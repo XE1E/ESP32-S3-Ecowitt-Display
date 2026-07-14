@@ -1,0 +1,50 @@
+/**
+ * my_config.h.template
+ *
+ * Copia este archivo a my_config.h y edita tus valores.
+ * my_config.h está en .gitignore para proteger tus credenciales.
+ */
+
+#ifndef MY_CONFIG_H
+#define MY_CONFIG_H
+
+// ============================================================================
+// WiFi
+// ============================================================================
+
+#define WIFI_SSID     "TU_SSID"
+#define WIFI_PASSWORD "TU_PASSWORD"
+
+// ============================================================================
+// API del servidor Ecowitt
+// ============================================================================
+
+// URL base de tu servidor (sin slash final)
+#define API_BASE_URL  "https://clima.xe1e.net"
+
+// Intervalo de actualización en milisegundos (60000 = 1 minuto)
+#define UPDATE_INTERVAL_MS  60000
+
+// ============================================================================
+// Ubicación (para NTP y pronóstico)
+// ============================================================================
+
+#define LOCATION_NAME "Ciudad de México"
+#define LATITUDE      19.4326
+#define LONGITUDE     -99.1332
+#define TIMEZONE      "America/Mexico_City"
+
+// ============================================================================
+// Opciones de display
+// ============================================================================
+
+// Brillo del backlight (0-255)
+#define DEFAULT_BRIGHTNESS  200
+
+// Usar Celsius (true) o Fahrenheit (false)
+#define USE_CELSIUS  true
+
+// Formato 24 horas (true) o 12 horas (false)
+#define USE_24H_FORMAT  true
+
+#endif // MY_CONFIG_H

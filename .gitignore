@@ -1,0 +1,19 @@
+# User config (contains WiFi credentials)
+my_config.h
+
+# Arduino build artifacts
+build/
+*.elf
+*.bin
+
+# IDE
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*~
