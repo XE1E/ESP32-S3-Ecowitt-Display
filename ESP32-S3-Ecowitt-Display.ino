@@ -21,6 +21,7 @@
 #include "my_config.h"
 #include "ecowitt_api.h"
 #include "bme280_sensor.h"
+#include "preferences_manager.h"
 
 // LVGL y display
 #include "lvgl_port.h"
@@ -28,6 +29,7 @@
 #include "gt911.h"
 #include "ui_dashboard.h"
 #include "ui_navigation.h"
+#include "ui_wizard.h"
 
 // ============================================================================
 // Variables globales
@@ -62,6 +64,56 @@ unsigned long lastClockUpdate = 0;
 // Setup
 // ============================================================================
 
+// Flag para saber si wizard está activo
+bool wizardActive = false;
+
+// Callback cuando el wizard termina
+void onWizardDone(bool success) {
+    wizardActive = false;
+    if (success) {
+        Serial.println("[WIZARD] Completado exitosamente");
+        startNormalOperation();
+    } else {
+        Serial.println("[WIZARD] Cancelado - reiniciando wizard");
+        showWizard(onWizardDone);
+        wizardActive = true;
+    }
+}
+
+// Iniciar operación normal (después de wizard o si ya configurado)
+void startNormalOperation() {
+    // Configurar NTP
+    configTzTime(TIMEZONE, "pool.ntp.org", "time.nist.gov");
+    Serial.println("[NTP] Sincronizando hora...");
+
+    // Verificar conexión al servidor
+    Serial.println("[API] Verificando conexión al servidor...");
+    if (ecowittApi.checkConnection()) {
+        Serial.println("[API] Servidor OK");
+        g_status.api_ok = true;
+    } else {
+        Serial.println("[API] No se pudo conectar al servidor");
+        g_status.api_ok = false;
+    }
+
+    // Primera carga de datos
+    updateWeatherData();
+    updateAlmanac();
+
+    // Crear dashboard
+    createDashboard();
+    updateDashboardTime();
+    updateDashboardWeather();
+
+    // Inicializar navegación touch
+    initNavigation();
+
+    Serial.println();
+    Serial.println("[SYS] Setup completo!");
+    Serial.println("══════════════════════════════════════════════════");
+    Serial.println();
+}
+
 void setup() {
     Serial.begin(115200);
     delay(500);
@@ -88,6 +140,14 @@ void setup() {
     }
 
     // ========================================================================
+    // Cargar preferencias
+    // ========================================================================
+    setDefaultPreferences();
+    bool configured = loadPreferences();
+    incrementBootCount();
+    Serial.printf("[PREFS] Configurado: %s\n", configured ? "Sí" : "No");
+
+    // ========================================================================
     // Inicializar I2C (compartido por touch y BME280)
     // ========================================================================
     Wire.begin(TOUCH_SDA, TOUCH_SCL);
@@ -99,7 +159,6 @@ void setup() {
 #ifdef BME280_ENABLED
     if (initBME280(BME280_ADDRESS)) {
         g_status.bme280_ok = true;
-        // Leer primera vez
         if (readBME280(g_local)) {
             Serial.printf("[BME280] Inicial: %.1f°C, %.0f%%, %.0f hPa\n",
                           g_local.temperature, g_local.humidity, g_local.pressure);
@@ -110,18 +169,25 @@ void setup() {
 #endif
 
     // ========================================================================
-    // Configurar estación remota
+    // Configurar estación remota (desde preferencias o config)
     // ========================================================================
+    UserPreferences* prefs = getPreferences();
+    if (prefs->remote_enabled) {
+        g_remote_config.enabled = true;
+        strncpy(g_remote_config.passkey, prefs->remote_passkey, sizeof(g_remote_config.passkey));
+        strncpy(g_remote_config.label, prefs->remote_label, sizeof(g_remote_config.label));
+        g_remote_config.send_interval = max(60, (int)prefs->remote_interval);
+        Serial.printf("[REMOTE] Estación remota: %s\n", g_remote_config.label);
+    } else {
 #ifdef REMOTE_STATION_ENABLED
-    g_remote_config.enabled = true;
-    strncpy(g_remote_config.passkey, REMOTE_STATION_PASSKEY, sizeof(g_remote_config.passkey));
-    strncpy(g_remote_config.label, REMOTE_STATION_LABEL, sizeof(g_remote_config.label));
-    g_remote_config.send_interval = max(60, REMOTE_STATION_INTERVAL);
-    Serial.printf("[REMOTE] Estación remota habilitada: %s (%s)\n",
-                  g_remote_config.label, g_remote_config.passkey);
+        g_remote_config.enabled = true;
+        strncpy(g_remote_config.passkey, REMOTE_STATION_PASSKEY, sizeof(g_remote_config.passkey));
+        strncpy(g_remote_config.label, REMOTE_STATION_LABEL, sizeof(g_remote_config.label));
+        g_remote_config.send_interval = max(60, REMOTE_STATION_INTERVAL);
 #else
-    g_remote_config.enabled = false;
+        g_remote_config.enabled = false;
 #endif
+    }
 
     // ========================================================================
     // Inicializar display y touch
@@ -144,50 +210,18 @@ void setup() {
     Serial.println("[DISPLAY] LVGL inicializado");
 
     // ========================================================================
-    // Conectar WiFi
+    // Decidir: Wizard o operación normal
     // ========================================================================
-    connectWiFi();
-
-    // ========================================================================
-    // Configurar NTP
-    // ========================================================================
-    configTzTime(TIMEZONE, "pool.ntp.org", "time.nist.gov");
-    Serial.println("[NTP] Sincronizando hora...");
-
-    // ========================================================================
-    // Verificar conexión al servidor
-    // ========================================================================
-    Serial.println("[API] Verificando conexión al servidor...");
-    if (ecowittApi.checkConnection()) {
-        Serial.println("[API] Servidor OK");
-        g_status.api_ok = true;
+    if (!configured) {
+        // Primera ejecución - mostrar wizard
+        Serial.println("[SYS] Primera ejecución - iniciando wizard");
+        showWizard(onWizardDone);
+        wizardActive = true;
     } else {
-        Serial.println("[API] No se pudo conectar al servidor");
-        g_status.api_ok = false;
+        // Ya configurado - conectar con valores guardados
+        connectWiFi();
+        startNormalOperation();
     }
-
-    // ========================================================================
-    // Primera carga de datos
-    // ========================================================================
-    updateWeatherData();
-    updateAlmanac();
-
-    // ========================================================================
-    // Crear dashboard
-    // ========================================================================
-    createDashboard();
-    updateDashboardTime();
-    updateDashboardWeather();
-
-    // ========================================================================
-    // Inicializar navegación touch
-    // ========================================================================
-    initNavigation();
-
-    Serial.println();
-    Serial.println("[SYS] Setup completo!");
-    Serial.println("══════════════════════════════════════════════════");
-    Serial.println();
 }
 
 // ============================================================================
@@ -198,9 +232,17 @@ void loop() {
     unsigned long now = millis();
 
     // ========================================================================
-    // Procesar LVGL
+    // Procesar LVGL (siempre)
     // ========================================================================
     lv_timer_handler();
+
+    // ========================================================================
+    // Si wizard activo, solo procesar LVGL
+    // ========================================================================
+    if (wizardActive) {
+        delay(5);
+        return;
+    }
 
     // ========================================================================
     // Actualizar reloj cada segundo
@@ -276,10 +318,23 @@ void loop() {
 // ============================================================================
 
 void connectWiFi() {
-    Serial.printf("[WiFi] Conectando a %s", WIFI_SSID);
+    // Usar preferencias si están configuradas, sino usar defines
+    const char* ssid;
+    const char* pass;
+
+    UserPreferences* prefs = getPreferences();
+    if (prefs->configured && strlen(prefs->wifi_ssid) > 0) {
+        ssid = prefs->wifi_ssid;
+        pass = prefs->wifi_pass;
+    } else {
+        ssid = WIFI_SSID;
+        pass = WIFI_PASSWORD;
+    }
+
+    Serial.printf("[WiFi] Conectando a %s", ssid);
 
     WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.begin(ssid, pass);
 
     int attempts = 0;
     while (WiFi.status() != WL_CONNECTED && attempts < 30) {
@@ -297,7 +352,6 @@ void connectWiFi() {
     } else {
         Serial.println(" FALLO!");
         g_status.wifi_connected = false;
-        // TODO: Mostrar pantalla de configuración WiFi
     }
 }
 

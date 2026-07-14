@@ -511,10 +511,14 @@ El display envía al servidor (formato Ecowitt):
 - [ ] Persistencia de preferencias en NVS
 
 ### Fase 5: Wizard y pulido (Semana 5)
-- [ ] Wizard de configuración inicial
-- [ ] Teclado en pantalla para WiFi/URL
-- [ ] Persistencia en NVS
-- [ ] Animaciones y transiciones
+- [x] Wizard de configuración inicial (7 pasos)
+- [x] Teclado en pantalla para WiFi/URL
+- [x] Persistencia en NVS (preferences_manager.h)
+- [x] Escaneo de redes WiFi
+- [x] Validación de conexión servidor
+- [x] Conversión de unidades (°C/°F, hPa/mmHg, km/h/mph)
+- [x] Contador de arranques
+- [ ] Animaciones y transiciones adicionales
 - [ ] Optimización de rendimiento
 - [ ] Pruebas de estabilidad (24h+)
 
