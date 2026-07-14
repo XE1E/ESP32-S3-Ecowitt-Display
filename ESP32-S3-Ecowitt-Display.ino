@@ -15,15 +15,18 @@
 #include <WiFi.h>
 #include <Preferences.h>
 #include <Wire.h>
+#include <time.h>
 
 #include "config.h"
 #include "my_config.h"
 #include "ecowitt_api.h"
 #include "bme280_sensor.h"
 
-// LVGL y display (descomentar cuando estén listos)
-// #include "lvgl_port.h"
-// #include "ui.h"
+// LVGL y display
+#include "lvgl_port.h"
+#include "rgb_lcd_port.h"
+#include "gt911.h"
+#include "ui_dashboard.h"
 
 // ============================================================================
 // Variables globales
@@ -50,6 +53,9 @@ unsigned long lastAlmanacUpdate = 0;
 const unsigned long WEATHER_INTERVAL = 60000;      // 1 minuto
 const unsigned long BME280_INTERVAL = 10000;       // 10 segundos
 const unsigned long ALMANAC_INTERVAL = 600000;     // 10 minutos
+const unsigned long CLOCK_INTERVAL = 1000;         // 1 segundo
+
+unsigned long lastClockUpdate = 0;
 
 // ============================================================================
 // Setup
@@ -117,18 +123,35 @@ void setup() {
 #endif
 
     // ========================================================================
-    // TODO: Inicializar display y touch
+    // Inicializar display y touch
     // ========================================================================
-    // initDisplay();
-    // initTouch();
-    // initLVGL();
-    // showSplashScreen();
-    // updateSplashStatus("Conectando WiFi...");
+    Serial.println("[DISPLAY] Inicializando LCD RGB...");
+    esp_lcd_panel_handle_t lcd_handle = waveshare_esp32_s3_rgb_lcd_init();
+    if (!lcd_handle) {
+        Serial.println("[DISPLAY] ERROR: Fallo inicialización LCD!");
+    }
+
+    Serial.println("[DISPLAY] Inicializando touch GT911...");
+    esp_lcd_touch_handle_t tp_handle = touch_gt911_init();
+    if (!tp_handle) {
+        Serial.println("[DISPLAY] ERROR: Fallo inicialización touch!");
+    }
+
+    Serial.println("[DISPLAY] Inicializando LVGL...");
+    lv_init();
+    lvgl_port_init(lcd_handle, tp_handle);
+    Serial.println("[DISPLAY] LVGL inicializado");
 
     // ========================================================================
     // Conectar WiFi
     // ========================================================================
     connectWiFi();
+
+    // ========================================================================
+    // Configurar NTP
+    // ========================================================================
+    configTzTime(TIMEZONE, "pool.ntp.org", "time.nist.gov");
+    Serial.println("[NTP] Sincronizando hora...");
 
     // ========================================================================
     // Verificar conexión al servidor
@@ -149,10 +172,11 @@ void setup() {
     updateAlmanac();
 
     // ========================================================================
-    // TODO: Crear UI
+    // Crear dashboard
     // ========================================================================
-    // hideSplashScreen();
-    // createUI();
+    createDashboard();
+    updateDashboardTime();
+    updateDashboardWeather();
 
     Serial.println();
     Serial.println("[SYS] Setup completo!");
@@ -168,9 +192,17 @@ void loop() {
     unsigned long now = millis();
 
     // ========================================================================
-    // Procesar LVGL (TODO)
+    // Procesar LVGL
     // ========================================================================
-    // lv_timer_handler();
+    lv_timer_handler();
+
+    // ========================================================================
+    // Actualizar reloj cada segundo
+    // ========================================================================
+    if (now - lastClockUpdate >= CLOCK_INTERVAL) {
+        lastClockUpdate = now;
+        updateDashboardTime();
+    }
 
     // ========================================================================
     // Leer BME280 local
@@ -320,8 +352,8 @@ void updateWeatherData() {
 
     g_status.last_update = millis();
 
-    // TODO: Actualizar UI
-    // updateAllUI();
+    // Actualizar UI
+    updateDashboardWeather();
 
     Serial.println("[API] Datos actualizados\n");
 }

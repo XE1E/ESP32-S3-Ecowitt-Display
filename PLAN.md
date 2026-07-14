@@ -479,20 +479,26 @@ El display envía al servidor (formato Ecowitt):
 - [ ] Probar conexión WiFi + fetch de API
 
 ### Fase 2: UI Dashboard (Semana 2)
-- [ ] Crear `ui_dashboard.h` basado en layout propuesto
-- [ ] Panel de reloj con NTP
-- [ ] Panel de temperatura (exterior + máx/mín)
-- [ ] Panel de humedad con gauge circular
-- [ ] Panel de condiciones (viento, UV, lluvia)
-- [ ] Panel de presión con tendencia
-- [ ] Pronóstico 3 días
+- [x] Crear `ui_dashboard.h` basado en layout propuesto
+- [x] Panel de reloj con NTP
+- [x] Panel de temperatura (exterior + máx/mín)
+- [x] Panel de humedad con gauge circular
+- [x] Panel de condiciones (viento, UV, lluvia)
+- [x] Panel de presión con tendencia
+- [x] Pronóstico 3 días
+- [x] Panel de alertas/tendencias
+- [x] Panel interior (BME280 o consola)
+- [x] Header con status WiFi y hora
+- [x] Footer con UV, sol/luna
 
 ### Fase 3: Alertas e Interior (Semana 3)
-- [ ] Crear `ui_alerts.h` — panel de alertas
-- [ ] Integrar `/api/alerts` y mostrar estado
-- [ ] Panel de interior (BME280 o dato de consola)
-- [ ] Comparación "vs ayer" desde `/api/compare`
-- [ ] Footer con UV, AQI, visibilidad, sol/luna
+- [x] Panel de alertas integrado en dashboard
+- [x] Integrar `/api/alerts` y mostrar estado
+- [x] Panel de interior (BME280 o dato de consola)
+- [x] Comparación "vs ayer" desde `/api/compare`
+- [x] Footer con UV, sol/luna
+- [ ] Crear `ui_alerts.h` — vista expandida de alertas
+- [ ] Gráficas de tendencia (sparklines)
 
 ### Fase 4: Navegación Touch (Semana 4)
 - [ ] Implementar swipe entre pantallas
