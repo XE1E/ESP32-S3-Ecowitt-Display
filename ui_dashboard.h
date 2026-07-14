@@ -663,6 +663,13 @@ void createDashboard() {
     createIndoorPanel(scr_dashboard, GAP + 350 + GAP, row3_y,
                       SCREEN_WIDTH - (GAP + 350 + GAP) - GAP);
 
+    // Event handlers para paneles (tap para expandir)
+    lv_obj_add_flag(panel_temp, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_flag(panel_humidity, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_flag(panel_pressure, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_flag(panel_conditions, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_flag(panel_indoor, LV_OBJ_FLAG_CLICKABLE);
+
     // Cargar pantalla
     lv_scr_load(scr_dashboard);
 

@@ -27,6 +27,7 @@
 #include "rgb_lcd_port.h"
 #include "gt911.h"
 #include "ui_dashboard.h"
+#include "ui_navigation.h"
 
 // ============================================================================
 // Variables globales
@@ -177,6 +178,11 @@ void setup() {
     createDashboard();
     updateDashboardTime();
     updateDashboardWeather();
+
+    // ========================================================================
+    // Inicializar navegación touch
+    // ========================================================================
+    initNavigation();
 
     Serial.println();
     Serial.println("[SYS] Setup completo!");

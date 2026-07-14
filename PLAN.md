@@ -501,11 +501,14 @@ El display envía al servidor (formato Ecowitt):
 - [ ] Gráficas de tendencia (sparklines)
 
 ### Fase 4: Navegación Touch (Semana 4)
-- [ ] Implementar swipe entre pantallas
-- [ ] Pantalla de historial (gráficas 24h)
-- [ ] Modales expandibles (tap en paneles)
+- [x] Implementar swipe entre pantallas
+- [x] Pantalla de historial (gráficas 24h)
+- [x] Modales expandibles (tap en paneles)
+- [x] Pantalla de configuración
+- [x] Indicador de página (dots)
+- [x] Animaciones de transición
 - [ ] Long-press para cambiar unidades
-- [ ] Pantalla de configuración
+- [ ] Persistencia de preferencias en NVS
 
 ### Fase 5: Wizard y pulido (Semana 5)
 - [ ] Wizard de configuración inicial
