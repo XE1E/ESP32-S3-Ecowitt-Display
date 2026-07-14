@@ -47,4 +47,31 @@
 // Formato 24 horas (true) o 12 horas (false)
 #define USE_24H_FORMAT  true
 
+// ============================================================================
+// Estación remota (enviar datos BME280 al servidor)
+// ============================================================================
+
+// Habilitar envío de datos BME280 como estación secundaria
+#define REMOTE_STATION_ENABLED  true
+
+// Identificador único (el servidor lo usará como passkey)
+// Debe ser único y no contener espacios
+#define REMOTE_STATION_PASSKEY  "display_sala"
+
+// Nombre visible en el panel de administración
+#define REMOTE_STATION_LABEL    "Display Sala"
+
+// Intervalo de envío en segundos (mínimo 60)
+#define REMOTE_STATION_INTERVAL 60
+
+// ============================================================================
+// BME280 (sensor interior local)
+// ============================================================================
+
+// Habilitar lectura del BME280
+#define BME280_ENABLED  true
+
+// Dirección I2C del BME280 (0x76 o 0x77)
+#define BME280_ADDRESS  0x76
+
 #endif // MY_CONFIG_H

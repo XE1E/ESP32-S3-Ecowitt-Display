@@ -3,6 +3,7 @@
  *
  * Display táctil de 7" para estación meteorológica Ecowitt.
  * Muestra datos en tiempo real desde tu propio servidor.
+ * Opcionalmente envía datos del BME280 como estación remota.
  *
  * Hardware: Waveshare ESP32-S3-Touch-LCD-7B (1024x600)
  * Framework: LVGL 8.3
@@ -13,12 +14,14 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <Preferences.h>
+#include <Wire.h>
 
 #include "config.h"
 #include "my_config.h"
 #include "ecowitt_api.h"
+#include "bme280_sensor.h"
 
-// TODO: Incluir cuando estén implementados
+// LVGL y display (descomentar cuando estén listos)
 // #include "lvgl_port.h"
 // #include "ui.h"
 
@@ -31,11 +34,22 @@ CompareData g_compare = {0};
 AlertData g_alerts = {0};
 AlmanacData g_almanac = {0};
 SystemStatus g_status = {0};
+LocalSensorData g_local = {0};
+RemoteStationConfig g_remote_config = {0};
 
 EcowittAPI ecowittApi;
 Preferences preferences;
 
-unsigned long lastUpdateTime = 0;
+// Timers
+unsigned long lastWeatherUpdate = 0;
+unsigned long lastBME280Read = 0;
+unsigned long lastRemoteSend = 0;
+unsigned long lastAlmanacUpdate = 0;
+
+// Intervalos (ms)
+const unsigned long WEATHER_INTERVAL = 60000;      // 1 minuto
+const unsigned long BME280_INTERVAL = 10000;       // 10 segundos
+const unsigned long ALMANAC_INTERVAL = 600000;     // 10 minutos
 
 // ============================================================================
 // Setup
@@ -44,37 +58,106 @@ unsigned long lastUpdateTime = 0;
 void setup() {
     Serial.begin(115200);
     delay(500);
-    Serial.println("\n\n=================================");
-    Serial.println("ESP32-S3 Ecowitt Display");
-    Serial.println("=================================\n");
 
-    // Verificar PSRAM
+    Serial.println("\n");
+    Serial.println("╔═══════════════════════════════════════════════╗");
+    Serial.println("║     ESP32-S3 Ecowitt Display                  ║");
+    Serial.println("║     github.com/XE1E/ESP32-S3-Ecowitt-Display  ║");
+    Serial.println("╚═══════════════════════════════════════════════╝");
+    Serial.println();
+
+    // ========================================================================
+    // Verificar PSRAM (crítico para display 1024x600)
+    // ========================================================================
     if (psramFound()) {
-        Serial.printf("PSRAM: %.2f MB disponible\n",
+        Serial.printf("[SYS] PSRAM: %.2f MB disponible\n",
                       ESP.getFreePsram() / 1024.0 / 1024.0);
     } else {
-        Serial.println("ERROR: PSRAM no encontrada!");
-        Serial.println("Verifica configuracion: PSRAM = OPI PSRAM");
-        while (1) delay(1000);
+        Serial.println("[SYS] ERROR: PSRAM no encontrada!");
+        Serial.println("[SYS] Verifica configuración: PSRAM = OPI PSRAM");
+        while (1) {
+            delay(1000);
+        }
     }
 
+    // ========================================================================
+    // Inicializar I2C (compartido por touch y BME280)
+    // ========================================================================
+    Wire.begin(TOUCH_SDA, TOUCH_SCL);
+    Serial.printf("[I2C] Inicializado en GPIO %d/%d\n", TOUCH_SDA, TOUCH_SCL);
+
+    // ========================================================================
+    // Inicializar BME280 (opcional)
+    // ========================================================================
+#ifdef BME280_ENABLED
+    if (initBME280(BME280_ADDRESS)) {
+        g_status.bme280_ok = true;
+        // Leer primera vez
+        if (readBME280(g_local)) {
+            Serial.printf("[BME280] Inicial: %.1f°C, %.0f%%, %.0f hPa\n",
+                          g_local.temperature, g_local.humidity, g_local.pressure);
+        }
+    } else {
+        g_status.bme280_ok = false;
+    }
+#endif
+
+    // ========================================================================
+    // Configurar estación remota
+    // ========================================================================
+#ifdef REMOTE_STATION_ENABLED
+    g_remote_config.enabled = true;
+    strncpy(g_remote_config.passkey, REMOTE_STATION_PASSKEY, sizeof(g_remote_config.passkey));
+    strncpy(g_remote_config.label, REMOTE_STATION_LABEL, sizeof(g_remote_config.label));
+    g_remote_config.send_interval = max(60, REMOTE_STATION_INTERVAL);
+    Serial.printf("[REMOTE] Estación remota habilitada: %s (%s)\n",
+                  g_remote_config.label, g_remote_config.passkey);
+#else
+    g_remote_config.enabled = false;
+#endif
+
+    // ========================================================================
     // TODO: Inicializar display y touch
+    // ========================================================================
     // initDisplay();
     // initTouch();
-
-    // TODO: Inicializar LVGL
     // initLVGL();
+    // showSplashScreen();
+    // updateSplashStatus("Conectando WiFi...");
 
+    // ========================================================================
     // Conectar WiFi
+    // ========================================================================
     connectWiFi();
 
+    // ========================================================================
+    // Verificar conexión al servidor
+    // ========================================================================
+    Serial.println("[API] Verificando conexión al servidor...");
+    if (ecowittApi.checkConnection()) {
+        Serial.println("[API] Servidor OK");
+        g_status.api_ok = true;
+    } else {
+        Serial.println("[API] No se pudo conectar al servidor");
+        g_status.api_ok = false;
+    }
+
+    // ========================================================================
+    // Primera carga de datos
+    // ========================================================================
+    updateWeatherData();
+    updateAlmanac();
+
+    // ========================================================================
     // TODO: Crear UI
+    // ========================================================================
+    // hideSplashScreen();
     // createUI();
 
-    // Primera carga de datos
-    updateWeatherData();
-
-    Serial.println("\nSetup completo!\n");
+    Serial.println();
+    Serial.println("[SYS] Setup completo!");
+    Serial.println("══════════════════════════════════════════════════");
+    Serial.println();
 }
 
 // ============================================================================
@@ -82,25 +165,80 @@ void setup() {
 // ============================================================================
 
 void loop() {
-    // TODO: Procesar LVGL
+    unsigned long now = millis();
+
+    // ========================================================================
+    // Procesar LVGL (TODO)
+    // ========================================================================
     // lv_timer_handler();
 
-    // Actualizar datos periódicamente
-    if (millis() - lastUpdateTime >= UPDATE_INTERVAL_MS) {
-        lastUpdateTime = millis();
+    // ========================================================================
+    // Leer BME280 local
+    // ========================================================================
+#ifdef BME280_ENABLED
+    if (g_status.bme280_ok && (now - lastBME280Read >= BME280_INTERVAL)) {
+        lastBME280Read = now;
+        if (readBME280(g_local)) {
+            g_status.last_bme_read = now;
+            Serial.printf("[BME280] %.1f°C  %.0f%%  %.0f hPa\n",
+                          g_local.temperature, g_local.humidity, g_local.pressure);
+        }
+    }
+#endif
+
+    // ========================================================================
+    // Enviar datos como estación remota
+    // ========================================================================
+    if (g_remote_config.enabled && g_status.bme280_ok && g_local.valid) {
+        unsigned long remoteInterval = g_remote_config.send_interval * 1000UL;
+        if (now - lastRemoteSend >= remoteInterval) {
+            lastRemoteSend = now;
+            bool ok = ecowittApi.postLocalSensorData(
+                g_remote_config.passkey,
+                g_local.temperature,
+                g_local.humidity,
+                g_local.pressure
+            );
+            g_status.remote_station_ok = ok;
+            g_status.last_remote_send = now;
+        }
+    }
+
+    // ========================================================================
+    // Actualizar datos del servidor
+    // ========================================================================
+    if (now - lastWeatherUpdate >= WEATHER_INTERVAL) {
+        lastWeatherUpdate = now;
         updateWeatherData();
     }
 
-    // Pequeña pausa para no saturar CPU
+    // ========================================================================
+    // Actualizar almanaque (menos frecuente)
+    // ========================================================================
+    if (now - lastAlmanacUpdate >= ALMANAC_INTERVAL) {
+        lastAlmanacUpdate = now;
+        updateAlmanac();
+    }
+
+    // ========================================================================
+    // Verificar WiFi y reconectar si es necesario
+    // ========================================================================
+    if (WiFi.status() != WL_CONNECTED) {
+        g_status.wifi_connected = false;
+        Serial.println("[WiFi] Conexión perdida, reconectando...");
+        connectWiFi();
+    }
+
+    // Pequeña pausa
     delay(5);
 }
 
 // ============================================================================
-// Funciones auxiliares
+// Conectar WiFi
 // ============================================================================
 
 void connectWiFi() {
-    Serial.printf("Conectando a WiFi: %s", WIFI_SSID);
+    Serial.printf("[WiFi] Conectando a %s", WIFI_SSID);
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -114,8 +252,8 @@ void connectWiFi() {
 
     if (WiFi.status() == WL_CONNECTED) {
         Serial.println(" OK!");
-        Serial.printf("IP: %s\n", WiFi.localIP().toString().c_str());
-        Serial.printf("RSSI: %d dBm\n", WiFi.RSSI());
+        Serial.printf("[WiFi] IP: %s\n", WiFi.localIP().toString().c_str());
+        Serial.printf("[WiFi] RSSI: %d dBm\n", WiFi.RSSI());
         g_status.wifi_connected = true;
         g_status.wifi_rssi = WiFi.RSSI();
     } else {
@@ -125,57 +263,100 @@ void connectWiFi() {
     }
 }
 
+// ============================================================================
+// Actualizar datos meteorológicos del servidor
+// ============================================================================
+
 void updateWeatherData() {
-    Serial.println("Actualizando datos...");
+    Serial.println("[API] Actualizando datos...");
 
     // Datos actuales
     if (ecowittApi.fetchCurrent(g_weather)) {
-        Serial.printf("  Temp: %.1f°C, Humedad: %.0f%%\n",
+        Serial.printf("[API] Exterior: %.1f°C, %.0f%%, %.1f hPa\n",
                       g_weather.temp_outdoor,
-                      g_weather.humidity_outdoor);
+                      g_weather.humidity_outdoor,
+                      g_weather.pressure_rel);
+        Serial.printf("[API] Viento: %.1f km/h %s, Ráfaga: %.1f\n",
+                      g_weather.wind_speed,
+                      g_weather.wind_dir_cardinal,
+                      g_weather.wind_gust);
+        Serial.printf("[API] Interior (consola): %.1f°C, %.0f%%\n",
+                      g_weather.temp_indoor,
+                      g_weather.humidity_indoor);
         g_status.api_ok = true;
     } else {
-        Serial.println("  ERROR: No se pudo obtener datos actuales");
+        Serial.println("[API] ERROR: No se pudieron obtener datos actuales");
         g_status.api_ok = false;
+        return;  // No continuar si falla el principal
     }
 
     // Estadísticas del día
     if (ecowittApi.fetchDailyStats(g_weather)) {
-        Serial.printf("  Max: %.1f°C, Min: %.1f°C\n",
+        Serial.printf("[API] Hoy: Máx %.1f°C, Mín %.1f°C, Lluvia %.1f mm\n",
                       g_weather.temp_max,
-                      g_weather.temp_min);
+                      g_weather.temp_min,
+                      g_weather.rain_total);
     }
 
     // Comparación vs ayer
     if (ecowittApi.fetchCompare(g_compare)) {
-        Serial.printf("  vs ayer: %+.1f°C\n", g_compare.temp_diff);
+        Serial.printf("[API] vs ayer: %+.1f°C, %+.0f%% HR, %+.1f hPa\n",
+                      g_compare.temp_diff,
+                      g_compare.humidity_diff,
+                      g_compare.pressure_diff);
     }
 
     // Alertas
     if (ecowittApi.fetchAlerts(g_alerts)) {
         if (g_alerts.has_alerts) {
-            Serial.printf("  ALERTAS: %d activas\n", g_alerts.alert_count);
+            Serial.printf("[API] ⚠️ %d ALERTAS ACTIVAS:\n", g_alerts.alert_count);
+            for (int i = 0; i < g_alerts.alert_count; i++) {
+                Serial.printf("       - %s\n", g_alerts.alerts[i]);
+            }
         } else {
-            Serial.println("  Sin alertas");
-        }
-    }
-
-    // Almanaque (menos frecuente)
-    static unsigned long lastAlmanacUpdate = 0;
-    if (millis() - lastAlmanacUpdate >= 600000) { // Cada 10 min
-        lastAlmanacUpdate = millis();
-        if (ecowittApi.fetchAlmanac(g_almanac)) {
-            Serial.printf("  Sol: %s - %s\n",
-                          g_almanac.sunrise,
-                          g_almanac.sunset);
+            Serial.println("[API] Sin alertas activas");
         }
     }
 
     g_status.last_update = millis();
-    g_status.uptime = millis() / 1000;
 
     // TODO: Actualizar UI
-    // updateUI();
+    // updateAllUI();
 
-    Serial.println("Datos actualizados.\n");
+    Serial.println("[API] Datos actualizados\n");
+}
+
+// ============================================================================
+// Actualizar almanaque
+// ============================================================================
+
+void updateAlmanac() {
+    if (ecowittApi.fetchAlmanac(g_almanac)) {
+        Serial.printf("[API] Sol: %s - %s, Luna: %s (%d%%)\n",
+                      g_almanac.sunrise,
+                      g_almanac.sunset,
+                      g_almanac.moon_phase,
+                      g_almanac.moon_illumination);
+    }
+}
+
+// ============================================================================
+// Mostrar estado del sistema (debug)
+// ============================================================================
+
+void printSystemStatus() {
+    Serial.println("\n=== Estado del Sistema ===");
+    Serial.printf("WiFi: %s (RSSI: %d dBm)\n",
+                  g_status.wifi_connected ? "Conectado" : "Desconectado",
+                  g_status.wifi_rssi);
+    Serial.printf("API: %s\n", g_status.api_ok ? "OK" : "Error");
+    Serial.printf("BME280: %s\n", g_status.bme280_ok ? "OK" : "No disponible");
+    Serial.printf("Estación remota: %s\n",
+                  g_remote_config.enabled ?
+                    (g_status.remote_station_ok ? "Enviando OK" : "Error envío") :
+                    "Deshabilitada");
+    Serial.printf("Uptime: %lu segundos\n", millis() / 1000);
+    Serial.printf("Heap libre: %d bytes\n", ESP.getFreeHeap());
+    Serial.printf("PSRAM libre: %d bytes\n", ESP.getFreePsram());
+    Serial.println("===========================\n");
 }

@@ -35,9 +35,18 @@
 // Estructuras de datos
 // ============================================================================
 
-// Datos meteorológicos actuales
+// Datos del BME280 local (este display)
+struct LocalSensorData {
+    float temperature;
+    float humidity;
+    float pressure;
+    bool valid;
+    unsigned long last_read;
+};
+
+// Datos meteorológicos actuales (del servidor)
 struct WeatherData {
-    // Exterior (de la estación Ecowitt)
+    // Exterior (de la estación Ecowitt principal)
     float temp_outdoor;
     float humidity_outdoor;
     float pressure_rel;
@@ -95,8 +104,20 @@ struct SystemStatus {
     bool wifi_connected;
     int wifi_rssi;
     bool api_ok;
+    bool bme280_ok;
+    bool remote_station_ok;      // Último envío como estación remota exitoso
     unsigned long last_update;
+    unsigned long last_bme_read;
+    unsigned long last_remote_send;
     unsigned long uptime;
+};
+
+// Configuración de estación remota (este display como sensor)
+struct RemoteStationConfig {
+    bool enabled;                // Enviar datos BME280 al servidor
+    char passkey[33];            // Identificador único (ej: "display_sala")
+    char label[32];              // Nombre visible (ej: "Sala")
+    int send_interval;           // Intervalo de envío en segundos (min 60)
 };
 
 // ============================================================================
@@ -108,5 +129,7 @@ extern CompareData g_compare;
 extern AlertData g_alerts;
 extern AlmanacData g_almanac;
 extern SystemStatus g_status;
+extern LocalSensorData g_local;
+extern RemoteStationConfig g_remote_config;
 
 #endif // CONFIG_H

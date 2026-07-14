@@ -224,6 +224,50 @@ public:
         return httpCode == HTTP_CODE_OK;
     }
 
+    /**
+     * Envía datos del BME280 local como estación remota
+     * Emula el protocolo Ecowitt para que el servidor lo registre
+     * como una estación secundaria (similar a WN31 o GW1100)
+     *
+     * @param passkey Identificador único de esta "estación"
+     * @param temp Temperatura en °C
+     * @param humidity Humedad en %
+     * @param pressure Presión en hPa
+     * @return true si el envío fue exitoso
+     */
+    bool postLocalSensorData(const char* passkey, float temp, float humidity, float pressure) {
+        HTTPClient http;
+        String url = String(_baseUrl) + "/data/report/";
+
+        http.begin(url);
+        http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+        http.setTimeout(10000);
+
+        // Construir payload en formato Ecowitt
+        // El servidor espera unidades imperiales (°F, inHg)
+        float temp_f = temp * 9.0 / 5.0 + 32.0;
+        float pressure_inhg = pressure * 0.02953;
+
+        String payload = "PASSKEY=" + String(passkey);
+        payload += "&stationtype=EcowittDisplay";
+        payload += "&dateutc=now";
+        payload += "&tempinf=" + String(temp_f, 1);
+        payload += "&humidityin=" + String((int)humidity);
+        payload += "&baromrelin=" + String(pressure_inhg, 3);
+        payload += "&baromabsin=" + String(pressure_inhg, 3);
+
+        int httpCode = http.POST(payload);
+        http.end();
+
+        if (httpCode == HTTP_CODE_OK) {
+            Serial.printf("[API] Datos locales enviados OK (passkey=%s)\n", passkey);
+            return true;
+        } else {
+            Serial.printf("[API] Error enviando datos locales: %d\n", httpCode);
+            return false;
+        }
+    }
+
 private:
     const char* _baseUrl;
 };

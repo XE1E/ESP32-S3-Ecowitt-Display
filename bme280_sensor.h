@@ -1,13 +1,12 @@
 /**
  * bme280_sensor.h - BME280 Indoor Sensor
  *
- * Optional indoor temperature, humidity, and pressure sensor
+ * Sensor local de temperatura, humedad y presión.
+ * Puede enviar datos al servidor como estación remota.
  */
 
 #ifndef BME280_SENSOR_H
 #define BME280_SENSOR_H
-
-#ifdef USE_BME280
 
 #include <Arduino.h>
 #include <Wire.h>
@@ -18,24 +17,22 @@
 // BME280 instance
 static Adafruit_BME280 bme;
 static bool bmeInitialized = false;
-static unsigned long lastSensorRead = 0;
 
 // ============================================================================
 // Initialize BME280
 // ============================================================================
 
-bool initBME280() {
-    Serial.println("Initializing BME280...");
+bool initBME280(uint8_t address = 0x76) {
+    Serial.println("[BME280] Inicializando...");
 
-    // Note: I2C should already be initialized by touch
-
-    if (!bme.begin(BME280_ADDR)) {
-        Serial.println("BME280 not found!");
+    // I2C ya inicializado por el touch (GPIO 19/20)
+    if (!bme.begin(address)) {
+        Serial.println("[BME280] No encontrado!");
         bmeInitialized = false;
         return false;
     }
 
-    // Configure for indoor monitoring
+    // Configurar para monitoreo interior
     bme.setSampling(
         Adafruit_BME280::MODE_NORMAL,
         Adafruit_BME280::SAMPLING_X2,   // temperature
@@ -46,7 +43,7 @@ bool initBME280() {
     );
 
     bmeInitialized = true;
-    Serial.println("BME280 initialized");
+    Serial.println("[BME280] Inicializado OK");
     return true;
 }
 
@@ -54,39 +51,19 @@ bool initBME280() {
 // Read Sensor Data
 // ============================================================================
 
-bool readBME280(IndoorData *data) {
+bool readBME280(LocalSensorData& data) {
     if (!bmeInitialized) {
-        data->valid = false;
+        data.valid = false;
         return false;
     }
 
-    data->temperature = bme.readTemperature();
-    data->humidity = bme.readHumidity();
-    data->pressure = bme.readPressure() / 100.0F;  // Convert to hPa
-    data->valid = true;
+    data.temperature = bme.readTemperature();
+    data.humidity = bme.readHumidity();
+    data.pressure = bme.readPressure() / 100.0F;  // Convertir a hPa
+    data.valid = true;
+    data.last_read = millis();
 
     return true;
-}
-
-// ============================================================================
-// Update Indoor Sensor (called from loop)
-// ============================================================================
-
-void updateIndoorSensor() {
-    if (!bmeInitialized) return;
-
-    if (millis() - lastSensorRead < SENSOR_UPDATE_INTERVAL) return;
-
-    lastSensorRead = millis();
-
-    extern IndoorData indoorData;
-    if (readBME280(&indoorData)) {
-        // Update UI with new readings
-        updateIndoorUI(indoorData.temperature, indoorData.humidity);
-
-        Serial.printf("Indoor: %.1f C, %.0f%% RH, %.0f hPa\n",
-            indoorData.temperature, indoorData.humidity, indoorData.pressure);
-    }
 }
 
 // ============================================================================
@@ -97,6 +74,17 @@ bool isBME280Available() {
     return bmeInitialized;
 }
 
-#endif // USE_BME280
+// ============================================================================
+// Get formatted string
+// ============================================================================
+
+void getBME280String(char* buffer, size_t size, const LocalSensorData& data) {
+    if (data.valid) {
+        snprintf(buffer, size, "%.1f°C  %.0f%%  %.0fhPa",
+                 data.temperature, data.humidity, data.pressure);
+    } else {
+        snprintf(buffer, size, "-- (sensor no disponible)");
+    }
+}
 
 #endif // BME280_SENSOR_H

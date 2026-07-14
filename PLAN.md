@@ -413,13 +413,68 @@ lv_style_set_pad_all(&style_card, 12);
 
 ---
 
-## 7. Fases de Implementación
+## 7. Estación Remota (BME280 como sensor)
+
+### 7.1 Concepto
+
+El display con BME280 puede funcionar como **estación secundaria** que envía
+datos al servidor, igual que un WN31 o GW1100:
+
+```
+┌─────────────────────────┐
+│   Display ESP32-S3      │
+│   + BME280              │
+│                         │
+│  1. Lee BME280 local    │
+│  2. POST → servidor     │──────► /data/report/ (protocolo Ecowitt)
+│  3. GET ← datos web     │◄────── /api/current
+│  4. Muestra todo        │
+└─────────────────────────┘
+```
+
+### 7.2 Configuración
+
+En `my_config.h`:
+```cpp
+#define REMOTE_STATION_ENABLED  true
+#define REMOTE_STATION_PASSKEY  "display_sala"   // Identificador único
+#define REMOTE_STATION_LABEL    "Display Sala"   // Nombre visible
+#define REMOTE_STATION_INTERVAL 60               // Segundos entre envíos
+```
+
+### 7.3 Registro en el servidor
+
+Para que el servidor reconozca el display como estación secundaria,
+agregar en el `.env` del servidor Ecowitt:
+
+```bash
+SECONDARY_STATIONS=display_sala:Display Sala
+```
+
+O crearlo desde el panel de administración:
+- Ir a Admin → Estaciones → + Agregar estación
+- Nombre: `display_sala`
+- Passkey: (se detectará automáticamente al primer envío)
+
+### 7.4 Datos enviados
+
+El display envía al servidor (formato Ecowitt):
+- `tempinf` — Temperatura interior (°F)
+- `humidityin` — Humedad interior (%)
+- `baromrelin` — Presión relativa (inHg)
+
+---
+
+## 8. Fases de Implementación
 
 ### Fase 1: Base funcional (Semana 1)
 - [x] Estructura del proyecto
 - [x] Copiar drivers LVGL del proyecto anterior
 - [x] Cliente API para Ecowitt (`ecowitt_api.h`)
-- [ ] Adaptar `config.h` para datos de Ecowitt
+- [x] Adaptar `config.h` para datos de Ecowitt
+- [x] Integrar BME280 con estructura `LocalSensorData`
+- [x] Implementar envío como estación remota (`postLocalSensorData`)
+- [x] Main loop con WiFi, fetch API, lectura BME280, envío remoto
 - [ ] Verificar compilación y arranque
 - [ ] Probar conexión WiFi + fetch de API
 
