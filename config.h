@@ -11,18 +11,42 @@
 // Pines del hardware
 // ============================================================================
 
+// Display RGB (Waveshare ESP32-S3-Touch-LCD-7B)
+// Pines según rgb_lcd_port.h original de Waveshare
+#define LCD_DE    5
+#define LCD_VSYNC 3
+#define LCD_HSYNC 46
+#define LCD_PCLK  7
+// Red (was Blue in original - B3-B7)
+#define LCD_R0    14
+#define LCD_R1    38
+#define LCD_R2    18
+#define LCD_R3    17
+#define LCD_R4    10
+// Green (G2-G7 -> G0-G5 for Arduino_GFX)
+#define LCD_G0    39
+#define LCD_G1    0
+#define LCD_G2    45
+#define LCD_G3    48
+#define LCD_G4    47
+#define LCD_G5    21
+// Blue (was Red in original - R3-R7)
+#define LCD_B0    1
+#define LCD_B1    2
+#define LCD_B2    42
+#define LCD_B3    41
+#define LCD_B4    40
+#define LCD_BL    -1  // Backlight manejado por CH422G
+
 // Touch (GT911)
 #define TOUCH_SDA     19
 #define TOUCH_SCL     20
-#define TOUCH_RST     38
-#define TOUCH_INT     18
+#define TOUCH_INT     4
+// TOUCH_RST is controlled via CH422G IO1, not GPIO
 
 // BME280 (comparte I2C con touch)
 #define BME280_SDA    19
 #define BME280_SCL    20
-
-// Display
-#define LCD_BACKLIGHT 2
 
 // ============================================================================
 // Resolución del display

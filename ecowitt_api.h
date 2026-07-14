@@ -32,7 +32,7 @@ public:
 
         if (httpCode == HTTP_CODE_OK) {
             String payload = http.getString();
-            JsonDocument doc;
+            DynamicJsonDocument doc(4096);
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {
@@ -85,7 +85,7 @@ public:
 
         if (httpCode == HTTP_CODE_OK) {
             String payload = http.getString();
-            JsonDocument doc;
+            DynamicJsonDocument doc(4096);
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {
@@ -115,7 +115,7 @@ public:
 
         if (httpCode == HTTP_CODE_OK) {
             String payload = http.getString();
-            JsonDocument doc;
+            DynamicJsonDocument doc(4096);
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {
@@ -146,7 +146,7 @@ public:
 
         if (httpCode == HTTP_CODE_OK) {
             String payload = http.getString();
-            JsonDocument doc;
+            DynamicJsonDocument doc(4096);
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {
@@ -184,7 +184,7 @@ public:
 
         if (httpCode == HTTP_CODE_OK) {
             String payload = http.getString();
-            JsonDocument doc;
+            DynamicJsonDocument doc(4096);
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {

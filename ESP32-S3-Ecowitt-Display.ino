@@ -24,9 +24,8 @@
 #include "preferences_manager.h"
 
 // LVGL y display
-#include "lvgl_port.h"
-#include "rgb_lcd_port.h"
-#include "gt911.h"
+#include "display.h"
+#include "touch.h"
 #include "ui_dashboard.h"
 #include "ui_navigation.h"
 #include "ui_wizard.h"
@@ -116,9 +115,10 @@ void startNormalOperation() {
 
 void setup() {
     Serial.begin(115200);
-    delay(500);
+    delay(1000);
 
-    Serial.println("\n");
+    Serial.println("\n*** BOOT ***");
+
     Serial.println("╔═══════════════════════════════════════════════╗");
     Serial.println("║     ESP32-S3 Ecowitt Display                  ║");
     Serial.println("║     github.com/XE1E/ESP32-S3-Ecowitt-Display  ║");
@@ -151,7 +151,18 @@ void setup() {
     // Inicializar I2C (compartido por touch y BME280)
     // ========================================================================
     Wire.begin(TOUCH_SDA, TOUCH_SCL);
+    Wire.setClock(400000);
     Serial.printf("[I2C] Inicializado en GPIO %d/%d\n", TOUCH_SDA, TOUCH_SCL);
+
+    // I2C Scanner para debug
+    Serial.println("[I2C] Scanning...");
+    for (uint8_t addr = 1; addr < 127; addr++) {
+        Wire.beginTransmission(addr);
+        if (Wire.endTransmission() == 0) {
+            Serial.printf("[I2C] Device found at 0x%02X\n", addr);
+        }
+    }
+    Serial.println("[I2C] Scan complete");
 
     // ========================================================================
     // Inicializar BME280 (opcional)
@@ -192,22 +203,23 @@ void setup() {
     // ========================================================================
     // Inicializar display y touch
     // ========================================================================
-    Serial.println("[DISPLAY] Inicializando LCD RGB...");
-    esp_lcd_panel_handle_t lcd_handle = waveshare_esp32_s3_rgb_lcd_init();
-    if (!lcd_handle) {
-        Serial.println("[DISPLAY] ERROR: Fallo inicialización LCD!");
-    }
+    Serial.println("[INIT] Iniciando display...");
+    Serial.flush();
+    initDisplay();
+    Serial.println("[INIT] Display OK");
+    Serial.flush();
 
-    Serial.println("[DISPLAY] Inicializando touch GT911...");
-    esp_lcd_touch_handle_t tp_handle = touch_gt911_init();
-    if (!tp_handle) {
-        Serial.println("[DISPLAY] ERROR: Fallo inicialización touch!");
-    }
+    Serial.println("[INIT] Iniciando touch...");
+    Serial.flush();
+    initTouch();
+    Serial.println("[INIT] Touch OK");
+    Serial.flush();
 
-    Serial.println("[DISPLAY] Inicializando LVGL...");
-    lv_init();
-    lvgl_port_init(lcd_handle, tp_handle);
-    Serial.println("[DISPLAY] LVGL inicializado");
+    Serial.println("[INIT] Iniciando LVGL...");
+    Serial.flush();
+    initLVGL();
+    Serial.println("[INIT] LVGL OK");
+    Serial.flush();
 
     // ========================================================================
     // Decidir: Wizard o operación normal
@@ -228,8 +240,19 @@ void setup() {
 // Loop principal
 // ============================================================================
 
+static unsigned long lastLvglTick = 0;
+
 void loop() {
     unsigned long now = millis();
+
+    // ========================================================================
+    // LVGL tick (must be called before lv_timer_handler)
+    // ========================================================================
+    uint32_t elapsed = now - lastLvglTick;
+    if (elapsed > 0) {
+        lv_tick_inc(elapsed);
+        lastLvglTick = now;
+    }
 
     // ========================================================================
     // Procesar LVGL (siempre)

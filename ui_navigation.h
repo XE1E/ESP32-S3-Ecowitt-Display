@@ -14,6 +14,10 @@
 #include <lvgl.h>
 #include "config.h"
 
+// Forward declarations
+void createHistoryScreen();
+void createSettingsScreen();
+
 // ============================================================================
 // Pantallas disponibles
 // ============================================================================
@@ -249,7 +253,7 @@ void createHistoryScreen() {
     lv_chart_set_point_count(chart_temp, 24);
     lv_chart_set_range(chart_temp, LV_CHART_AXIS_PRIMARY_Y, 10, 40);
     lv_obj_set_style_line_width(chart_temp, 2, LV_PART_ITEMS);
-    lv_obj_set_style_size(chart_temp, 4, 4, LV_PART_INDICATOR);
+    lv_obj_set_style_size(chart_temp, 4, LV_PART_INDICATOR);
     ser_temp = lv_chart_add_series(chart_temp, lv_color_hex(0xFF6B6B), LV_CHART_AXIS_PRIMARY_Y);
 
     // Gráfica de humedad
@@ -271,7 +275,7 @@ void createHistoryScreen() {
     lv_chart_set_point_count(chart_humidity, 24);
     lv_chart_set_range(chart_humidity, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
     lv_obj_set_style_line_width(chart_humidity, 2, LV_PART_ITEMS);
-    lv_obj_set_style_size(chart_humidity, 4, 4, LV_PART_INDICATOR);
+    lv_obj_set_style_size(chart_humidity, 4, LV_PART_INDICATOR);
     ser_humidity = lv_chart_add_series(chart_humidity, lv_color_hex(0x2196F3), LV_CHART_AXIS_PRIMARY_Y);
 
     // Gráfica de presión
@@ -293,7 +297,7 @@ void createHistoryScreen() {
     lv_chart_set_point_count(chart_pressure, 24);
     lv_chart_set_range(chart_pressure, LV_CHART_AXIS_PRIMARY_Y, 990, 1040);
     lv_obj_set_style_line_width(chart_pressure, 2, LV_PART_ITEMS);
-    lv_obj_set_style_size(chart_pressure, 4, 4, LV_PART_INDICATOR);
+    lv_obj_set_style_size(chart_pressure, 4, LV_PART_INDICATOR);
     ser_pressure = lv_chart_add_series(chart_pressure, lv_color_hex(0x4CAF50), LV_CHART_AXIS_PRIMARY_Y);
 
     // Panel de estadísticas

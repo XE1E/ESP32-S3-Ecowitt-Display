@@ -1,9 +1,9 @@
 /**
- * ui_wizard.h - Wizard de configuración inicial
+ * ui_wizard.h - Wizard de configuracion inicial
  *
  * Se muestra cuando:
- * - Primera ejecución (no hay WiFi guardado)
- * - Usuario solicita reconfiguración
+ * - Primera ejecucion (no hay WiFi guardado)
+ * - Usuario solicita reconfiguracion
  */
 
 #ifndef UI_WIZARD_H
@@ -14,6 +14,17 @@
 #include <WiFi.h>
 #include <Preferences.h>
 #include "config.h"
+
+// Forward declarations
+void showWelcomeStep();
+void showWifiScanStep();
+void showPasswordStep();
+void showServerUrlStep();
+void showConnectingStep();
+void showSuccessStep();
+void showFailedStep(const char *reason);
+void saveConfiguration();
+void closeWizard(bool success);
 
 // ============================================================================
 // Estados del Wizard
@@ -112,37 +123,37 @@ void showWelcomeStep() {
 
     // Logo/Icono
     lv_obj_t *icon = lv_label_create(wizard_content);
-    lv_label_set_text(icon, "🌤️");
+    lv_label_set_text(icon, LV_SYMBOL_HOME);
     lv_obj_set_style_text_font(icon, &lv_font_montserrat_48, 0);
     lv_obj_align(icon, LV_ALIGN_TOP_MID, 0, 20);
 
-    // Título
+    // Titulo
     lv_obj_t *title = lv_label_create(wizard_content);
     lv_label_set_text(title, "Ecowitt Display");
     lv_obj_set_style_text_font(title, &lv_font_montserrat_28, 0);
     lv_obj_set_style_text_color(title, lv_color_hex(0x2C2C2C), 0);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 90);
 
-    // Subtítulo
+    // Subtitulo
     lv_obj_t *subtitle = lv_label_create(wizard_content);
-    lv_label_set_text(subtitle, "Configuración inicial");
+    lv_label_set_text(subtitle, "Configuracion inicial");
     lv_obj_set_style_text_font(subtitle, &lv_font_montserrat_18, 0);
     lv_obj_set_style_text_color(subtitle, lv_color_hex(0x666666), 0);
     lv_obj_align(subtitle, LV_ALIGN_TOP_MID, 0, 130);
 
-    // Descripción
+    // Descripcion
     lv_obj_t *desc = lv_label_create(wizard_content);
     lv_label_set_text(desc,
-        "Este asistente te ayudará a configurar:\n\n"
-        "  • Conexión WiFi\n"
+        "Este asistente te ayudara a configurar:\n\n"
+        "  • Conexion WiFi\n"
         "  • URL del servidor Ecowitt\n"
-        "  • Preferencias de visualización");
+        "  • Preferencias de visualizacion");
     lv_obj_set_style_text_font(desc, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(desc, lv_color_hex(0x666666), 0);
     lv_obj_set_width(desc, 400);
     lv_obj_align(desc, LV_ALIGN_CENTER, 0, 20);
 
-    // Botón comenzar
+    // Boton comenzar
     lv_obj_t *btn_start = lv_btn_create(wizard_content);
     lv_obj_set_size(btn_start, 200, 50);
     lv_obj_align(btn_start, LV_ALIGN_BOTTOM_MID, 0, -20);
@@ -187,8 +198,8 @@ void updateWifiList() {
 
         // Signal strength icon
         lv_obj_t *lbl_signal = lv_label_create(btn);
-        const char *signal_icon = scannedRSSI[i] > -50 ? "📶" :
-                                  scannedRSSI[i] > -70 ? "📶" : "📶";
+        const char *signal_icon = scannedRSSI[i] > -50 ? LV_SYMBOL_WIFI :
+                                  scannedRSSI[i] > -70 ? LV_SYMBOL_WIFI : LV_SYMBOL_WIFI;
         char signal_txt[32];
         snprintf(signal_txt, sizeof(signal_txt), "%s %d dBm", signal_icon, scannedRSSI[i]);
         lv_label_set_text(lbl_signal, signal_txt);
@@ -224,7 +235,7 @@ void scanWifiNetworks() {
         scannedRSSI[i] = WiFi.RSSI(i);
     }
 
-    // Ordenar por señal
+    // Ordenar por senal
     for (int i = 0; i < networkCount - 1; i++) {
         for (int j = i + 1; j < networkCount; j++) {
             if (scannedRSSI[j] > scannedRSSI[i]) {
@@ -256,7 +267,7 @@ void showWifiScanStep() {
     clearWizardContent();
     wizardStep = WIZARD_WIFI_SCAN;
 
-    // Título
+    // Titulo
     lv_obj_t *title = lv_label_create(wizard_content);
     lv_label_set_text(title, LV_SYMBOL_WIFI " Selecciona tu red WiFi");
     lv_obj_set_style_text_font(title, &lv_font_montserrat_24, 0);
@@ -289,7 +300,7 @@ void showWifiScanStep() {
     }, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *lbl_back = lv_label_create(btn_back);
-    lv_label_set_text(lbl_back, LV_SYMBOL_LEFT " Atrás");
+    lv_label_set_text(lbl_back, LV_SYMBOL_LEFT " Atras");
     lv_obj_center(lbl_back);
 
     lv_obj_t *btn_refresh = lv_btn_create(wizard_content);
@@ -312,7 +323,7 @@ void showWifiScanStep() {
 }
 
 // ============================================================================
-// Step 3: Contraseña WiFi
+// Step 3: Contrasena WiFi
 // ============================================================================
 
 static lv_obj_t *ta_password = nullptr;
@@ -321,9 +332,9 @@ void showPasswordStep() {
     clearWizardContent();
     wizardStep = WIZARD_WIFI_PASSWORD;
 
-    // Título
+    // Titulo
     lv_obj_t *title = lv_label_create(wizard_content);
-    lv_label_set_text(title, LV_SYMBOL_WIFI " Contraseña WiFi");
+    lv_label_set_text(title, LV_SYMBOL_WIFI " Contrasena WiFi");
     lv_obj_set_style_text_font(title, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(title, lv_color_hex(0x2C2C2C), 0);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
@@ -337,18 +348,18 @@ void showPasswordStep() {
     lv_obj_set_style_text_color(lbl_network, lv_color_hex(0x666666), 0);
     lv_obj_align(lbl_network, LV_ALIGN_TOP_MID, 0, 50);
 
-    // Campo de contraseña
+    // Campo de contrasena
     ta_password = lv_textarea_create(wizard_content);
     lv_textarea_set_one_line(ta_password, true);
     lv_textarea_set_password_mode(ta_password, true);
-    lv_textarea_set_placeholder_text(ta_password, "Ingresa la contraseña");
+    lv_textarea_set_placeholder_text(ta_password, "Ingresa la contrasena");
     lv_obj_set_size(ta_password, 400, 50);
     lv_obj_align(ta_password, LV_ALIGN_TOP_MID, 0, 90);
     lv_obj_set_style_text_font(ta_password, &lv_font_montserrat_18, 0);
 
-    // Checkbox mostrar contraseña
+    // Checkbox mostrar contrasena
     lv_obj_t *cb_show = lv_checkbox_create(wizard_content);
-    lv_checkbox_set_text(cb_show, "Mostrar contraseña");
+    lv_checkbox_set_text(cb_show, "Mostrar contrasena");
     lv_obj_align(cb_show, LV_ALIGN_TOP_MID, 0, 150);
     lv_obj_add_event_cb(cb_show, [](lv_event_t *e) {
         lv_obj_t *cb = lv_event_get_target(e);
@@ -372,7 +383,7 @@ void showPasswordStep() {
     }, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *lbl_back = lv_label_create(btn_back);
-    lv_label_set_text(lbl_back, LV_SYMBOL_LEFT " Atrás");
+    lv_label_set_text(lbl_back, LV_SYMBOL_LEFT " Atras");
     lv_obj_center(lbl_back);
 
     lv_obj_t *btn_next = lv_btn_create(wizard_content);
@@ -403,14 +414,14 @@ void showServerUrlStep() {
     clearWizardContent();
     wizardStep = WIZARD_SERVER_URL;
 
-    // Título
+    // Titulo
     lv_obj_t *title = lv_label_create(wizard_content);
-    lv_label_set_text(title, "🌐 Servidor Ecowitt");
+    lv_label_set_text(title, LV_SYMBOL_SETTINGS " Servidor Ecowitt");
     lv_obj_set_style_text_font(title, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(title, lv_color_hex(0x2C2C2C), 0);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 10);
 
-    // Descripción
+    // Descripcion
     lv_obj_t *desc = lv_label_create(wizard_content);
     lv_label_set_text(desc, "Ingresa la URL de tu servidor Ecowitt\n(ej: https://clima.example.com)");
     lv_obj_set_style_text_font(desc, &lv_font_montserrat_14, 0);
@@ -443,7 +454,7 @@ void showServerUrlStep() {
     }, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *lbl_back = lv_label_create(btn_back);
-    lv_label_set_text(lbl_back, LV_SYMBOL_LEFT " Atrás");
+    lv_label_set_text(lbl_back, LV_SYMBOL_LEFT " Atras");
     lv_obj_center(lbl_back);
 
     lv_obj_t *btn_connect = lv_btn_create(wizard_content);
@@ -563,7 +574,7 @@ void showConnectingStep() {
     lv_obj_set_style_text_align(info, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(info, LV_ALIGN_CENTER, 0, 110);
 
-    // Iniciar conexión
+    // Iniciar conexion
     connect_timer = lv_timer_create(attemptConnection, 500, NULL);
 
     Serial.println("[WIZARD] Step: Connecting");
@@ -579,13 +590,13 @@ void showSuccessStep() {
 
     // Icono
     lv_obj_t *icon = lv_label_create(wizard_content);
-    lv_label_set_text(icon, "✅");
+    lv_label_set_text(icon, LV_SYMBOL_OK);
     lv_obj_set_style_text_font(icon, &lv_font_montserrat_48, 0);
     lv_obj_align(icon, LV_ALIGN_CENTER, 0, -60);
 
-    // Título
+    // Titulo
     lv_obj_t *title = lv_label_create(wizard_content);
-    lv_label_set_text(title, "¡Configuración completa!");
+    lv_label_set_text(title, "¡Configuracion completa!");
     lv_obj_set_style_text_font(title, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(title, lv_color_hex(0x4CAF50), 0);
     lv_obj_align(title, LV_ALIGN_CENTER, 0, 10);
@@ -605,7 +616,7 @@ void showSuccessStep() {
     lv_obj_set_style_text_align(info, LV_TEXT_ALIGN_CENTER, 0);
     lv_obj_align(info, LV_ALIGN_CENTER, 0, 80);
 
-    // Botón continuar
+    // Boton continuar
     lv_obj_t *btn_done = lv_btn_create(wizard_content);
     lv_obj_set_size(btn_done, 200, 50);
     lv_obj_align(btn_done, LV_ALIGN_BOTTOM_MID, 0, -20);
@@ -633,25 +644,25 @@ void showFailedStep(const char *reason) {
 
     // Icono
     lv_obj_t *icon = lv_label_create(wizard_content);
-    lv_label_set_text(icon, "❌");
+    lv_label_set_text(icon, LV_SYMBOL_CLOSE);
     lv_obj_set_style_text_font(icon, &lv_font_montserrat_48, 0);
     lv_obj_align(icon, LV_ALIGN_CENTER, 0, -60);
 
-    // Título
+    // Titulo
     lv_obj_t *title = lv_label_create(wizard_content);
-    lv_label_set_text(title, "Error de conexión");
+    lv_label_set_text(title, "Error de conexion");
     lv_obj_set_style_text_font(title, &lv_font_montserrat_24, 0);
     lv_obj_set_style_text_color(title, lv_color_hex(0xF44336), 0);
     lv_obj_align(title, LV_ALIGN_CENTER, 0, 10);
 
-    // Razón
+    // Razon
     lv_obj_t *lbl_reason = lv_label_create(wizard_content);
     lv_label_set_text(lbl_reason, reason);
     lv_obj_set_style_text_font(lbl_reason, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_color(lbl_reason, lv_color_hex(0x666666), 0);
     lv_obj_align(lbl_reason, LV_ALIGN_CENTER, 0, 60);
 
-    // Botón reintentar
+    // Boton reintentar
     lv_obj_t *btn_retry = lv_btn_create(wizard_content);
     lv_obj_set_size(btn_retry, 180, 50);
     lv_obj_align(btn_retry, LV_ALIGN_BOTTOM_MID, 0, -20);
@@ -670,7 +681,7 @@ void showFailedStep(const char *reason) {
 }
 
 // ============================================================================
-// Guardar configuración en NVS
+// Guardar configuracion en NVS
 // ============================================================================
 
 void saveConfiguration() {
@@ -688,7 +699,7 @@ void saveConfiguration() {
 }
 
 // ============================================================================
-// Cargar configuración de NVS
+// Cargar configuracion de NVS
 // ============================================================================
 
 bool loadConfiguration(char *ssid, size_t ssid_len,
