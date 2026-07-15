@@ -2,20 +2,26 @@
  * weather_icons.h - Definiciones de iconos del clima
  *
  * Fuente: erikflowers/weather-icons
- * Los iconos requieren la fuente weather_icons_XX convertida con lv_font_conv
- *
- * Mientras no tengamos la fuente, usamos texto como placeholder
+ * Fuentes convertidas: weather_icons_32.c, weather_icons_48.c
  */
 
 #ifndef WEATHER_ICONS_H
 #define WEATHER_ICONS_H
 
+#include <lvgl.h>
+
 // ============================================================================
-// Verificar si tenemos la fuente de iconos
+// Declaracion de fuentes convertidas
 // ============================================================================
 
-// Descomentar cuando la fuente este lista
-// #define WEATHER_ICONS_FONT_AVAILABLE
+LV_FONT_DECLARE(weather_icons_32);
+LV_FONT_DECLARE(weather_icons_48);
+
+// ============================================================================
+// Habilitar iconos de clima (comentar para usar placeholders de texto)
+// ============================================================================
+
+#define WEATHER_ICONS_FONT_AVAILABLE
 
 #ifdef WEATHER_ICONS_FONT_AVAILABLE
 
