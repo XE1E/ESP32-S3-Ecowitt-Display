@@ -35,8 +35,9 @@ struct UserPreferences {
 
     // Display
     uint8_t brightness;     // 0-255
-    bool auto_brightness;   // Ajuste automático
+    bool auto_brightness;   // Ajuste automatico
     uint16_t sleep_timeout; // Segundos antes de dim (0 = desactivado)
+    bool dark_mode;         // Tema oscuro
 
     // Estación remota
     bool remote_enabled;
@@ -69,6 +70,7 @@ void setDefaultPreferences() {
     userPrefs.brightness = 200;
     userPrefs.auto_brightness = false;
     userPrefs.sleep_timeout = 0;
+    userPrefs.dark_mode = false;
 
     userPrefs.remote_enabled = false;
     userPrefs.remote_interval = 60;
@@ -104,6 +106,7 @@ bool loadPreferences() {
     userPrefs.brightness = nvs.getUChar("brightness", 200);
     userPrefs.auto_brightness = nvs.getBool("auto_bright", false);
     userPrefs.sleep_timeout = nvs.getUShort("sleep_time", 0);
+    userPrefs.dark_mode = nvs.getBool("dark_mode", false);
 
     // Estación remota
     userPrefs.remote_enabled = nvs.getBool("remote_en", false);
@@ -149,6 +152,7 @@ void savePreferences() {
     nvs.putUChar("brightness", userPrefs.brightness);
     nvs.putBool("auto_bright", userPrefs.auto_brightness);
     nvs.putUShort("sleep_time", userPrefs.sleep_timeout);
+    nvs.putBool("dark_mode", userPrefs.dark_mode);
 
     // Estación remota
     nvs.putBool("remote_en", userPrefs.remote_enabled);

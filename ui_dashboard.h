@@ -11,9 +11,10 @@
 #include <lvgl.h>
 #include <time.h>
 #include "config.h"
+#include "preferences_manager.h"
 
 // ============================================================================
-// Sistema de Temas
+// Sistema de Temas Mejorado
 // ============================================================================
 
 struct ThemeColors {
@@ -23,47 +24,84 @@ struct ThemeColors {
     lv_color_t text_primary;
     lv_color_t text_secondary;
     lv_color_t text_muted;
+    lv_color_t header_bg;
+    lv_color_t accent;
 };
 
-// Tema claro
+// Tema claro - colores suaves y profesionales
 static const ThemeColors THEME_LIGHT = {
-    .bg = LV_COLOR_MAKE(0xF5, 0xF5, 0xF5),
+    .bg = LV_COLOR_MAKE(0xF0, 0xF2, 0xF5),
     .card = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
     .border = LV_COLOR_MAKE(0xE0, 0xE0, 0xE0),
-    .text_primary = LV_COLOR_MAKE(0x2C, 0x2C, 0x2C),
-    .text_secondary = LV_COLOR_MAKE(0x66, 0x66, 0x66),
-    .text_muted = LV_COLOR_MAKE(0x99, 0x99, 0x99),
+    .text_primary = LV_COLOR_MAKE(0x1A, 0x1A, 0x1A),
+    .text_secondary = LV_COLOR_MAKE(0x55, 0x55, 0x55),
+    .text_muted = LV_COLOR_MAKE(0x88, 0x88, 0x88),
+    .header_bg = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
+    .accent = LV_COLOR_MAKE(0x21, 0x96, 0xF3),
 };
 
-// Tema oscuro
+// Tema oscuro - estilo servidor (0f1a2a base)
 static const ThemeColors THEME_DARK = {
-    .bg = LV_COLOR_MAKE(0x1A, 0x1A, 0x2E),
-    .card = LV_COLOR_MAKE(0x25, 0x25, 0x3A),
-    .border = LV_COLOR_MAKE(0x3A, 0x3A, 0x5A),
-    .text_primary = LV_COLOR_MAKE(0xEE, 0xEE, 0xEE),
-    .text_secondary = LV_COLOR_MAKE(0xAA, 0xAA, 0xAA),
-    .text_muted = LV_COLOR_MAKE(0x77, 0x77, 0x77),
+    .bg = LV_COLOR_MAKE(0x0B, 0x11, 0x20),        // Body gradient base
+    .card = LV_COLOR_MAKE(0x1A, 0x25, 0x35),      // Card approx 5% white
+    .border = LV_COLOR_MAKE(0x2A, 0x35, 0x45),    // Border
+    .text_primary = LV_COLOR_MAKE(0xE8, 0xED, 0xF5),   // --ink
+    .text_secondary = LV_COLOR_MAKE(0xCB, 0xD5, 0xE1), // slate-300
+    .text_muted = LV_COLOR_MAKE(0x84, 0x96, 0xA6),     // --muted
+    .header_bg = LV_COLOR_MAKE(0x0A, 0x0F, 0x1C),      // Appbar
+    .accent = LV_COLOR_MAKE(0x60, 0xA5, 0xFA),         // blue-400
 };
 
-// Estado actual del tema
+// Estado actual del tema (se carga de NVS)
 static bool darkMode = false;
 static bool useCelsius = true;
 
-// Colores que obtienen del tema actual
+// Cargar preferencias de UI desde NVS
+void loadUIPreferences() {
+    UserPreferences* prefs = getPreferences();
+    darkMode = prefs->dark_mode;
+    useCelsius = prefs->use_celsius;
+}
+
+// Guardar preferencias de UI a NVS
+void saveUIPreferences() {
+    UserPreferences* prefs = getPreferences();
+    prefs->dark_mode = darkMode;
+    prefs->use_celsius = useCelsius;
+    savePreferences();
+}
+
+// Colores dinamicos segun tema actual
 #define COLOR_BG            (darkMode ? THEME_DARK.bg : THEME_LIGHT.bg)
 #define COLOR_CARD          (darkMode ? THEME_DARK.card : THEME_LIGHT.card)
 #define COLOR_BORDER        (darkMode ? THEME_DARK.border : THEME_LIGHT.border)
 #define COLOR_TEXT_PRIMARY  (darkMode ? THEME_DARK.text_primary : THEME_LIGHT.text_primary)
 #define COLOR_TEXT_SECONDARY (darkMode ? THEME_DARK.text_secondary : THEME_LIGHT.text_secondary)
 #define COLOR_TEXT_MUTED    (darkMode ? THEME_DARK.text_muted : THEME_LIGHT.text_muted)
+#define COLOR_HEADER        (darkMode ? THEME_DARK.header_bg : THEME_LIGHT.header_bg)
+#define COLOR_ACCENT        (darkMode ? THEME_DARK.accent : THEME_LIGHT.accent)
 
-// Colores fijos (no cambian con tema)
-#define COLOR_ACCENT        lv_color_hex(0x2196F3)
-#define COLOR_GREEN         lv_color_hex(0x4CAF50)
-#define COLOR_YELLOW        lv_color_hex(0xFF9800)
-#define COLOR_RED           lv_color_hex(0xF44336)
-#define COLOR_TEMP_HOT      lv_color_hex(0xFF6B6B)
-#define COLOR_TEMP_COLD     lv_color_hex(0x64B5F6)
+// Colores de estado - estilo servidor
+#define COLOR_GREEN         lv_color_hex(0x6EE7B7)  // emerald-300
+#define COLOR_YELLOW        lv_color_hex(0xFDE047)  // yellow-300
+#define COLOR_RED           lv_color_hex(0xF87171)  // red-400
+#define COLOR_CYAN          lv_color_hex(0x67E8F9)  // cyan-300 (humidity)
+#define COLOR_VIOLET        lv_color_hex(0xC4B5FD)  // violet-300 (pressure)
+#define COLOR_TEMP_HOT      lv_color_hex(0xFDBA74)  // orange-300
+#define COLOR_TEMP_COLD     lv_color_hex(0x7DD3FC)  // sky-300
+#define COLOR_WIND          lv_color_hex(0x6EE7B7)  // emerald-300
+#define COLOR_RAIN          lv_color_hex(0x93C5FD)  // blue-300
+#define COLOR_SUN           lv_color_hex(0xFFB800)  // weather-sun
+#define COLOR_UV            lv_color_hex(0xFCD34D)  // amber-300
+
+// Iconos usando simbolos LVGL
+#define ICON_WIFI       LV_SYMBOL_WIFI
+#define ICON_SETTINGS   LV_SYMBOL_SETTINGS
+#define ICON_WARNING    LV_SYMBOL_WARNING
+#define ICON_OK         LV_SYMBOL_OK
+#define ICON_REFRESH    LV_SYMBOL_REFRESH
+#define ICON_UP         LV_SYMBOL_UP
+#define ICON_DOWN       LV_SYMBOL_DOWN
 
 // Conversion de temperatura
 float toDisplayTemp(float celsius) {
@@ -254,7 +292,7 @@ void createHeader(lv_obj_t *parent) {
     lbl_server_status = lv_label_create(header);
     lv_label_set_text(lbl_server_status, "API");
     lv_obj_set_style_text_color(lbl_server_status, COLOR_GREEN, 0);
-    lv_obj_set_style_text_font(lbl_server_status, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_server_status, &lv_font_montserrat_14, 0);
     lv_obj_align_to(lbl_server_status, lbl_wifi_rssi, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
 
     // Status text
@@ -292,12 +330,12 @@ void createHeader(lv_obj_t *parent) {
         lv_obj_t *btn = lv_event_get_target(e);
         lv_obj_t *lbl = lv_obj_get_child(btn, 0);
         lv_label_set_text(lbl, useCelsius ? "C" : "F");
-        // Actualizar valores mostrados
+        saveUIPreferences();  // Guardar en NVS
         extern void updateDashboardWeather();
         updateDashboardWeather();
     }, LV_EVENT_CLICKED, NULL);
 
-    // Theme toggle button (sun/moon)
+    // Theme toggle button
     btn_theme = lv_btn_create(header);
     lv_obj_set_size(btn_theme, 40, 30);
     lv_obj_align(btn_theme, LV_ALIGN_RIGHT_MID, -90, 0);
@@ -306,12 +344,16 @@ void createHeader(lv_obj_t *parent) {
     lv_obj_set_style_shadow_width(btn_theme, 0, 0);
 
     lv_obj_t *theme_icon = lv_label_create(btn_theme);
-    lv_label_set_text(theme_icon, LV_SYMBOL_IMAGE);  // Using image as sun substitute
+    lv_label_set_text(theme_icon, darkMode ? LV_SYMBOL_EYE_OPEN : LV_SYMBOL_EYE_CLOSE);
     lv_obj_set_style_text_color(theme_icon, COLOR_TEXT_SECONDARY, 0);
     lv_obj_center(theme_icon);
 
     lv_obj_add_event_cb(btn_theme, [](lv_event_t *e) {
         darkMode = !darkMode;
+        lv_obj_t *btn = lv_event_get_target(e);
+        lv_obj_t *icon = lv_obj_get_child(btn, 0);
+        lv_label_set_text(icon, darkMode ? LV_SYMBOL_EYE_OPEN : LV_SYMBOL_EYE_CLOSE);
+        saveUIPreferences();  // Guardar en NVS
         refreshDashboardTheme();
     }, LV_EVENT_CLICKED, NULL);
 
@@ -409,7 +451,7 @@ void createPressurePanel(lv_obj_t *parent, int x, int y) {
     lv_obj_t *title = lv_label_create(panel_pressure);
     lv_label_set_text(title, "PRESION");
     lv_obj_set_style_text_color(title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
     lv_obj_align(title, LV_ALIGN_TOP_LEFT, 0, 0);
 
     // Valor
@@ -437,7 +479,7 @@ void createPressurePanel(lv_obj_t *parent, int x, int y) {
     lbl_pressure_diff = lv_label_create(panel_pressure);
     lv_label_set_text(lbl_pressure_diff, "+1.5 (3h)");
     lv_obj_set_style_text_color(lbl_pressure_diff, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(lbl_pressure_diff, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_pressure_diff, &lv_font_montserrat_14, 0);
     lv_obj_align(lbl_pressure_diff, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 }
 
@@ -482,42 +524,48 @@ void createAlertsPanel(lv_obj_t *parent, int x, int y, int w) {
 // ============================================================================
 
 void createTemperaturePanel(lv_obj_t *parent, int x, int y) {
-    panel_temp = createCard(parent, x, y, 190, 185);
+    panel_temp = createCard(parent, x, y, 200, 140);
 
-    // Título
+    // Indicador de color + Titulo
+    lv_obj_t *indicator = lv_label_create(panel_temp);
+    lv_label_set_text(indicator, "|");
+    lv_obj_set_style_text_color(indicator, COLOR_CYAN, 0);
+    lv_obj_set_style_text_font(indicator, &lv_font_montserrat_14, 0);
+    lv_obj_align(indicator, LV_ALIGN_TOP_LEFT, 0, 0);
+
     lv_obj_t *title = lv_label_create(panel_temp);
-    lv_label_set_text(title, "EXTERIOR");
+    lv_label_set_text(title, "TEMPERATURA");
     lv_obj_set_style_text_color(title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
-    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
+    lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
 
-    // Temperatura principal
+    // Valor principal grande
     lbl_temp_value = lv_label_create(panel_temp);
-    lv_label_set_text(lbl_temp_value, "21.5°");
-    lv_obj_set_style_text_color(lbl_temp_value, COLOR_TEXT_PRIMARY, 0);
+    lv_label_set_text(lbl_temp_value, "21.5");
+    lv_obj_set_style_text_color(lbl_temp_value, COLOR_CYAN, 0);
     lv_obj_set_style_text_font(lbl_temp_value, &lv_font_montserrat_48, 0);
-    lv_obj_align(lbl_temp_value, LV_ALIGN_TOP_MID, 0, 25);
+    lv_obj_align(lbl_temp_value, LV_ALIGN_LEFT_MID, 0, 5);
 
-    // Sensacion térmica
+    // Subtitulo
     lbl_temp_feels = lv_label_create(panel_temp);
-    lv_label_set_text(lbl_temp_feels, "Sensacion 20.2°");
-    lv_obj_set_style_text_color(lbl_temp_feels, COLOR_TEXT_SECONDARY, 0);
+    lv_label_set_text(lbl_temp_feels, "promedio C");
+    lv_obj_set_style_text_color(lbl_temp_feels, COLOR_TEXT_MUTED, 0);
     lv_obj_set_style_text_font(lbl_temp_feels, &lv_font_montserrat_14, 0);
-    lv_obj_align(lbl_temp_feels, LV_ALIGN_CENTER, 0, 25);
+    lv_obj_align(lbl_temp_feels, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
-    // Máxima
+    // Max (derecha arriba)
     lbl_temp_max = lv_label_create(panel_temp);
-    lv_label_set_text(lbl_temp_max, "▲ 26°");
+    lv_label_set_text(lbl_temp_max, LV_SYMBOL_UP " 26.0C");
     lv_obj_set_style_text_color(lbl_temp_max, COLOR_TEMP_HOT, 0);
     lv_obj_set_style_text_font(lbl_temp_max, &lv_font_montserrat_16, 0);
-    lv_obj_align(lbl_temp_max, LV_ALIGN_BOTTOM_LEFT, 10, -5);
+    lv_obj_align(lbl_temp_max, LV_ALIGN_TOP_RIGHT, 0, 20);
 
-    // Mínima
+    // Min (derecha abajo)
     lbl_temp_min = lv_label_create(panel_temp);
-    lv_label_set_text(lbl_temp_min, "▼ 18°");
+    lv_label_set_text(lbl_temp_min, LV_SYMBOL_DOWN " 18.0C");
     lv_obj_set_style_text_color(lbl_temp_min, COLOR_TEMP_COLD, 0);
     lv_obj_set_style_text_font(lbl_temp_min, &lv_font_montserrat_16, 0);
-    lv_obj_align(lbl_temp_min, LV_ALIGN_BOTTOM_RIGHT, -10, -5);
+    lv_obj_align(lbl_temp_min, LV_ALIGN_BOTTOM_RIGHT, 0, -20);
 }
 
 // ============================================================================
@@ -525,43 +573,49 @@ void createTemperaturePanel(lv_obj_t *parent, int x, int y) {
 // ============================================================================
 
 void createHumidityPanel(lv_obj_t *parent, int x, int y) {
-    panel_humidity = createCard(parent, x, y, 150, 185);
+    panel_humidity = createCard(parent, x, y, 200, 140);
 
-    // Título
+    // Indicador + Titulo
+    lv_obj_t *indicator = lv_label_create(panel_humidity);
+    lv_label_set_text(indicator, "o");
+    lv_obj_set_style_text_color(indicator, COLOR_CYAN, 0);
+    lv_obj_set_style_text_font(indicator, &lv_font_montserrat_14, 0);
+    lv_obj_align(indicator, LV_ALIGN_TOP_LEFT, 0, 0);
+
     lv_obj_t *title = lv_label_create(panel_humidity);
     lv_label_set_text(title, "HUMEDAD");
     lv_obj_set_style_text_color(title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
-    lv_obj_align(title, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
+    lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
 
-    // Arco de humedad
-    arc_humidity = lv_arc_create(panel_humidity);
-    lv_obj_set_size(arc_humidity, 110, 110);
-    lv_arc_set_rotation(arc_humidity, 135);
-    lv_arc_set_bg_angles(arc_humidity, 0, 270);
-    lv_arc_set_range(arc_humidity, 0, 100);
-    lv_arc_set_value(arc_humidity, 65);
-    lv_obj_remove_style(arc_humidity, NULL, LV_PART_KNOB);
-    lv_obj_clear_flag(arc_humidity, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_set_style_arc_width(arc_humidity, 12, LV_PART_MAIN);
-    lv_obj_set_style_arc_width(arc_humidity, 12, LV_PART_INDICATOR);
-    lv_obj_set_style_arc_color(arc_humidity, COLOR_BORDER, LV_PART_MAIN);
-    lv_obj_set_style_arc_color(arc_humidity, COLOR_ACCENT, LV_PART_INDICATOR);
-    lv_obj_align(arc_humidity, LV_ALIGN_CENTER, 0, 10);
-
-    // Valor en el centro del arco
+    // Valor grande
     lbl_humidity_value = lv_label_create(panel_humidity);
-    lv_label_set_text(lbl_humidity_value, "65%");
-    lv_obj_set_style_text_color(lbl_humidity_value, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(lbl_humidity_value, &lv_font_montserrat_28, 0);
-    lv_obj_align(lbl_humidity_value, LV_ALIGN_CENTER, 0, 5);
+    lv_label_set_text(lbl_humidity_value, "65.0");
+    lv_obj_set_style_text_color(lbl_humidity_value, COLOR_CYAN, 0);
+    lv_obj_set_style_text_font(lbl_humidity_value, &lv_font_montserrat_48, 0);
+    lv_obj_align(lbl_humidity_value, LV_ALIGN_LEFT_MID, 0, 5);
 
-    // Label
+    // Subtitulo
     lbl_humidity_label = lv_label_create(panel_humidity);
-    lv_label_set_text(lbl_humidity_label, "Exterior");
+    lv_label_set_text(lbl_humidity_label, "promedio %");
     lv_obj_set_style_text_color(lbl_humidity_label, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(lbl_humidity_label, &lv_font_montserrat_12, 0);
-    lv_obj_align(lbl_humidity_label, LV_ALIGN_BOTTOM_MID, 0, -5);
+    lv_obj_set_style_text_font(lbl_humidity_label, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_humidity_label, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+
+    // Max/Min (reutilizamos arc_humidity como referencia aunque no es arco)
+    arc_humidity = NULL;  // No usamos arco
+
+    lv_obj_t *hum_max = lv_label_create(panel_humidity);
+    lv_label_set_text(hum_max, LV_SYMBOL_UP " 95%");
+    lv_obj_set_style_text_color(hum_max, COLOR_TEMP_HOT, 0);
+    lv_obj_set_style_text_font(hum_max, &lv_font_montserrat_16, 0);
+    lv_obj_align(hum_max, LV_ALIGN_TOP_RIGHT, 0, 20);
+
+    lv_obj_t *hum_min = lv_label_create(panel_humidity);
+    lv_label_set_text(hum_min, LV_SYMBOL_DOWN " 48%");
+    lv_obj_set_style_text_color(hum_min, COLOR_TEMP_COLD, 0);
+    lv_obj_set_style_text_font(hum_min, &lv_font_montserrat_16, 0);
+    lv_obj_align(hum_min, LV_ALIGN_BOTTOM_RIGHT, 0, -20);
 }
 
 // ============================================================================
@@ -631,7 +685,7 @@ void createForecastPanel(lv_obj_t *parent, int x, int y) {
     lv_obj_t *title = lv_label_create(panel_forecast);
     lv_label_set_text(title, "PRONOSTICO");
     lv_obj_set_style_text_color(title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
     lv_obj_align(title, LV_ALIGN_TOP_LEFT, 0, 0);
 
     // 3 tarjetas de días
@@ -654,7 +708,7 @@ void createForecastPanel(lv_obj_t *parent, int x, int y) {
         lbl_fc_day[i] = lv_label_create(forecast_cards[i]);
         lv_label_set_text(lbl_fc_day[i], days[i]);
         lv_obj_set_style_text_color(lbl_fc_day[i], COLOR_TEXT_SECONDARY, 0);
-        lv_obj_set_style_text_font(lbl_fc_day[i], &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(lbl_fc_day[i], &lv_font_montserrat_14, 0);
         lv_obj_align(lbl_fc_day[i], LV_ALIGN_TOP_MID, 0, 0);
 
         // Icono
@@ -674,7 +728,7 @@ void createForecastPanel(lv_obj_t *parent, int x, int y) {
         lbl_fc_rain[i] = lv_label_create(forecast_cards[i]);
         lv_label_set_text(lbl_fc_rain[i], rain[i]);
         lv_obj_set_style_text_color(lbl_fc_rain[i], COLOR_TEMP_COLD, 0);
-        lv_obj_set_style_text_font(lbl_fc_rain[i], &lv_font_montserrat_12, 0);
+        lv_obj_set_style_text_font(lbl_fc_rain[i], &lv_font_montserrat_14, 0);
         lv_obj_align(lbl_fc_rain[i], LV_ALIGN_BOTTOM_MID, 0, 0);
     }
 }
@@ -690,7 +744,7 @@ void createIndoorPanel(lv_obj_t *parent, int x, int y, int w) {
     lbl_indoor_title = lv_label_create(panel_indoor);
     lv_label_set_text(lbl_indoor_title, "* INTERIOR");
     lv_obj_set_style_text_color(lbl_indoor_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(lbl_indoor_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_font(lbl_indoor_title, &lv_font_montserrat_14, 0);
     lv_obj_align(lbl_indoor_title, LV_ALIGN_TOP_LEFT, 0, 0);
 
     // Temperatura interior
