@@ -81,9 +81,12 @@ struct WeatherData {
     float pressure_rel;
     float wind_speed;
     float wind_gust;
+    float wind_dir;           // Degrees (0-360)
     char wind_dir_cardinal[4];
     float rain_rate;
     float rain_day;
+    float rain_week;
+    float rain_month;
     float uv;
     float solar_radiation;
     float feels_like;
@@ -121,10 +124,12 @@ struct AlertData {
 
 // Datos del almanaque
 struct AlmanacData {
-    char sunrise[6];     // "07:15"
-    char sunset[6];      // "19:42"
+    char sunrise[10];    // "06:06 a.m."
+    char sunset[10];     // "07:18 p.m."
     char moon_phase[32];
     int moon_illumination;
+    int daylight_hours;
+    int daylight_minutes;
     bool valid;
 };
 
