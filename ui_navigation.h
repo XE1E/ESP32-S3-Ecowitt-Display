@@ -219,7 +219,7 @@ void createHistoryScreen() {
     lv_obj_clear_flag(card_temp, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *lbl_temp = lv_label_create(card_temp);
-    lv_label_set_text(lbl_temp, "🌡️ TEMPERATURA (°C)");
+    lv_label_set_text(lbl_temp, "TEMPERATURA (°C)");
     lv_obj_set_style_text_font(lbl_temp, &lv_font_montserrat_14, 0);
     lv_obj_align(lbl_temp, LV_ALIGN_TOP_LEFT, 5, 5);
 
@@ -241,7 +241,7 @@ void createHistoryScreen() {
     lv_obj_clear_flag(card_hum, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *lbl_hum = lv_label_create(card_hum);
-    lv_label_set_text(lbl_hum, "💧 HUMEDAD (%)");
+    lv_label_set_text(lbl_hum, "HUMEDAD (%)");
     lv_obj_set_style_text_font(lbl_hum, &lv_font_montserrat_14, 0);
     lv_obj_align(lbl_hum, LV_ALIGN_TOP_LEFT, 5, 5);
 
@@ -263,7 +263,7 @@ void createHistoryScreen() {
     lv_obj_clear_flag(card_pres, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *lbl_pres = lv_label_create(card_pres);
-    lv_label_set_text(lbl_pres, "📊 PRESIÓN (hPa)");
+    lv_label_set_text(lbl_pres, "PRESION (hPa)");
     lv_obj_set_style_text_font(lbl_pres, &lv_font_montserrat_14, 0);
     lv_obj_align(lbl_pres, LV_ALIGN_TOP_LEFT, 5, 5);
 
@@ -285,7 +285,7 @@ void createHistoryScreen() {
     lv_obj_clear_flag(card_stats, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *lbl_stats = lv_label_create(card_stats);
-    lv_label_set_text(lbl_stats, "📈 ESTADÍSTICAS DEL DÍA");
+    lv_label_set_text(lbl_stats, "ESTADISTICAS DEL DIA");
     lv_obj_set_style_text_font(lbl_stats, &lv_font_montserrat_14, 0);
     lv_obj_align(lbl_stats, LV_ALIGN_TOP_LEFT, 5, 5);
 
@@ -319,7 +319,7 @@ void createSettingsScreen() {
 
     // Título
     lv_obj_t *title = lv_label_create(scr_settings);
-    lv_label_set_text(title, LV_SYMBOL_SETTINGS " CONFIGURACIÓN");
+    lv_label_set_text(title, LV_SYMBOL_SETTINGS " CONFIGURACION");
     lv_obj_set_style_text_color(title, lv_color_hex(0x2C2C2C), 0);
     lv_obj_set_style_text_font(title, &lv_font_montserrat_24, 0);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 15);
@@ -439,7 +439,7 @@ void createSettingsScreen() {
     lv_obj_clear_flag(card_conn, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *lbl_conn = lv_label_create(card_conn);
-    lv_label_set_text(lbl_conn, "CONEXIÓN");
+    lv_label_set_text(lbl_conn, "CONEXION");
     lv_obj_set_style_text_color(lbl_conn, lv_color_hex(0x666666), 0);
     lv_obj_set_style_text_font(lbl_conn, &lv_font_montserrat_12, 0);
     lv_obj_align(lbl_conn, LV_ALIGN_TOP_LEFT, 0, 0);
@@ -457,13 +457,13 @@ void createSettingsScreen() {
 
     lv_obj_t *lbl_api = lv_label_create(card_conn);
     lv_label_set_text(lbl_api, g_status.api_ok ?
-        "🟢 Servidor: Conectado" : "🔴 Servidor: Sin conexión");
+        "Servidor: OK" : "Servidor: ERROR");
     lv_obj_set_style_text_font(lbl_api, &lv_font_montserrat_16, 0);
     lv_obj_align(lbl_api, LV_ALIGN_TOP_LEFT, 0, 60);
 
     lv_obj_t *lbl_bme = lv_label_create(card_conn);
     lv_label_set_text(lbl_bme, g_status.bme280_ok ?
-        "🟢 BME280: OK" : "⚪ BME280: No detectado");
+        "BME280: OK" : "BME280: --");
     lv_obj_set_style_text_font(lbl_bme, &lv_font_montserrat_16, 0);
     lv_obj_align(lbl_bme, LV_ALIGN_TOP_LEFT, 0, 90);
 
@@ -496,7 +496,7 @@ void createSettingsScreen() {
         "Uptime: %lu min\n"
         "Heap libre: %.1f KB\n"
         "PSRAM libre: %.1f MB\n"
-        "Versión: 1.0.0",
+        "Version: 1.0.0",
         millis() / 60000,
         ESP.getFreeHeap() / 1024.0,
         ESP.getFreePsram() / 1024.0 / 1024.0);
@@ -609,23 +609,23 @@ lv_obj_t* modalTemperatureContent(lv_obj_t *parent) {
     lv_obj_set_style_text_font(lbl_temp, &lv_font_montserrat_48, 0);
     lv_obj_align(lbl_temp, LV_ALIGN_TOP_LEFT, 20, 50);
 
-    // Sensación térmica
+    // Sensacion termica
     lv_obj_t *lbl_feels = lv_label_create(parent);
-    snprintf(buf, sizeof(buf), "Sensación térmica: %.1f°C", g_weather.feels_like);
+    snprintf(buf, sizeof(buf), "Sensacion termica: %.1f°C", g_weather.feels_like);
     lv_label_set_text(lbl_feels, buf);
     lv_obj_set_style_text_font(lbl_feels, &lv_font_montserrat_18, 0);
     lv_obj_align(lbl_feels, LV_ALIGN_TOP_LEFT, 20, 120);
 
-    // Punto de rocío
+    // Punto de rocio
     lv_obj_t *lbl_dew = lv_label_create(parent);
-    snprintf(buf, sizeof(buf), "Punto de rocío: %.1f°C", g_weather.dewpoint);
+    snprintf(buf, sizeof(buf), "Punto de rocio: %.1f°C", g_weather.dewpoint);
     lv_label_set_text(lbl_dew, buf);
     lv_obj_set_style_text_font(lbl_dew, &lv_font_montserrat_18, 0);
     lv_obj_align(lbl_dew, LV_ALIGN_TOP_LEFT, 20, 150);
 
-    // Máxima/Mínima
+    // Maxima/Minima
     lv_obj_t *lbl_range = lv_label_create(parent);
-    snprintf(buf, sizeof(buf), "Hoy: Máx %.1f°C  /  Mín %.1f°C",
+    snprintf(buf, sizeof(buf), "Hoy: Max %.1f°C  /  Min %.1f°C",
              g_weather.temp_max, g_weather.temp_min);
     lv_label_set_text(lbl_range, buf);
     lv_obj_set_style_text_font(lbl_range, &lv_font_montserrat_18, 0);
@@ -656,7 +656,7 @@ lv_obj_t* modalTemperatureContent(lv_obj_t *parent) {
     }
 
     lv_obj_t *lbl_chart = lv_label_create(parent);
-    lv_label_set_text(lbl_chart, "Últimas 24 horas");
+    lv_label_set_text(lbl_chart, "Ultimas 24 horas");
     lv_obj_set_style_text_font(lbl_chart, &lv_font_montserrat_12, 0);
     lv_obj_set_style_text_color(lbl_chart, lv_color_hex(0x999999), 0);
     lv_obj_align(lbl_chart, LV_ALIGN_BOTTOM_RIGHT, -120, -10);
@@ -665,7 +665,7 @@ lv_obj_t* modalTemperatureContent(lv_obj_t *parent) {
 }
 
 void showTemperatureModal() {
-    showModal("🌡️ TEMPERATURA", modalTemperatureContent);
+    showModal("TEMPERATURA", modalTemperatureContent);
 }
 
 // ============================================================================
