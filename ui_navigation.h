@@ -155,44 +155,21 @@ void updatePageIndicator() {
 // ============================================================================
 
 static void gestureEventHandler(lv_event_t *e) {
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *obj = lv_event_get_target(e);
+    lv_dir_t dir = lv_indev_get_gesture_dir(lv_indev_get_act());
 
-    if (code == LV_EVENT_PRESSED) {
-        lv_indev_t *indev = lv_indev_get_act();
-        if (indev) {
-            lv_indev_get_point(indev, &gesture_start);
-            gesture_active = true;
-            gesture_start_time = lv_tick_get();
-        }
-    }
-    else if (code == LV_EVENT_RELEASED && gesture_active) {
-        lv_indev_t *indev = lv_indev_get_act();
-        if (indev) {
-            lv_point_t gesture_end;
-            lv_indev_get_point(indev, &gesture_end);
-
-            int32_t dx = gesture_end.x - gesture_start.x;
-            int32_t dy = gesture_end.y - gesture_start.y;
-            uint32_t elapsed = lv_tick_get() - gesture_start_time;
-
-            // Verificar si es swipe horizontal
-            if (elapsed < SWIPE_TIME_MAX && abs(dx) > SWIPE_THRESHOLD && abs(dx) > abs(dy) * 2) {
-                if (dx < 0) {
-                    navigateNext();  // Swipe izquierda → siguiente
-                } else {
-                    navigatePrev();  // Swipe derecha → anterior
-                }
-                updatePageIndicator();
-            }
-        }
-        gesture_active = false;
+    if (dir == LV_DIR_LEFT) {
+        navigateNext();
+        updatePageIndicator();
+    } else if (dir == LV_DIR_RIGHT) {
+        navigatePrev();
+        updatePageIndicator();
     }
 }
 
 void enableSwipeNavigation(lv_obj_t *screen) {
-    lv_obj_add_event_cb(screen, gestureEventHandler, LV_EVENT_PRESSED, NULL);
-    lv_obj_add_event_cb(screen, gestureEventHandler, LV_EVENT_RELEASED, NULL);
+    lv_obj_add_flag(screen, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_set_scroll_dir(screen, LV_DIR_NONE);  // Disable scroll, enable gesture
+    lv_obj_add_event_cb(screen, gestureEventHandler, LV_EVENT_GESTURE, NULL);
 }
 
 // ============================================================================
@@ -697,12 +674,21 @@ void showTemperatureModal() {
 
 void initNavigation() {
     extern lv_obj_t *scr_dashboard;
+    extern lv_obj_t *btn_settings;
 
     // Habilitar swipe en dashboard
     enableSwipeNavigation(scr_dashboard);
 
     // Crear indicador de página
     createPageIndicator(scr_dashboard);
+
+    // Settings button callback
+    if (btn_settings) {
+        lv_obj_add_event_cb(btn_settings, [](lv_event_t *e) {
+            navigateToScreen(SCREEN_SETTINGS);
+            updatePageIndicator();
+        }, LV_EVENT_CLICKED, NULL);
+    }
 
     Serial.println("[NAV] Sistema de navegación inicializado");
 }

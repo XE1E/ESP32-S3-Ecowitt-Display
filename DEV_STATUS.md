@@ -78,11 +78,11 @@ pixel_clock: 30MHz
    - Reset via GPIO directo (pines incorrectos)
    - Reset via CH422G IO1
 
-2. **Secuencia de reset probada**:
+2. **Secuencia de reset ANTERIOR (incorrecta)**:
    ```cpp
    pinMode(TOUCH_INT, OUTPUT);
    digitalWrite(TOUCH_INT, LOW);  // Select address 0x5D
-   ch422g_set_pin(1, false);      // RST LOW
+   ch422g_set_pin(1, false);      // RST LOW  <-- ERROR: INT debe ponerse LOW despues de RST LOW
    delay(100);
    ch422g_set_pin(1, true);       // RST HIGH
    delay(200);
@@ -90,10 +90,39 @@ pixel_clock: 30MHz
    delay(50);
    ```
 
-3. **Libreria GT911 Lite** - Instalada, no funciono
-   - `GT911_Lite ts; ts.begin(&Wire);`
+3. **Libreria GT911 Lite** - No funciono
+   - No soporta registros de 16 bits del GT911
+   - No permite configurar direccion I2C
 
 4. **I2C Scanner** - No se pudo verificar (Serial no muestra output)
+
+## Solucion Implementada (2026-07-14):
+
+### Nueva secuencia de reset (correcta segun Waveshare):
+```cpp
+// 1. RST LOW primero
+ch422g_set_pin(CH422G_TOUCH_RST_PIN, false);
+delay(10);
+
+// 2. INT LOW (selecciona direccion 0x5D)
+pinMode(TOUCH_INT, OUTPUT);
+digitalWrite(TOUCH_INT, LOW);
+delay(10);
+
+// 3. RST HIGH - controlador arranca
+ch422g_set_pin(CH422G_TOUCH_RST_PIN, true);
+delay(100);
+
+// 4. Liberar INT (como INPUT)
+pinMode(TOUCH_INT, INPUT);
+delay(100);
+```
+
+### Driver GT911 reescrito:
+- Comunicacion I2C directa con registros de 16 bits
+- Verifica ambas direcciones I2C (0x5D y 0x14)
+- Lee Product ID para confirmar comunicacion
+- Debug detallado en Serial
 
 ## Problemas Conocidos:
 

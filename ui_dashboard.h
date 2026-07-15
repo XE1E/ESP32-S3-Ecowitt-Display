@@ -51,7 +51,7 @@ static lv_obj_t *content_area = nullptr;
 static lv_obj_t *lbl_status_icon = nullptr;
 static lv_obj_t *lbl_status_text = nullptr;
 static lv_obj_t *lbl_wifi_rssi = nullptr;
-static lv_obj_t *btn_settings = nullptr;
+lv_obj_t *btn_settings = nullptr;
 static lv_obj_t *lbl_header_time = nullptr;
 
 // Panel Reloj
@@ -222,6 +222,9 @@ void createHeader(lv_obj_t *parent) {
     lv_label_set_text(settings_icon, LV_SYMBOL_SETTINGS);
     lv_obj_set_style_text_color(settings_icon, COLOR_TEXT_SECONDARY, 0);
     lv_obj_center(settings_icon);
+
+    // Settings button callback - will be set in initNavigation()
+    // (navigateToScreen not yet defined at this point)
 
     // Header time
     lbl_header_time = lv_label_create(header);

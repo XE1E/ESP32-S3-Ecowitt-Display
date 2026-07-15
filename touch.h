@@ -33,21 +33,23 @@ static lv_indev_drv_t indev_drv;
 // ============================================================================
 
 void lvgl_touch_cb(lv_indev_drv_t *drv, lv_indev_data_t *data) {
-    if (ts.read()) {
-        if (ts.isTouched) {
-            touch_x = ts.x;
-            touch_y = ts.y;
-            touch_pressed = true;
-            data->state = LV_INDEV_STATE_PRESSED;
-            data->point.x = touch_x;
-            data->point.y = touch_y;
-        } else {
-            touch_pressed = false;
-            data->state = LV_INDEV_STATE_RELEASED;
+    // INT pin LOW = active touch (GT911 signals valid touch)
+    if (digitalRead(TOUCH_INT) == LOW) {
+        if (ts.read() && ts.isTouched) {
+            if (ts.x >= 0 && ts.x < SCREEN_WIDTH && ts.y >= 0 && ts.y < SCREEN_HEIGHT) {
+                touch_x = ts.x;
+                touch_y = ts.y;
+                touch_pressed = true;
+                data->state = LV_INDEV_STATE_PRESSED;
+                data->point.x = touch_x;
+                data->point.y = touch_y;
+                return;
+            }
         }
-    } else {
-        data->state = LV_INDEV_STATE_RELEASED;
     }
+
+    touch_pressed = false;
+    data->state = LV_INDEV_STATE_RELEASED;
 }
 
 // ============================================================================
@@ -72,14 +74,22 @@ void initTouch() {
     // Initialize GT911 library
     ts.begin(&Wire);
 
-    Serial.println("[TOUCH] GT911 initialized");
+    // Test if GT911 responds
+    if (ts.read()) {
+        Serial.println("[TOUCH] GT911 responding OK");
+    } else {
+        Serial.println("[TOUCH] WARNING: GT911 not responding");
+    }
 
-    // Register LVGL input device
+    Serial.println("[TOUCH] GT911 initialized");
+}
+
+// Register touch with LVGL (call AFTER initLVGL)
+void registerTouchInput() {
     lv_indev_drv_init(&indev_drv);
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = lvgl_touch_cb;
     lv_indev_drv_register(&indev_drv);
-
     Serial.println("[TOUCH] LVGL input registered");
 }
 

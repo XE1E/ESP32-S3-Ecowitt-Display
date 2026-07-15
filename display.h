@@ -128,7 +128,7 @@ void initDisplay() {
         45,     // vsync_pulse_width
         13,     // vsync_back_porch
         1,      // pclk_active_neg
-        30000000 // prefer_speed (30MHz - original EXAMPLE_LCD_PIXEL_CLOCK_HZ)
+        15000000 // prefer_speed (15MHz - stable)
     );
 
     // Create display
@@ -137,7 +137,7 @@ void initDisplay() {
         SCREEN_HEIGHT,
         rgbpanel,
         0,      // rotation
-        true    // auto_flush
+        false   // auto_flush OFF - LVGL controls flushing
     );
 
     // Initialize
@@ -165,8 +165,8 @@ void initLVGL() {
 
     lv_init();
 
-    // Allocate display buffers in PSRAM
-    size_t buf_size = SCREEN_WIDTH * 100;  // 100 lines buffer
+    // Allocate display buffers in PSRAM (larger = smoother updates)
+    size_t buf_size = SCREEN_WIDTH * 200;  // 200 lines buffer
     buf1 = (lv_color_t *)ps_malloc(buf_size * sizeof(lv_color_t));
     buf2 = (lv_color_t *)ps_malloc(buf_size * sizeof(lv_color_t));
 

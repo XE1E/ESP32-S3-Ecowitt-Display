@@ -17,15 +17,15 @@ ESP32-S3 weather display for Ecowitt weather stations. 7" color touchscreen (102
 
 ### Pin Configuration
 
-| Function | GPIO |
-|----------|------|
-| Touch SDA | 19 |
-| Touch SCL | 20 |
-| Touch RST | 38 |
-| Touch INT | 18 |
-| BME280 SDA | 19 (shared) |
-| BME280 SCL | 20 (shared) |
-| LCD Backlight | 2 |
+| Function | GPIO | Notes |
+|----------|------|-------|
+| I2C SDA | 8 | Shared bus (CH422G, GT911, BME280) |
+| I2C SCL | 9 | Shared bus |
+| Touch INT | 4 | LOW = touch active |
+| Touch RST | CH422G IO1 | Via I2C expander |
+| LCD Backlight | CH422G IO2 | Via I2C expander (PWM) |
+
+**IMPORTANT:** I2C is on GPIO 8/9, NOT 19/20 as some docs suggest!
 
 ## Architecture
 
@@ -38,15 +38,37 @@ This display connects to a self-hosted Ecowitt weather server (e.g., clima.xe1e.
 - Full control over data and features
 - Can show alerts, comparisons, etc.
 
-### Key Endpoints
+### Key Endpoints (ecowitt-weather-server-xe1e)
 
 ```
-GET /api/current      - Current weather data
-GET /api/stats/daily  - Day statistics (max/min/totals)
-GET /api/compare      - Comparison vs yesterday
-GET /api/alerts       - Active alerts
-GET /api/forecast     - Weather forecast (Open-Meteo proxy)
-GET /api/almanac      - Sun, moon, planets
+# Core Data
+GET /api/current              - Current weather readings
+GET /api/history              - Historical data (time range)
+GET /api/stats/daily          - Day min/max/avg statistics
+GET /api/compare              - Comparison vs yesterday
+
+# Climatology
+GET /api/climate/daily        - Daily summaries
+GET /api/climate/records      - All-time and monthly records
+GET /api/wind/rose            - Wind direction distribution
+
+# External Data
+GET /api/alerts               - Active weather alerts
+GET /api/forecast/local       - Barometric forecast
+GET /api/almanac              - Sun, moon, planets
+GET /api/airquality           - AQI from WAQI
+GET /api/metar?station=MMMX   - Aviation weather
+GET /api/satellite            - NASA satellite imagery
+
+# Multi-Station
+GET /api/stations             - List all stations
+GET /api/current?station=X    - Data from station X
+
+# Admin (requires Bearer token)
+POST /api/admin/login         - Get auth token
+GET  /api/admin/settings      - Server configuration
+POST /api/admin/settings      - Update configuration
+GET  /api/admin/status        - System status
 ```
 
 ### Main Flow
@@ -153,8 +175,20 @@ loop()  → lv_timer_handler() → Every 60s: fetch API → Update UI
 
 | Problem | Solution |
 |---------|----------|
-| Black screen + reboot loop | Use LVGL_PORT_AVOID_TEAR_MODE = 1 |
-| Touch not working | Check I2C pins 19/20 |
-| Out of memory | Reduce chart points, check PSRAM enabled |
-| API timeout | Check WiFi, increase timeout |
-| Font not found | Enable font in lv_conf.h |
+| Display tearing/jumping | Reduce pixel clock to 14-15MHz in display.h |
+| Touch not working | I2C on GPIO 8/9 (not 19/20!), check CH422G init |
+| Ghost touches | Filter with INT pin (GPIO 4), only read when LOW |
+| Swipe not working | Use LV_EVENT_GESTURE, add LV_OBJ_FLAG_CLICKABLE |
+| Accents not showing | Enable extended fonts in lv_conf.h |
+| Black screen + reboot | Use auto_flush=false in Arduino_RGB_Display |
+| Out of memory | Use PSRAM buffers (ps_malloc), reduce chart points |
+| Serial not visible | Use UART mode (CDCOnBoot=default) not USB CDC |
+
+## Display Stability
+
+```c
+// display.h - Stable settings
+Arduino_RGB_Display(..., false);  // auto_flush = false
+prefer_speed = 15000000;          // 15MHz pixel clock (not 30MHz!)
+buf_size = SCREEN_WIDTH * 200;    // 200 lines buffer in PSRAM
+```

@@ -38,15 +38,20 @@
 #define LCD_B4    40
 #define LCD_BL    -1  // Backlight manejado por CH422G
 
-// Touch (GT911)
-#define TOUCH_SDA     19
-#define TOUCH_SCL     20
+// I2C Bus (shared by CH422G, GT911, BME280)
+// IMPORTANT: Pins 8/9, NOT 19/20!
+#define I2C_SDA       8
+#define I2C_SCL       9
+
+// Touch (GT911) - uses shared I2C
+#define TOUCH_SDA     I2C_SDA
+#define TOUCH_SCL     I2C_SCL
 #define TOUCH_INT     4
 // TOUCH_RST is controlled via CH422G IO1, not GPIO
 
-// BME280 (comparte I2C con touch)
-#define BME280_SDA    19
-#define BME280_SCL    20
+// BME280 (shares I2C bus)
+#define BME280_SDA    I2C_SDA
+#define BME280_SCL    I2C_SCL
 
 // ============================================================================
 // Resolución del display

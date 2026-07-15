@@ -221,6 +221,9 @@ void setup() {
     Serial.println("[INIT] LVGL OK");
     Serial.flush();
 
+    // Register touch input AFTER LVGL is initialized
+    registerTouchInput();
+
     // ========================================================================
     // Decidir: Wizard o operación normal
     // ========================================================================
