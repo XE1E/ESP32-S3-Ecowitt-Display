@@ -387,32 +387,144 @@ void connectWiFi() {
 // Actualizar datos meteorológicos del servidor
 // ============================================================================
 
+// ============================================================================
+// Simulador de datos (para pruebas sin conexión al servidor)
+// ============================================================================
+
+void simulateWeatherData() {
+    Serial.println("[SIM] Generando datos simulados...");
+
+    // Valores base con variación basada en tiempo
+    float base_temp = 22.0 + sin(millis() / 60000.0) * 5.0;  // Oscila ±5°C
+    float base_humidity = 55.0 + cos(millis() / 90000.0) * 20.0;  // Oscila ±20%
+
+    // === Principal (WS69) ===
+    g_weather.temp_outdoor = base_temp + random(-20, 20) / 10.0;
+    g_weather.humidity_outdoor = constrain(base_humidity + random(-5, 5), 20, 100);
+    g_weather.pressure_rel = 1013.0 + random(-50, 50) / 10.0;
+    g_weather.wind_speed = random(0, 250) / 10.0;
+    g_weather.wind_gust = g_weather.wind_speed + random(0, 100) / 10.0;
+    g_weather.wind_dir = random(0, 360);
+    const char* cardinals[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE",
+                               "S","SSO","SO","OSO","O","ONO","NO","NNO"};
+    int idx = ((int)(g_weather.wind_dir + 11) / 22) % 16;
+    strlcpy(g_weather.wind_dir_cardinal, cardinals[idx], sizeof(g_weather.wind_dir_cardinal));
+    g_weather.rain_rate = random(0, 30) / 10.0;
+    g_weather.rain_day = random(0, 100) / 10.0;
+    g_weather.uv = random(0, 110) / 10.0;
+    g_weather.solar_radiation = random(0, 1000);
+    g_weather.feels_like = g_weather.temp_outdoor - (g_weather.wind_speed / 10.0);
+    g_weather.dewpoint = g_weather.temp_outdoor - ((100 - g_weather.humidity_outdoor) / 5.0);
+    g_weather.temp_max = g_weather.temp_outdoor + random(20, 50) / 10.0;
+    g_weather.temp_min = g_weather.temp_outdoor - random(20, 50) / 10.0;
+    g_weather.valid = true;
+
+    Serial.printf("[SIM] Principal: %.1f°C, %.0f%%, %.1f hPa, Viento: %.1f km/h %s\n",
+                  g_weather.temp_outdoor, g_weather.humidity_outdoor,
+                  g_weather.pressure_rel, g_weather.wind_speed, g_weather.wind_dir_cardinal);
+
+    // === Local (WS2910 - consola interior) ===
+    g_weather.temp_indoor = base_temp + 2.0 + random(-10, 10) / 10.0;
+    g_weather.humidity_indoor = constrain(base_humidity - 10 + random(-5, 5), 20, 80);
+
+    Serial.printf("[SIM] Local (WS2910): %.1f°C, %.0f%%\n",
+                  g_weather.temp_indoor, g_weather.humidity_indoor);
+
+    // === Jardín (WN31 ch1) ===
+    g_jardin.temperature = base_temp - 1.0 + random(-15, 15) / 10.0;
+    g_jardin.humidity = constrain(base_humidity + 5 + random(-5, 5), 30, 95);
+    g_jardin.battery = 100;  // OK
+    g_jardin.temp_max = g_jardin.temperature + 2.0;
+    g_jardin.temp_min = g_jardin.temperature - 2.0;
+    g_jardin.valid = true;
+
+    Serial.printf("[SIM] Jardin (WN31): %.1f°C, %.0f%%, Bat: %d%%\n",
+                  g_jardin.temperature, g_jardin.humidity, g_jardin.battery);
+
+    // === Remota (GW1100) ===
+    g_remoto.temperature = base_temp - 3.0 + random(-20, 20) / 10.0;
+    g_remoto.humidity = constrain(base_humidity + 10 + random(-5, 5), 40, 100);
+    g_remoto.pressure = g_weather.pressure_rel - 5.0 + random(-10, 10) / 10.0;
+    g_remoto.temp_max = g_remoto.temperature + 3.0;
+    g_remoto.temp_min = g_remoto.temperature - 3.0;
+    g_remoto.valid = true;
+
+    Serial.printf("[SIM] Remota (GW1100): %.1f°C, %.0f%%, %.0f hPa\n",
+                  g_remoto.temperature, g_remoto.humidity, g_remoto.pressure);
+
+    // === Portable (BME280 simulado) ===
+    g_local.temperature = base_temp + 3.0 + random(-10, 10) / 10.0;
+    g_local.humidity = constrain(base_humidity - 15 + random(-5, 5), 25, 70);
+    g_local.pressure = g_weather.pressure_rel;
+    g_local.temp_max = g_local.temperature + 1.0;
+    g_local.temp_min = g_local.temperature - 1.0;
+    g_local.battery = -1;
+    g_local.valid = true;
+
+    Serial.printf("[SIM] Portable: %.1f°C, %.0f%%, %.0f hPa\n",
+                  g_local.temperature, g_local.humidity, g_local.pressure);
+
+    // === Comparación vs ayer ===
+    g_compare.temp_diff = random(-30, 30) / 10.0;
+    g_compare.humidity_diff = random(-15, 15);
+    g_compare.pressure_diff = random(-20, 20) / 10.0;
+    g_compare.valid = true;
+
+    // === Alertas ===
+    g_alerts.has_alerts = (random(0, 10) > 7);  // 30% probabilidad
+    if (g_alerts.has_alerts) {
+        g_alerts.alert_count = 1;
+        strlcpy(g_alerts.alerts[0], "Lluvia ligera esperada", sizeof(g_alerts.alerts[0]));
+    } else {
+        g_alerts.alert_count = 0;
+    }
+
+    g_status.api_ok = true;  // Simulador siempre OK
+    g_status.last_update = millis();
+
+    // Actualizar UI
+    updateDashboardWeather();
+
+    Serial.println("[SIM] Datos simulados generados\n");
+}
+
 void updateWeatherData() {
+    // === MODO SIMULADOR ===
+    // Comentar la siguiente línea para usar datos reales del API
+    #define USE_SIMULATOR
+
+    #ifdef USE_SIMULATOR
+    simulateWeatherData();
+    return;
+    #endif
+
     Serial.println("[API] Actualizando datos...");
 
-    // Datos actuales
+    // ========================================================================
+    // Datos de la estación principal (WS69)
+    // ========================================================================
     if (ecowittApi.fetchCurrent(g_weather)) {
-        Serial.printf("[API] Exterior: %.1f°C, %.0f%%, %.1f hPa\n",
+        Serial.printf("[API] Principal: %.1f°C, %.0f%%, %.1f hPa\n",
                       g_weather.temp_outdoor,
                       g_weather.humidity_outdoor,
                       g_weather.pressure_rel);
-        Serial.printf("[API] Viento: %.1f km/h %s, Ráfaga: %.1f\n",
+        Serial.printf("[API] Viento: %.1f km/h %s, Rafaga: %.1f\n",
                       g_weather.wind_speed,
                       g_weather.wind_dir_cardinal,
                       g_weather.wind_gust);
-        Serial.printf("[API] Interior (consola): %.1f°C, %.0f%%\n",
+        Serial.printf("[API] Local (WS2910): %.1f°C, %.0f%%\n",
                       g_weather.temp_indoor,
                       g_weather.humidity_indoor);
         g_status.api_ok = true;
     } else {
-        Serial.println("[API] ERROR: No se pudieron obtener datos actuales");
+        Serial.println("[API] ERROR: No se pudieron obtener datos principales");
         g_status.api_ok = false;
-        return;  // No continuar si falla el principal
+        return;
     }
 
     // Estadísticas del día
     if (ecowittApi.fetchDailyStats(g_weather)) {
-        Serial.printf("[API] Hoy: Máx %.1f°C, Mín %.1f°C, Lluvia %.1f mm\n",
+        Serial.printf("[API] Hoy: Max %.1f°C, Min %.1f°C, Lluvia %.1f mm\n",
                       g_weather.temp_max,
                       g_weather.temp_min,
                       g_weather.rain_total);
@@ -429,7 +541,7 @@ void updateWeatherData() {
     // Alertas
     if (ecowittApi.fetchAlerts(g_alerts)) {
         if (g_alerts.has_alerts) {
-            Serial.printf("[API] ⚠️ %d ALERTAS ACTIVAS:\n", g_alerts.alert_count);
+            Serial.printf("[API] %d ALERTAS ACTIVAS:\n", g_alerts.alert_count);
             for (int i = 0; i < g_alerts.alert_count; i++) {
                 Serial.printf("       - %s\n", g_alerts.alerts[i]);
             }
@@ -437,6 +549,51 @@ void updateWeatherData() {
             Serial.println("[API] Sin alertas activas");
         }
     }
+
+    // ========================================================================
+    // Datos del sensor Jardín (WN31 canal 1)
+    // El WN31 envía datos como temperature_ch1, humidity_ch1, etc.
+    // ========================================================================
+    if (ecowittApi.fetchWN31Channel(1, g_jardin)) {
+        Serial.printf("[API] Jardin (WN31 ch1): %.1f°C, %.0f%%, Bat: %d%%\n",
+                      g_jardin.temperature,
+                      g_jardin.humidity,
+                      g_jardin.battery);
+    } else {
+        Serial.println("[API] Jardin (WN31): sin datos en canal 1");
+        g_jardin.valid = false;
+    }
+
+    // ========================================================================
+    // Datos del gateway remoto (GW1100)
+    // Estación secundaria accesible via ?station=gw1100
+    // ========================================================================
+    if (ecowittApi.fetchRemoteGateway("gw1100", g_remoto)) {
+        Serial.printf("[API] Remota (GW1100): %.1f°C, %.0f%%, %.0f hPa\n",
+                      g_remoto.temperature,
+                      g_remoto.humidity,
+                      g_remoto.pressure);
+    } else {
+        Serial.println("[API] Remota (GW1100): sin datos");
+        g_remoto.valid = false;
+    }
+
+    // ========================================================================
+    // Portable (BME280 local) - simulado si no hay sensor
+    // ========================================================================
+#ifndef BME280_ENABLED
+    // Simular datos del Portable basados en exterior con offset
+    g_local.temperature = g_weather.temp_outdoor + 2.5f;  // Interior más cálido
+    g_local.humidity = g_weather.humidity_outdoor - 10.0f;  // Menos humedad
+    g_local.pressure = g_weather.pressure_rel;
+    g_local.temp_max = g_local.temperature + 1.0f;
+    g_local.temp_min = g_local.temperature - 1.0f;
+    g_local.battery = -1;  // No aplica
+    g_local.valid = true;
+    g_local.last_read = millis();
+    Serial.printf("[SIM] Portable: %.1f°C, %.0f%%, %.0f hPa (simulado)\n",
+                  g_local.temperature, g_local.humidity, g_local.pressure);
+#endif
 
     g_status.last_update = millis();
 

@@ -1,6 +1,6 @@
 # TODO - ESP32-S3 Ecowitt Display
 
-## Estado: 2026-07-15
+## Estado: 2026-07-16
 
 ## Arquitectura de Pantallas (En Discusion)
 
@@ -91,10 +91,23 @@ Una pantalla por ubicacion con:
 - [ ] Navegacion tap card → detalle
 
 ### Conectar API
-- [ ] Endpoint multi-estacion (/api/current?station=X)
-- [ ] Datos HN31 (sensor remoto)
-- [ ] Datos GW110 (gateway remoto)
-- [ ] Estado del servidor
+- [x] Endpoint multi-estacion (/api/current?station=X)
+- [x] Datos WN31 canal 1 (Jardin) via temperature_ch1, humidity_ch1
+- [x] Datos GW1100 (gateway remoto) via ?station=gw1100
+- [x] Estado del servidor (banner inferior)
+- [x] Portable simulado cuando no hay BME280
+- [x] Simulador local para pruebas sin servidor
+- [x] Soporte HTTPS con WiFiClientSecure
+- [ ] Debuguear conexion HTTPS al servidor real (actualmente usa simulador)
+
+### Ajustes Visuales (2026-07-16)
+- [x] Header: fuentes mas grandes (titulo 24px, ciudad 18px)
+- [x] Portable en header sin encimar reloj
+- [x] Panel principal mas grande (190px)
+- [x] Sombras visibles en tarjetas (50% opacidad)
+- [x] Icono bateria pegado al valor %
+- [x] Presion mismo tamano que humedad (montserrat_40)
+- [x] Habilitada fuente montserrat_40 en lv_conf.h
 
 ### Funcionalidad
 - [ ] Long-press para acciones secundarias
@@ -134,4 +147,4 @@ Una pantalla por ubicacion con:
 - Fuentes disponibles: 12, 14, 16, 18, 20, 24, 28, 36, 40, 48
 
 ---
-*Actualizado: 2026-07-15*
+*Actualizado: 2026-07-16*
