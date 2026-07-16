@@ -1480,6 +1480,49 @@ void createDashboard() {
         &lbl_remoto_temp, &lbl_remoto_maxmin, &lbl_remoto_humidity,
         &lbl_remoto_pressure, "Presion:");
 
+    // === TAP HANDLERS para navegacion a pantallas de detalle ===
+    // Definiciones de pantallas (deben coincidir con ui_navigation.h)
+    #define NAV_SCREEN_DETAIL_PRINCIPAL 1
+    #define NAV_SCREEN_DETAIL_LOCAL     2
+    #define NAV_SCREEN_DETAIL_JARDIN    3
+    #define NAV_SCREEN_DETAIL_REMOTO    4
+
+    // Panel Principal -> Detalle Principal
+    if (panel_main) {
+        lv_obj_add_flag(panel_main, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(panel_main, [](lv_event_t *e) {
+            extern void navigateToScreenById(int);
+            navigateToScreenById(NAV_SCREEN_DETAIL_PRINCIPAL);
+        }, LV_EVENT_CLICKED, NULL);
+    }
+
+    // Card Local -> Detalle Local
+    if (card_local) {
+        lv_obj_add_flag(card_local, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(card_local, [](lv_event_t *e) {
+            extern void navigateToScreenById(int);
+            navigateToScreenById(NAV_SCREEN_DETAIL_LOCAL);
+        }, LV_EVENT_CLICKED, NULL);
+    }
+
+    // Card Jardin -> Detalle Jardin
+    if (card_jardin) {
+        lv_obj_add_flag(card_jardin, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(card_jardin, [](lv_event_t *e) {
+            extern void navigateToScreenById(int);
+            navigateToScreenById(NAV_SCREEN_DETAIL_JARDIN);
+        }, LV_EVENT_CLICKED, NULL);
+    }
+
+    // Card Remoto -> Detalle Remoto
+    if (card_remoto) {
+        lv_obj_add_flag(card_remoto, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(card_remoto, [](lv_event_t *e) {
+            extern void navigateToScreenById(int);
+            navigateToScreenById(NAV_SCREEN_DETAIL_REMOTO);
+        }, LV_EVENT_CLICKED, NULL);
+    }
+
     // Cargar pantalla
     lv_scr_load(scr_dashboard);
 
