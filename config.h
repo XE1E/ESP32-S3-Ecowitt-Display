@@ -69,8 +69,37 @@ struct LocalSensorData {
     float temperature;
     float humidity;
     float pressure;
+    float temp_max;
+    float temp_min;
+    int battery;              // 0-100 o -1 si no aplica
     bool valid;
     unsigned long last_read;
+};
+
+// Datos de sensor remoto generico (HN31, WN31, etc)
+struct RemoteSensorData {
+    char id[16];              // Identificador (ej: "HN31_jardin")
+    char label[24];           // Nombre visible (ej: "Jardin")
+    float temperature;
+    float humidity;
+    float temp_max;
+    float temp_min;
+    int battery;              // 0-100%
+    bool valid;
+    unsigned long last_update;
+};
+
+// Datos de gateway remoto (GW110, GW1100, etc)
+struct RemoteGatewayData {
+    char id[16];              // Identificador
+    char label[24];           // Nombre visible
+    float temperature;
+    float humidity;
+    float pressure;
+    float temp_max;
+    float temp_min;
+    bool valid;
+    unsigned long last_update;
 };
 
 // Datos meteorológicos actuales (del servidor)
@@ -101,6 +130,10 @@ struct WeatherData {
     float temp_min;
     float wind_max;
     float rain_total;
+
+    // Condicion derivada
+    char condition[16];       // "clear", "cloudy", "rain", "storm", "fog", "wind"
+    bool is_day;              // true si es de dia (para iconos)
 
     // Metadata
     char timestamp[32];
@@ -164,6 +197,8 @@ extern AlertData g_alerts;
 extern AlmanacData g_almanac;
 extern SystemStatus g_status;
 extern LocalSensorData g_local;
+extern RemoteSensorData g_jardin;      // HN31 en jardin
+extern RemoteGatewayData g_remoto;     // GW110 remoto
 extern RemoteStationConfig g_remote_config;
 
 #endif // CONFIG_H

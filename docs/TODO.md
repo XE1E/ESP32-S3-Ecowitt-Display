@@ -1,6 +1,39 @@
 # TODO - ESP32-S3 Ecowitt Display
 
-## Estado: 2026-07-14
+## Estado: 2026-07-15
+
+## Arquitectura de Pantallas (En Discusion)
+
+### Dashboard (Pantalla Principal)
+Vista resumen del sistema completo - un vistazo rapido a todo.
+
+| Ubicacion | Sensores | Datos |
+|-----------|----------|-------|
+| **Principal** | Estacion Ecowitt | Temp (max/min), Humedad, Presion, Viento + Rafagas |
+| **Local** | BME280 indoor | Temp (max/min), Humedad, Bateria |
+| **Jardin** | HN31 | Temp (max/min), Humedad, Bateria |
+| **Remoto** | GW110 | Temp (max/min), Humedad, Presion |
+
+Adicional:
+- Estado del servidor (online, ultima actualizacion)
+- Iconos del clima
+- Tap en card → abre pantalla de detalle
+
+### Pantallas de Detalle (4 pantallas)
+Una pantalla por ubicacion con:
+- Todas las lecturas disponibles del sensor/estacion
+- Historial (graficas)
+- Estadisticas (min/max/avg diario, records)
+- Estilo similar al servidor web
+
+**Principal** tendra mas info (UV, lluvia, solar, etc.)
+
+### Navegacion
+- Swipe horizontal entre pantallas
+- Tap en card de Dashboard → detalle de esa ubicacion
+- Boton/gesto para volver al Dashboard
+
+---
 
 ## Completado
 
@@ -32,16 +65,36 @@
 
 ## Pendiente Inmediato
 
-### UI/Display
-- [ ] Conectar datos reales del API a todos los paneles
-- [ ] Iconos del clima (texto o graficos)
-- [ ] Animaciones de iconos del clima
+### Iconos del Clima
+- [x] Definir set de iconos (Weather Icons font ya convertido)
+- [x] Mapear condiciones del API a iconos (derivado de sensores)
+- [x] Implementar en Dashboard
+- [x] Variantes dia/noche
+- [x] Iconos agregados: termometro, humedad, barometro, viento, direccion, lluvia, sol/luna
 
-### Pantallas Adicionales
-- [ ] Pantalla de Pronostico detallado (5-7 dias)
-- [ ] Pantalla de Graficas/Historia
-- [ ] Pantalla de Interior (BME280)
-- [ ] Pantalla de Configuracion mejorada
+### Rediseno Dashboard
+- [x] Layout 4 cards (Principal, Local, Jardin, Remoto)
+- [x] Card Principal: temp, humedad, presion, viento+rafagas, max/min
+- [x] Card Local: temp, humedad, bateria, max/min
+- [x] Card Jardin (HN31): temp, humedad, bateria, max/min
+- [x] Card Remoto (GW110): temp, humedad, presion, max/min
+- [x] Status del servidor
+- [x] Icono del clima en card Principal
+- [x] Estructuras de datos para sensores remotos (RemoteSensorData, RemoteGatewayData)
+
+### Pantallas de Detalle
+- [ ] Estructura base de pantalla detalle
+- [ ] Pantalla Detalle Principal (todos los sensores)
+- [ ] Pantalla Detalle Local
+- [ ] Pantalla Detalle Jardin
+- [ ] Pantalla Detalle Remoto
+- [ ] Navegacion tap card → detalle
+
+### Conectar API
+- [ ] Endpoint multi-estacion (/api/current?station=X)
+- [ ] Datos HN31 (sensor remoto)
+- [ ] Datos GW110 (gateway remoto)
+- [ ] Estado del servidor
 
 ### Funcionalidad
 - [ ] Long-press para acciones secundarias
@@ -51,13 +104,15 @@
 
 ## Fase 2 (Futuro)
 
-### Nuevas Pantallas
+### Pantallas Especializadas
+- [ ] Pantalla de Pronostico (5-7 dias)
 - [ ] Pantalla de Alertas (lista completa)
 - [ ] Pantalla de Almanaque (sol, luna, planetas)
 - [ ] Pantalla de Viento (rosa de vientos)
 - [ ] Pantalla de Lluvia (acumulados detallados)
 - [ ] Pantalla de Calidad del Aire
 - [ ] Pantalla de Admin del Servidor
+- [ ] Pantalla de Configuracion mejorada
 
 ### Widgets Avanzados
 - [ ] Graficas con lv_chart
@@ -79,4 +134,4 @@
 - Fuentes disponibles: 12, 14, 16, 18, 20, 24, 28, 36, 40, 48
 
 ---
-*Actualizado: 2026-07-14*
+*Actualizado: 2026-07-15*

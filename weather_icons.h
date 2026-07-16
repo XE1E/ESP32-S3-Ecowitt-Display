@@ -208,4 +208,85 @@ inline const char* getWindDirectionIcon(int degrees) {
     return WI_DIR_NW;
 }
 
+/**
+ * Derivar condicion del clima de datos de sensores
+ * Ecowitt no da condicion, la calculamos de lluvia, viento, UV, humedad
+ *
+ * @param rain_rate Tasa de lluvia mm/h
+ * @param wind_speed Velocidad del viento km/h
+ * @param humidity Humedad %
+ * @param uv Indice UV
+ * @param pressure_diff Cambio de presion en 3h
+ * @return String con la condicion ("clear", "rain", "storm", etc)
+ */
+inline const char* deriveWeatherCondition(float rain_rate, float wind_speed,
+                                          float humidity, float uv, float pressure_diff) {
+    // Tormenta: lluvia fuerte + viento
+    if (rain_rate > 5.0 && wind_speed > 30) {
+        return "storm";
+    }
+    // Lluvia
+    if (rain_rate > 0.5) {
+        return "rain";
+    }
+    // Llovizna
+    if (rain_rate > 0) {
+        return "drizzle";
+    }
+    // Viento fuerte
+    if (wind_speed > 40) {
+        return "wind";
+    }
+    // Niebla: humedad muy alta, sin lluvia, UV bajo
+    if (humidity > 95 && uv < 1) {
+        return "fog";
+    }
+    // Nublado: humedad alta, UV bajo
+    if (humidity > 80 && uv < 2) {
+        return "cloudy";
+    }
+    // Parcialmente nublado: UV moderado
+    if (uv >= 2 && uv < 5) {
+        return "partly";
+    }
+    // Despejado: UV alto
+    if (uv >= 5) {
+        return "clear";
+    }
+    // Default basado en humedad
+    if (humidity > 70) {
+        return "cloudy";
+    }
+    return "clear";
+}
+
+/**
+ * Determinar si es de dia basado en hora actual y almanaque
+ * @param current_hour Hora actual (0-23)
+ * @param sunrise_hour Hora de amanecer
+ * @param sunset_hour Hora de atardecer
+ * @return true si es de dia
+ */
+inline bool isDaytime(int current_hour, int sunrise_hour, int sunset_hour) {
+    return (current_hour >= sunrise_hour && current_hour < sunset_hour);
+}
+
+/**
+ * Obtener texto de condicion en espanol
+ */
+inline const char* getConditionText(const char* condition, bool is_day) {
+    if (!condition) return "Desconocido";
+
+    if (strstr(condition, "storm")) return "Tormenta";
+    if (strstr(condition, "rain")) return "Lluvia";
+    if (strstr(condition, "drizzle")) return "Llovizna";
+    if (strstr(condition, "wind")) return "Ventoso";
+    if (strstr(condition, "fog")) return "Niebla";
+    if (strstr(condition, "cloudy")) return "Nublado";
+    if (strstr(condition, "partly")) return is_day ? "Parcial nublado" : "Parcial nublado";
+    if (strstr(condition, "clear")) return is_day ? "Despejado" : "Despejado";
+
+    return "Variable";
+}
+
 #endif // WEATHER_ICONS_H

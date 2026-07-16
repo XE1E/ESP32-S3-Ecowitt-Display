@@ -4,6 +4,7 @@
  * Opts: --font weathericons-regular-webfont.ttf --range 0xF002,0xF008,0xF00D,0xF013,0xF014,0xF019,0xF01B,0xF01E,0xF02E,0xF050,0xF051,0xF052,0xF055,0xF079,0xF07A,0xF086,0xF095,0xF09C,0xF0A3,0xF0AA --size 48 --format lvgl --bpp 4 --no-compress -o weather_icons_48.c
  ******************************************************************************/
 
+#define LV_LVGL_H_INCLUDE_SIMPLE 1
 #ifdef LV_LVGL_H_INCLUDE_SIMPLE
 #include "lvgl.h"
 #else

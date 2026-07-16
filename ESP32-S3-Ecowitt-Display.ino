@@ -40,6 +40,8 @@ AlertData g_alerts = {0};
 AlmanacData g_almanac = {0};
 SystemStatus g_status = {0};
 LocalSensorData g_local = {0};
+RemoteSensorData g_jardin = {0};
+RemoteGatewayData g_remoto = {0};
 RemoteStationConfig g_remote_config = {0};
 
 EcowittAPI ecowittApi;

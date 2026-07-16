@@ -12,6 +12,7 @@
 #include <time.h>
 #include "config.h"
 #include "preferences_manager.h"
+#include "weather_icons.h"
 
 // ============================================================================
 // Sistema de Temas Mejorado
@@ -470,6 +471,13 @@ void createPressurePanel(lv_obj_t *parent, int x, int y) {
     lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
     lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
+    // Icono de barometro (Weather Icons)
+    lv_obj_t *baro_icon = lv_label_create(panel_pressure);
+    lv_label_set_text(baro_icon, WI_BAROMETER);
+    lv_obj_set_style_text_font(baro_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(baro_icon, COLOR_VIOLET, 0);
+    lv_obj_align(baro_icon, LV_ALIGN_TOP_RIGHT, -10, 30);
+
     // Valor GRANDE
     lbl_pressure_value = lv_label_create(panel_pressure);
     lv_label_set_text(lbl_pressure_value, "1012.5");
@@ -573,6 +581,13 @@ void createTemperaturePanel(lv_obj_t *parent, int x, int y) {
     lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
     lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
+    // Icono de termometro (Weather Icons)
+    lv_obj_t *thermo_icon = lv_label_create(panel_temp);
+    lv_label_set_text(thermo_icon, WI_THERMOMETER);
+    lv_obj_set_style_text_font(thermo_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(thermo_icon, COLOR_CYAN, 0);
+    lv_obj_align(thermo_icon, LV_ALIGN_TOP_RIGHT, -10, 30);
+
     // Temperatura GRANDE
     lbl_temp_value = lv_label_create(panel_temp);
     lv_label_set_text(lbl_temp_value, "21.5");
@@ -642,6 +657,13 @@ void createHumidityPanel(lv_obj_t *parent, int x, int y) {
     lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
     lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
+    // Icono de humedad (Weather Icons)
+    lv_obj_t *hum_icon = lv_label_create(panel_humidity);
+    lv_label_set_text(hum_icon, WI_HUMIDITY);
+    lv_obj_set_style_text_font(hum_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(hum_icon, COLOR_CYAN, 0);
+    lv_obj_align(hum_icon, LV_ALIGN_TOP_RIGHT, -10, 30);
+
     // Valor GRANDE
     lbl_humidity_value = lv_label_create(panel_humidity);
     lv_label_set_text(lbl_humidity_value, "65");
@@ -698,10 +720,11 @@ void createHumidityPanel(lv_obj_t *parent, int x, int y) {
 void createConditionsPanel(lv_obj_t *parent, int x, int y, int w) {
     panel_conditions = createCard(parent, x, y, w, 185);
 
-    // Icono condición
+    // Icono condición (usando Weather Icons font)
     lbl_condition_icon = lv_label_create(panel_conditions);
-    lv_label_set_text(lbl_condition_icon, "*");
-    lv_obj_set_style_text_font(lbl_condition_icon, &lv_font_montserrat_48, 0);
+    lv_label_set_text(lbl_condition_icon, WI_DAY_SUNNY);
+    lv_obj_set_style_text_font(lbl_condition_icon, &weather_icons_48, 0);
+    lv_obj_set_style_text_color(lbl_condition_icon, COLOR_SUN, 0);
     lv_obj_align(lbl_condition_icon, LV_ALIGN_TOP_LEFT, 10, 5);
 
     // Texto condición
@@ -909,6 +932,7 @@ lv_obj_t* createMiniCard(lv_obj_t *parent, int x, int y, int w, int h,
 
 static lv_obj_t *panel_wind_new = nullptr;
 static lv_obj_t *lbl_wind_speed = nullptr;
+static lv_obj_t *lbl_wind_dir_icon = nullptr;
 static lv_obj_t *lbl_wind_direction = nullptr;
 static lv_obj_t *lbl_wind_gust_new = nullptr;
 static lv_obj_t *lbl_wind_beaufort = nullptr;
@@ -929,6 +953,13 @@ void createWindPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
     lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
+    // Icono de viento (Weather Icons)
+    lv_obj_t *wind_icon = lv_label_create(panel_wind_new);
+    lv_label_set_text(wind_icon, WI_STRONG_WIND);
+    lv_obj_set_style_text_font(wind_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(wind_icon, COLOR_WIND, 0);
+    lv_obj_align(wind_icon, LV_ALIGN_TOP_MID, 0, 2);
+
     // Velocidad GRANDE
     lbl_wind_speed = lv_label_create(panel_wind_new);
     lv_label_set_text(lbl_wind_speed, "14.0");
@@ -942,18 +973,19 @@ void createWindPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     lv_obj_set_style_text_font(unit, &lv_font_montserrat_20, 0);
     lv_obj_align_to(unit, lbl_wind_speed, LV_ALIGN_OUT_RIGHT_BOTTOM, 8, -5);
 
-    // Direccion
-    lv_obj_t *dir_label = lv_label_create(panel_wind_new);
-    lv_label_set_text(dir_label, "Direccion:");
-    lv_obj_set_style_text_color(dir_label, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(dir_label, &lv_font_montserrat_16, 0);
-    lv_obj_align(dir_label, LV_ALIGN_TOP_LEFT, 10, 95);
+    // Icono de direccion (Weather Icons)
+    lbl_wind_dir_icon = lv_label_create(panel_wind_new);
+    lv_label_set_text(lbl_wind_dir_icon, WI_DIR_N);
+    lv_obj_set_style_text_font(lbl_wind_dir_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(lbl_wind_dir_icon, COLOR_WIND, 0);
+    lv_obj_align(lbl_wind_dir_icon, LV_ALIGN_TOP_RIGHT, -15, 35);
 
+    // Direccion texto
     lbl_wind_direction = lv_label_create(panel_wind_new);
     lv_label_set_text(lbl_wind_direction, "NO 303");
     lv_obj_set_style_text_color(lbl_wind_direction, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(lbl_wind_direction, &lv_font_montserrat_20, 0);
-    lv_obj_align_to(lbl_wind_direction, dir_label, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    lv_obj_set_style_text_font(lbl_wind_direction, &lv_font_montserrat_18, 0);
+    lv_obj_align(lbl_wind_direction, LV_ALIGN_TOP_RIGHT, -10, 75);
 
     // Rafaga
     lv_obj_t *gust_label = lv_label_create(panel_wind_new);
@@ -1001,6 +1033,13 @@ void createRainPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     lv_obj_set_style_text_color(title, COLOR_TEXT_MUTED, 0);
     lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
     lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+
+    // Icono de lluvia (Weather Icons)
+    lv_obj_t *rain_icon = lv_label_create(panel_rain_new);
+    lv_label_set_text(rain_icon, WI_UMBRELLA);
+    lv_obj_set_style_text_font(rain_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(rain_icon, COLOR_RAIN, 0);
+    lv_obj_align(rain_icon, LV_ALIGN_TOP_RIGHT, -10, 30);
 
     // Tasa actual GRANDE
     lbl_rain_rate = lv_label_create(panel_rain_new);
@@ -1056,6 +1095,7 @@ void createRainPanel(lv_obj_t *parent, int x, int y, int w, int h) {
 static lv_obj_t *panel_sun_moon = nullptr;
 static lv_obj_t *lbl_sunrise_val = nullptr;
 static lv_obj_t *lbl_sunset_val = nullptr;
+static lv_obj_t *lbl_moon_icon = nullptr;
 static lv_obj_t *lbl_moon_val = nullptr;
 static lv_obj_t *lbl_daylight = nullptr;
 
@@ -1075,44 +1115,44 @@ void createSunMoonPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
     lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
-    // Amanecer
-    lv_obj_t *sunrise_lbl = lv_label_create(panel_sun_moon);
-    lv_label_set_text(sunrise_lbl, "Amanecer:");
-    lv_obj_set_style_text_color(sunrise_lbl, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(sunrise_lbl, &lv_font_montserrat_16, 0);
-    lv_obj_align(sunrise_lbl, LV_ALIGN_TOP_LEFT, 10, 35);
+    // Amanecer - con icono
+    lv_obj_t *sunrise_icon = lv_label_create(panel_sun_moon);
+    lv_label_set_text(sunrise_icon, WI_SUNRISE);
+    lv_obj_set_style_text_font(sunrise_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(sunrise_icon, COLOR_SUN, 0);
+    lv_obj_align(sunrise_icon, LV_ALIGN_TOP_LEFT, 10, 30);
 
     lbl_sunrise_val = lv_label_create(panel_sun_moon);
     lv_label_set_text(lbl_sunrise_val, "06:06");
     lv_obj_set_style_text_color(lbl_sunrise_val, COLOR_SUN, 0);
     lv_obj_set_style_text_font(lbl_sunrise_val, &lv_font_montserrat_24, 0);
-    lv_obj_align_to(lbl_sunrise_val, sunrise_lbl, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    lv_obj_align_to(lbl_sunrise_val, sunrise_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
-    // Atardecer
-    lv_obj_t *sunset_lbl = lv_label_create(panel_sun_moon);
-    lv_label_set_text(sunset_lbl, "Atardecer:");
-    lv_obj_set_style_text_color(sunset_lbl, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(sunset_lbl, &lv_font_montserrat_16, 0);
-    lv_obj_align(sunset_lbl, LV_ALIGN_TOP_LEFT, 10, 70);
+    // Atardecer - con icono
+    lv_obj_t *sunset_icon = lv_label_create(panel_sun_moon);
+    lv_label_set_text(sunset_icon, WI_SUNSET);
+    lv_obj_set_style_text_font(sunset_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(sunset_icon, COLOR_TEMP_HOT, 0);
+    lv_obj_align(sunset_icon, LV_ALIGN_TOP_LEFT, 10, 65);
 
     lbl_sunset_val = lv_label_create(panel_sun_moon);
     lv_label_set_text(lbl_sunset_val, "19:18");
     lv_obj_set_style_text_color(lbl_sunset_val, COLOR_TEMP_HOT, 0);
     lv_obj_set_style_text_font(lbl_sunset_val, &lv_font_montserrat_24, 0);
-    lv_obj_align_to(lbl_sunset_val, sunset_lbl, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    lv_obj_align_to(lbl_sunset_val, sunset_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
-    // Luna
-    lv_obj_t *moon_lbl = lv_label_create(panel_sun_moon);
-    lv_label_set_text(moon_lbl, "Luna:");
-    lv_obj_set_style_text_color(moon_lbl, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(moon_lbl, &lv_font_montserrat_16, 0);
-    lv_obj_align(moon_lbl, LV_ALIGN_TOP_LEFT, 10, 105);
+    // Luna - Icono (Weather Icons)
+    lbl_moon_icon = lv_label_create(panel_sun_moon);
+    lv_label_set_text(lbl_moon_icon, WI_MOON_NEW);
+    lv_obj_set_style_text_font(lbl_moon_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(lbl_moon_icon, COLOR_TEXT_SECONDARY, 0);
+    lv_obj_align(lbl_moon_icon, LV_ALIGN_TOP_LEFT, 10, 100);
 
     lbl_moon_val = lv_label_create(panel_sun_moon);
-    lv_label_set_text(lbl_moon_val, "Luna nueva (5%)");
+    lv_label_set_text(lbl_moon_val, "Nueva (5%)");
     lv_obj_set_style_text_color(lbl_moon_val, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(lbl_moon_val, &lv_font_montserrat_20, 0);
-    lv_obj_align_to(lbl_moon_val, moon_lbl, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    lv_obj_set_style_text_font(lbl_moon_val, &lv_font_montserrat_18, 0);
+    lv_obj_align_to(lbl_moon_val, lbl_moon_icon, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
 
     // Horas de luz
     lv_obj_t *daylight_lbl = lv_label_create(panel_sun_moon);
@@ -1136,7 +1176,262 @@ void createSunMoonPanel(lv_obj_t *parent, int x, int y, int w, int h) {
 }
 
 // ============================================================================
-// Crear Dashboard completo (layout simplificado - 6 cards)
+// NUEVO LAYOUT: Panel Principal + 3 Cards de ubicacion
+// ============================================================================
+
+// Variables para el nuevo layout
+static lv_obj_t *panel_main = nullptr;
+static lv_obj_t *lbl_main_temp = nullptr;
+static lv_obj_t *lbl_main_condition_icon = nullptr;
+static lv_obj_t *lbl_main_condition = nullptr;
+static lv_obj_t *lbl_main_feels = nullptr;
+static lv_obj_t *lbl_main_maxmin = nullptr;
+static lv_obj_t *lbl_main_humidity = nullptr;
+static lv_obj_t *lbl_main_pressure = nullptr;
+static lv_obj_t *lbl_main_pressure_trend = nullptr;
+static lv_obj_t *lbl_main_wind = nullptr;
+static lv_obj_t *lbl_main_wind_dir = nullptr;
+static lv_obj_t *lbl_main_wind_icon = nullptr;
+static lv_obj_t *lbl_main_gust = nullptr;
+static lv_obj_t *lbl_main_server = nullptr;
+
+static lv_obj_t *card_local = nullptr;
+static lv_obj_t *lbl_local_temp = nullptr;
+static lv_obj_t *lbl_local_maxmin = nullptr;
+static lv_obj_t *lbl_local_humidity = nullptr;
+static lv_obj_t *lbl_local_battery = nullptr;
+
+static lv_obj_t *card_jardin = nullptr;
+static lv_obj_t *lbl_jardin_temp = nullptr;
+static lv_obj_t *lbl_jardin_maxmin = nullptr;
+static lv_obj_t *lbl_jardin_humidity = nullptr;
+static lv_obj_t *lbl_jardin_battery = nullptr;
+
+static lv_obj_t *card_remoto = nullptr;
+static lv_obj_t *lbl_remoto_temp = nullptr;
+static lv_obj_t *lbl_remoto_maxmin = nullptr;
+static lv_obj_t *lbl_remoto_humidity = nullptr;
+static lv_obj_t *lbl_remoto_pressure = nullptr;
+
+/**
+ * Panel Principal - Estacion Ecowitt con toda la info
+ */
+void createMainPanel(lv_obj_t *parent, int x, int y, int w, int h) {
+    panel_main = createCard(parent, x, y, w, h);
+
+    // --- Columna izquierda: Temperatura y condicion ---
+
+    // Icono de condicion grande
+    lbl_main_condition_icon = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_condition_icon, WI_DAY_SUNNY);
+    lv_obj_set_style_text_font(lbl_main_condition_icon, &weather_icons_48, 0);
+    lv_obj_set_style_text_color(lbl_main_condition_icon, COLOR_SUN, 0);
+    lv_obj_align(lbl_main_condition_icon, LV_ALIGN_TOP_LEFT, 15, 15);
+
+    // Temperatura grande
+    lbl_main_temp = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_temp, "24.5°");
+    lv_obj_set_style_text_color(lbl_main_temp, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(lbl_main_temp, &lv_font_montserrat_48, 0);
+    lv_obj_align(lbl_main_temp, LV_ALIGN_TOP_LEFT, 80, 10);
+
+    // Condicion texto
+    lbl_main_condition = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_condition, "Despejado");
+    lv_obj_set_style_text_color(lbl_main_condition, COLOR_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_font(lbl_main_condition, &lv_font_montserrat_18, 0);
+    lv_obj_align(lbl_main_condition, LV_ALIGN_TOP_LEFT, 15, 75);
+
+    // Sensacion termica
+    lbl_main_feels = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_feels, "Sensacion 23.5°");
+    lv_obj_set_style_text_color(lbl_main_feels, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(lbl_main_feels, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_main_feels, LV_ALIGN_TOP_LEFT, 15, 100);
+
+    // Max / Min
+    lbl_main_maxmin = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_maxmin, LV_SYMBOL_UP " 28°  " LV_SYMBOL_DOWN " 18°");
+    lv_obj_set_style_text_color(lbl_main_maxmin, COLOR_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_font(lbl_main_maxmin, &lv_font_montserrat_16, 0);
+    lv_obj_align(lbl_main_maxmin, LV_ALIGN_TOP_LEFT, 15, 125);
+
+    // --- Columna central: Humedad y Presion ---
+
+    // Titulo humedad
+    lv_obj_t *hum_title = lv_label_create(panel_main);
+    lv_label_set_text(hum_title, "Humedad");
+    lv_obj_set_style_text_color(hum_title, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(hum_title, &lv_font_montserrat_14, 0);
+    lv_obj_align(hum_title, LV_ALIGN_TOP_MID, -100, 10);
+
+    // Icono + valor humedad
+    lv_obj_t *hum_icon = lv_label_create(panel_main);
+    lv_label_set_text(hum_icon, WI_HUMIDITY);
+    lv_obj_set_style_text_font(hum_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(hum_icon, COLOR_CYAN, 0);
+    lv_obj_align(hum_icon, LV_ALIGN_TOP_MID, -120, 30);
+
+    lbl_main_humidity = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_humidity, "65%");
+    lv_obj_set_style_text_color(lbl_main_humidity, COLOR_CYAN, 0);
+    lv_obj_set_style_text_font(lbl_main_humidity, &lv_font_montserrat_36, 0);
+    lv_obj_align(lbl_main_humidity, LV_ALIGN_TOP_MID, -60, 30);
+
+    // Titulo presion
+    lv_obj_t *pres_title = lv_label_create(panel_main);
+    lv_label_set_text(pres_title, "Presion");
+    lv_obj_set_style_text_color(pres_title, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(pres_title, &lv_font_montserrat_14, 0);
+    lv_obj_align(pres_title, LV_ALIGN_TOP_MID, -100, 80);
+
+    // Icono + valor presion
+    lv_obj_t *pres_icon = lv_label_create(panel_main);
+    lv_label_set_text(pres_icon, WI_BAROMETER);
+    lv_obj_set_style_text_font(pres_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(pres_icon, COLOR_VIOLET, 0);
+    lv_obj_align(pres_icon, LV_ALIGN_TOP_MID, -120, 100);
+
+    lbl_main_pressure = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_pressure, "1012");
+    lv_obj_set_style_text_color(lbl_main_pressure, COLOR_VIOLET, 0);
+    lv_obj_set_style_text_font(lbl_main_pressure, &lv_font_montserrat_28, 0);
+    lv_obj_align(lbl_main_pressure, LV_ALIGN_TOP_MID, -55, 100);
+
+    lbl_main_pressure_trend = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_pressure_trend, LV_SYMBOL_UP);
+    lv_obj_set_style_text_color(lbl_main_pressure_trend, COLOR_GREEN, 0);
+    lv_obj_set_style_text_font(lbl_main_pressure_trend, &lv_font_montserrat_18, 0);
+    lv_obj_align_to(lbl_main_pressure_trend, lbl_main_pressure, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+
+    // --- Columna derecha: Viento ---
+
+    // Titulo viento
+    lv_obj_t *wind_title = lv_label_create(panel_main);
+    lv_label_set_text(wind_title, "Viento");
+    lv_obj_set_style_text_color(wind_title, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(wind_title, &lv_font_montserrat_14, 0);
+    lv_obj_align(wind_title, LV_ALIGN_TOP_RIGHT, -150, 10);
+
+    // Icono viento
+    lv_obj_t *wind_icon = lv_label_create(panel_main);
+    lv_label_set_text(wind_icon, WI_STRONG_WIND);
+    lv_obj_set_style_text_font(wind_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(wind_icon, COLOR_WIND, 0);
+    lv_obj_align(wind_icon, LV_ALIGN_TOP_RIGHT, -180, 30);
+
+    // Velocidad viento
+    lbl_main_wind = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_wind, "12 km/h");
+    lv_obj_set_style_text_color(lbl_main_wind, COLOR_WIND, 0);
+    lv_obj_set_style_text_font(lbl_main_wind, &lv_font_montserrat_28, 0);
+    lv_obj_align(lbl_main_wind, LV_ALIGN_TOP_RIGHT, -50, 30);
+
+    // Direccion con icono
+    lbl_main_wind_icon = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_wind_icon, WI_DIR_N);
+    lv_obj_set_style_text_font(lbl_main_wind_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(lbl_main_wind_icon, COLOR_WIND, 0);
+    lv_obj_align(lbl_main_wind_icon, LV_ALIGN_TOP_RIGHT, -180, 70);
+
+    lbl_main_wind_dir = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_wind_dir, "NO 303°");
+    lv_obj_set_style_text_color(lbl_main_wind_dir, COLOR_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_font(lbl_main_wind_dir, &lv_font_montserrat_18, 0);
+    lv_obj_align(lbl_main_wind_dir, LV_ALIGN_TOP_RIGHT, -80, 75);
+
+    // Rafagas
+    lbl_main_gust = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_gust, "Rafagas: 18 km/h");
+    lv_obj_set_style_text_color(lbl_main_gust, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(lbl_main_gust, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_main_gust, LV_ALIGN_TOP_RIGHT, -50, 110);
+
+    // --- Barra inferior: Server status ---
+    lbl_main_server = lv_label_create(panel_main);
+    lv_label_set_text(lbl_main_server, "Servidor: Online  |  Actualizado: 12:34:56");
+    lv_obj_set_style_text_color(lbl_main_server, COLOR_GREEN, 0);
+    lv_obj_set_style_text_font(lbl_main_server, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_main_server, LV_ALIGN_BOTTOM_LEFT, 15, -10);
+}
+
+/**
+ * Card de ubicacion generica (Local, Jardin, Remoto)
+ */
+lv_obj_t* createLocationCard(lv_obj_t *parent, int x, int y, int w, int h,
+                             const char* title, lv_color_t accent,
+                             lv_obj_t** temp_lbl, lv_obj_t** maxmin_lbl,
+                             lv_obj_t** humidity_lbl, lv_obj_t** extra_lbl,
+                             const char* extra_label_text) {
+    lv_obj_t *card = createCard(parent, x, y, w, h);
+
+    // Indicador de color + titulo
+    lv_obj_t *indicator = lv_label_create(card);
+    lv_label_set_text(indicator, "|");
+    lv_obj_set_style_text_color(indicator, accent, 0);
+    lv_obj_set_style_text_font(indicator, &lv_font_montserrat_18, 0);
+    lv_obj_align(indicator, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    lv_obj_t *title_lbl = lv_label_create(card);
+    lv_label_set_text(title_lbl, title);
+    lv_obj_set_style_text_color(title_lbl, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(title_lbl, &lv_font_montserrat_14, 0);
+    lv_obj_align_to(title_lbl, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+
+    // Icono termometro
+    lv_obj_t *thermo = lv_label_create(card);
+    lv_label_set_text(thermo, WI_THERMOMETER);
+    lv_obj_set_style_text_font(thermo, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(thermo, accent, 0);
+    lv_obj_align(thermo, LV_ALIGN_TOP_LEFT, 5, 30);
+
+    // Temperatura grande
+    *temp_lbl = lv_label_create(card);
+    lv_label_set_text(*temp_lbl, "22.5°");
+    lv_obj_set_style_text_color(*temp_lbl, accent, 0);
+    lv_obj_set_style_text_font(*temp_lbl, &lv_font_montserrat_36, 0);
+    lv_obj_align(*temp_lbl, LV_ALIGN_TOP_LEFT, 50, 25);
+
+    // Max/Min
+    *maxmin_lbl = lv_label_create(card);
+    lv_label_set_text(*maxmin_lbl, LV_SYMBOL_UP " 25°  " LV_SYMBOL_DOWN " 20°");
+    lv_obj_set_style_text_color(*maxmin_lbl, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(*maxmin_lbl, &lv_font_montserrat_14, 0);
+    lv_obj_align(*maxmin_lbl, LV_ALIGN_TOP_LEFT, 10, 75);
+
+    // Humedad
+    lv_obj_t *hum_icon = lv_label_create(card);
+    lv_label_set_text(hum_icon, WI_HUMIDITY);
+    lv_obj_set_style_text_font(hum_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(hum_icon, COLOR_CYAN, 0);
+    lv_obj_align(hum_icon, LV_ALIGN_TOP_LEFT, 5, 100);
+
+    *humidity_lbl = lv_label_create(card);
+    lv_label_set_text(*humidity_lbl, "58%");
+    lv_obj_set_style_text_color(*humidity_lbl, COLOR_CYAN, 0);
+    lv_obj_set_style_text_font(*humidity_lbl, &lv_font_montserrat_24, 0);
+    lv_obj_align(*humidity_lbl, LV_ALIGN_TOP_LEFT, 50, 105);
+
+    // Campo extra (bateria o presion)
+    if (extra_lbl && extra_label_text) {
+        lv_obj_t *extra_title = lv_label_create(card);
+        lv_label_set_text(extra_title, extra_label_text);
+        lv_obj_set_style_text_color(extra_title, COLOR_TEXT_MUTED, 0);
+        lv_obj_set_style_text_font(extra_title, &lv_font_montserrat_12, 0);
+        lv_obj_align(extra_title, LV_ALIGN_TOP_RIGHT, -10, 100);
+
+        *extra_lbl = lv_label_create(card);
+        lv_label_set_text(*extra_lbl, "--");
+        lv_obj_set_style_text_color(*extra_lbl, COLOR_TEXT_SECONDARY, 0);
+        lv_obj_set_style_text_font(*extra_lbl, &lv_font_montserrat_18, 0);
+        lv_obj_align(*extra_lbl, LV_ALIGN_TOP_RIGHT, -10, 118);
+    }
+
+    return card;
+}
+
+// ============================================================================
+// Crear Dashboard completo - NUEVO LAYOUT (1 Principal + 3 Ubicaciones)
 // ============================================================================
 
 void createDashboard() {
@@ -1147,42 +1442,48 @@ void createDashboard() {
     lv_obj_set_style_bg_color(scr_dashboard, COLOR_BG, 0);
     lv_obj_clear_flag(scr_dashboard, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Header (sin footer, mas espacio para contenido)
+    // Header
     createHeader(scr_dashboard);
 
-    // Area de contenido: 2 filas de 3 cards cada una
-    int y1 = HEADER_HEIGHT + 10;
-    int y2 = y1 + 255;  // Segunda fila
-    int card_w = 325;   // Ancho de cada card (3 caben en 1024 con gaps)
-    int card_h = 240;   // Alto de cada card
+    // === NUEVO LAYOUT: 1 Principal + 3 Ubicaciones ===
+    // Dimensiones
     int gap = 12;
+    int y1 = HEADER_HEIGHT + gap;
+    int main_h = 160;           // Panel principal mas compacto
+    int y2 = y1 + main_h + gap; // Segunda fila
+    int card_h = 150;           // Cards de ubicacion
+    int card_w = (SCREEN_WIDTH - gap * 4) / 3;  // ~327px cada una
 
-    // === FILA 1: Temperatura, Humedad, Viento ===
+    // Panel Principal (ancho completo)
+    createMainPanel(scr_dashboard, gap, y1, SCREEN_WIDTH - gap * 2, main_h);
 
-    // 1. Panel Temperatura (grande, principal)
-    createTemperaturePanel(scr_dashboard, gap, y1);
+    // === FILA 2: Cards de ubicacion ===
 
-    // 2. Panel Humedad
-    createHumidityPanel(scr_dashboard, gap + card_w + gap, y1);
+    // Card LOCAL (BME280) - tambien lleva bateria
+    card_local = createLocationCard(scr_dashboard,
+        gap, y2, card_w, card_h,
+        "LOCAL (Interior)", COLOR_GREEN,
+        &lbl_local_temp, &lbl_local_maxmin, &lbl_local_humidity,
+        &lbl_local_battery, "Bateria:");
 
-    // 3. Panel Viento
-    createWindPanel(scr_dashboard, gap + (card_w + gap) * 2, y1, card_w, card_h);
+    // Card JARDIN (HN31)
+    card_jardin = createLocationCard(scr_dashboard,
+        gap + card_w + gap, y2, card_w, card_h,
+        "JARDIN (HN31)", COLOR_WIND,
+        &lbl_jardin_temp, &lbl_jardin_maxmin, &lbl_jardin_humidity,
+        &lbl_jardin_battery, "Bateria:");
 
-    // === FILA 2: Rafaga/Presion, Lluvia, Sol/Luna ===
-
-    // 4. Panel Presion
-    createPressurePanel(scr_dashboard, gap, y2);
-
-    // 5. Panel Lluvia
-    createRainPanel(scr_dashboard, gap + card_w + gap, y2, card_w, 220);
-
-    // 6. Panel Sol y Luna + Pronostico mini
-    createSunMoonPanel(scr_dashboard, gap + (card_w + gap) * 2, y2, card_w, 220);
+    // Card REMOTO (GW110)
+    card_remoto = createLocationCard(scr_dashboard,
+        gap + (card_w + gap) * 2, y2, card_w, card_h,
+        "REMOTO (GW110)", COLOR_VIOLET,
+        &lbl_remoto_temp, &lbl_remoto_maxmin, &lbl_remoto_humidity,
+        &lbl_remoto_pressure, "Presion:");
 
     // Cargar pantalla
     lv_scr_load(scr_dashboard);
 
-    Serial.println("[UI] Dashboard creado (6 cards)");
+    Serial.println("[UI] Dashboard creado (nuevo layout 4 cards)");
 }
 
 // ============================================================================
@@ -1243,6 +1544,51 @@ void updateDashboardWeather() {
         lv_label_set_text(lbl_status_text, g_status.api_ok ? "Online" : "Offline");
     }
     // WiFi ya se actualiza con icono y color en la funcion
+
+    // === Derivar condicion del clima ===
+    // Determinar si es de dia
+    struct tm timeinfo;
+    time_t now = time(nullptr);
+    localtime_r(&now, &timeinfo);
+    int current_hour = timeinfo.tm_hour;
+    int sunrise_hour = 6, sunset_hour = 19;  // Default
+    if (g_almanac.valid) {
+        sscanf(g_almanac.sunrise, "%d:", &sunrise_hour);
+        sscanf(g_almanac.sunset, "%d:", &sunset_hour);
+        if (sunset_hour < 12) sunset_hour += 12;  // PM adjustment
+    }
+    bool is_day = isDaytime(current_hour, sunrise_hour, sunset_hour);
+
+    // Derivar condicion de datos de sensores
+    float pressure_diff = g_compare.valid ? g_compare.pressure_diff : 0;
+    const char* condition = deriveWeatherCondition(
+        g_weather.rain_rate, g_weather.wind_speed,
+        g_weather.humidity_outdoor, g_weather.uv, pressure_diff);
+
+    // Actualizar icono de condicion
+    if (lbl_condition_icon) {
+        const char* icon = getWeatherIcon(condition, is_day);
+        lv_label_set_text(lbl_condition_icon, icon);
+
+        // Color segun condicion
+        lv_color_t icon_color = COLOR_SUN;
+        if (strstr(condition, "rain") || strstr(condition, "drizzle")) {
+            icon_color = COLOR_RAIN;
+        } else if (strstr(condition, "storm")) {
+            icon_color = COLOR_YELLOW;
+        } else if (strstr(condition, "cloud") || strstr(condition, "fog")) {
+            icon_color = COLOR_TEXT_MUTED;
+        } else if (!is_day) {
+            icon_color = COLOR_VIOLET;
+        }
+        lv_obj_set_style_text_color(lbl_condition_icon, icon_color, 0);
+    }
+
+    // Actualizar texto de condicion
+    if (lbl_condition_text) {
+        const char* cond_text = getConditionText(condition, is_day);
+        lv_label_set_text(lbl_condition_text, cond_text);
+    }
 
     // === Temperatura (con conversion C/F) ===
     if (lbl_temp_value) {
@@ -1427,8 +1773,12 @@ void updateDashboardWeather() {
         lv_label_set_text(lbl_wind_speed, buf);
     }
     if (lbl_wind_direction) {
-        snprintf(buf, sizeof(buf), "%s %d", g_weather.wind_dir_cardinal, (int)g_weather.wind_dir);
+        snprintf(buf, sizeof(buf), "%s %d°", g_weather.wind_dir_cardinal, (int)g_weather.wind_dir);
         lv_label_set_text(lbl_wind_direction, buf);
+    }
+    if (lbl_wind_dir_icon) {
+        const char* dir_icon = getWindDirectionIcon((int)g_weather.wind_dir);
+        lv_label_set_text(lbl_wind_dir_icon, dir_icon);
     }
     if (lbl_wind_gust_new) {
         snprintf(buf, sizeof(buf), "%.1f km/h", g_weather.wind_gust);
@@ -1466,8 +1816,17 @@ void updateDashboardWeather() {
         if (lbl_sunset_val) {
             lv_label_set_text(lbl_sunset_val, g_almanac.sunset);
         }
+        if (lbl_moon_icon) {
+            bool is_waxing = strstr(g_almanac.moon_phase, "creciente") ||
+                            strstr(g_almanac.moon_phase, "Creciente") ||
+                            strstr(g_almanac.moon_phase, "waxing");
+            const char* moon_icon = getMoonPhaseIcon(g_almanac.moon_illumination, is_waxing);
+            lv_label_set_text(lbl_moon_icon, moon_icon);
+        }
         if (lbl_moon_val) {
-            lv_label_set_text(lbl_moon_val, g_almanac.moon_phase);
+            snprintf(buf, sizeof(buf), "%s (%d%%)",
+                     g_almanac.moon_phase, g_almanac.moon_illumination);
+            lv_label_set_text(lbl_moon_val, buf);
         }
         if (lbl_daylight) {
             // Calcular horas de luz (aproximado)
@@ -1475,6 +1834,164 @@ void updateDashboardWeather() {
                      g_almanac.daylight_hours, g_almanac.daylight_minutes);
             lv_label_set_text(lbl_daylight, buf);
         }
+    }
+
+    // =========================================================================
+    // NUEVO LAYOUT: Panel Principal y Cards de ubicacion
+    // =========================================================================
+
+    // === Panel Principal ===
+    if (lbl_main_temp) {
+        snprintf(buf, sizeof(buf), "%.1f°", toDisplayTemp(g_weather.temp_outdoor));
+        lv_label_set_text(lbl_main_temp, buf);
+    }
+    if (lbl_main_condition_icon) {
+        const char* icon = getWeatherIcon(condition, is_day);
+        lv_label_set_text(lbl_main_condition_icon, icon);
+        lv_color_t icon_color = COLOR_SUN;
+        if (strstr(condition, "rain") || strstr(condition, "drizzle")) icon_color = COLOR_RAIN;
+        else if (strstr(condition, "storm")) icon_color = COLOR_YELLOW;
+        else if (strstr(condition, "cloud") || strstr(condition, "fog")) icon_color = COLOR_TEXT_MUTED;
+        else if (!is_day) icon_color = COLOR_VIOLET;
+        lv_obj_set_style_text_color(lbl_main_condition_icon, icon_color, 0);
+    }
+    if (lbl_main_condition) {
+        lv_label_set_text(lbl_main_condition, getConditionText(condition, is_day));
+    }
+    if (lbl_main_feels) {
+        snprintf(buf, sizeof(buf), "Sensacion %.1f°", toDisplayTemp(g_weather.feels_like));
+        lv_label_set_text(lbl_main_feels, buf);
+    }
+    if (lbl_main_maxmin) {
+        snprintf(buf, sizeof(buf), LV_SYMBOL_UP " %.0f°  " LV_SYMBOL_DOWN " %.0f°",
+                 toDisplayTemp(g_weather.temp_max), toDisplayTemp(g_weather.temp_min));
+        lv_label_set_text(lbl_main_maxmin, buf);
+    }
+    if (lbl_main_humidity) {
+        snprintf(buf, sizeof(buf), "%.0f%%", g_weather.humidity_outdoor);
+        lv_label_set_text(lbl_main_humidity, buf);
+    }
+    if (lbl_main_pressure) {
+        snprintf(buf, sizeof(buf), "%.0f", g_weather.pressure_rel);
+        lv_label_set_text(lbl_main_pressure, buf);
+    }
+    if (lbl_main_pressure_trend && g_compare.valid) {
+        const char* arrow = g_compare.pressure_diff > 0.5 ? LV_SYMBOL_UP :
+                           g_compare.pressure_diff < -0.5 ? LV_SYMBOL_DOWN : "-";
+        lv_label_set_text(lbl_main_pressure_trend, arrow);
+        lv_obj_set_style_text_color(lbl_main_pressure_trend,
+            g_compare.pressure_diff > 0.5 ? COLOR_GREEN :
+            g_compare.pressure_diff < -0.5 ? COLOR_RED : COLOR_TEXT_MUTED, 0);
+    }
+    if (lbl_main_wind) {
+        snprintf(buf, sizeof(buf), "%.0f km/h", g_weather.wind_speed);
+        lv_label_set_text(lbl_main_wind, buf);
+    }
+    if (lbl_main_wind_icon) {
+        lv_label_set_text(lbl_main_wind_icon, getWindDirectionIcon((int)g_weather.wind_dir));
+    }
+    if (lbl_main_wind_dir) {
+        snprintf(buf, sizeof(buf), "%s %d°", g_weather.wind_dir_cardinal, (int)g_weather.wind_dir);
+        lv_label_set_text(lbl_main_wind_dir, buf);
+    }
+    if (lbl_main_gust) {
+        snprintf(buf, sizeof(buf), "Rafagas: %.0f km/h", g_weather.wind_gust);
+        lv_label_set_text(lbl_main_gust, buf);
+    }
+    if (lbl_main_server) {
+        char time_str[10];
+        struct tm ti;
+        time_t t = time(nullptr);
+        localtime_r(&t, &ti);
+        strftime(time_str, sizeof(time_str), "%H:%M:%S", &ti);
+        snprintf(buf, sizeof(buf), "Servidor: %s  |  Actualizado: %s",
+                 g_status.api_ok ? "Online" : "Offline", time_str);
+        lv_label_set_text(lbl_main_server, buf);
+        lv_obj_set_style_text_color(lbl_main_server,
+            g_status.api_ok ? COLOR_GREEN : COLOR_RED, 0);
+    }
+
+    // === Card LOCAL (BME280) ===
+    if (lbl_local_temp) {
+        if (g_local.valid) {
+            snprintf(buf, sizeof(buf), "%.1f°", toDisplayTemp(g_local.temperature));
+            lv_label_set_text(lbl_local_temp, buf);
+        } else {
+            lv_label_set_text(lbl_local_temp, "--.-°");
+        }
+    }
+    if (lbl_local_maxmin && g_local.valid) {
+        snprintf(buf, sizeof(buf), LV_SYMBOL_UP " %.0f°  " LV_SYMBOL_DOWN " %.0f°",
+                 toDisplayTemp(g_local.temp_max), toDisplayTemp(g_local.temp_min));
+        lv_label_set_text(lbl_local_maxmin, buf);
+    }
+    if (lbl_local_humidity) {
+        if (g_local.valid) {
+            snprintf(buf, sizeof(buf), "%.0f%%", g_local.humidity);
+        } else {
+            snprintf(buf, sizeof(buf), "--%%" );
+        }
+        lv_label_set_text(lbl_local_humidity, buf);
+    }
+    if (lbl_local_battery && g_local.valid && g_local.battery >= 0) {
+        snprintf(buf, sizeof(buf), "%d%%", g_local.battery);
+        lv_label_set_text(lbl_local_battery, buf);
+    }
+
+    // === Card JARDIN (HN31) ===
+    extern RemoteSensorData g_jardin;
+    if (lbl_jardin_temp) {
+        if (g_jardin.valid) {
+            snprintf(buf, sizeof(buf), "%.1f°", toDisplayTemp(g_jardin.temperature));
+        } else {
+            snprintf(buf, sizeof(buf), "--.-°");
+        }
+        lv_label_set_text(lbl_jardin_temp, buf);
+    }
+    if (lbl_jardin_maxmin && g_jardin.valid) {
+        snprintf(buf, sizeof(buf), LV_SYMBOL_UP " %.0f°  " LV_SYMBOL_DOWN " %.0f°",
+                 toDisplayTemp(g_jardin.temp_max), toDisplayTemp(g_jardin.temp_min));
+        lv_label_set_text(lbl_jardin_maxmin, buf);
+    }
+    if (lbl_jardin_humidity) {
+        if (g_jardin.valid) {
+            snprintf(buf, sizeof(buf), "%.0f%%", g_jardin.humidity);
+        } else {
+            snprintf(buf, sizeof(buf), "--%%");
+        }
+        lv_label_set_text(lbl_jardin_humidity, buf);
+    }
+    if (lbl_jardin_battery && g_jardin.valid) {
+        snprintf(buf, sizeof(buf), "%d%%", g_jardin.battery);
+        lv_label_set_text(lbl_jardin_battery, buf);
+    }
+
+    // === Card REMOTO (GW110) ===
+    extern RemoteGatewayData g_remoto;
+    if (lbl_remoto_temp) {
+        if (g_remoto.valid) {
+            snprintf(buf, sizeof(buf), "%.1f°", toDisplayTemp(g_remoto.temperature));
+        } else {
+            snprintf(buf, sizeof(buf), "--.-°");
+        }
+        lv_label_set_text(lbl_remoto_temp, buf);
+    }
+    if (lbl_remoto_maxmin && g_remoto.valid) {
+        snprintf(buf, sizeof(buf), LV_SYMBOL_UP " %.0f°  " LV_SYMBOL_DOWN " %.0f°",
+                 toDisplayTemp(g_remoto.temp_max), toDisplayTemp(g_remoto.temp_min));
+        lv_label_set_text(lbl_remoto_maxmin, buf);
+    }
+    if (lbl_remoto_humidity) {
+        if (g_remoto.valid) {
+            snprintf(buf, sizeof(buf), "%.0f%%", g_remoto.humidity);
+        } else {
+            snprintf(buf, sizeof(buf), "--%%");
+        }
+        lv_label_set_text(lbl_remoto_humidity, buf);
+    }
+    if (lbl_remoto_pressure && g_remoto.valid) {
+        snprintf(buf, sizeof(buf), "%.0f hPa", g_remoto.pressure);
+        lv_label_set_text(lbl_remoto_pressure, buf);
     }
 }
 
