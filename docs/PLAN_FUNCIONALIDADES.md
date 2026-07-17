@@ -453,6 +453,19 @@ Acceso: Swipe desde Récords
 
 ---
 
+## Funcionalidad UX
+
+| Feature | Descripción | Estado |
+|---------|-------------|--------|
+| Long-press | Acciones secundarias en cards | ❌ Pendiente |
+| Slider brillo | Control PWM via CH422G | ✅ Implementado |
+| Cache offline | Mostrar último dato si sin conexión | ❌ Pendiente |
+| Reconexión WiFi | Automática con fallback 3 redes | ✅ Implementado |
+| Swipe navegación | Cambio entre pantallas | ❌ Pendiente |
+| Tap en cards | Acceso a pantallas detalle | ✅ Parcial |
+
+---
+
 ## Notas Técnicas
 
 ### Hardware ESP32-S3
