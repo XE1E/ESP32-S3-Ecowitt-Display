@@ -2,19 +2,35 @@
 
 ## Inventario del Servidor Web (clima.xe1e.net)
 
-### APIs Disponibles
+### Endpoint Optimizado (Principal)
+
+| Endpoint | Descripción | Estado |
+|----------|-------------|--------|
+| `/api/display` | **Endpoint optimizado para ESP32** - Combina todo en 1 llamada | ✅ En uso |
+
+Contenido de `/api/display`:
+- `timezone_offset`: Offset de zona horaria (ej: -6 para México)
+- `current`: Lecturas actuales (temperatura, humedad, viento, lluvia, UV, etc.)
+- `stats`: Min/Max del día por sensor
+- `compare`: Diferencias vs ayer
+- `almanac`: Amanecer, atardecer, fase lunar
+- `forecast`: Pronóstico barométrico local
+- `airquality`: AQI y PM2.5 (si configurado)
+- `stations`: Datos de estaciones secundarias (ch1/WN31, gw1100)
+
+### APIs Individuales (Referencia)
 
 | Endpoint | Descripción | Estado ESP32 |
 |----------|-------------|--------------|
-| `/api/current` | Lecturas actuales de todos los sensores | ✅ Implementado |
-| `/api/stats/daily` | Min/Max/Avg del día | ✅ Implementado |
-| `/api/compare` | Comparación vs ayer | ✅ Implementado |
-| `/api/alerts` | Alertas activas | ✅ Implementado |
-| `/api/almanac` | Sol, luna, planetas | ✅ Implementado |
-| `/api/stations` | Lista de estaciones | ✅ Implementado |
-| `/api/forecast/local` | Pronóstico barométrico | ⚠️ Parcial |
+| `/api/current` | Lecturas actuales de todos los sensores | ⚡ Via /api/display |
+| `/api/stats/daily` | Min/Max/Avg del día | ⚡ Via /api/display |
+| `/api/compare` | Comparación vs ayer | ⚡ Via /api/display |
+| `/api/almanac` | Sol, luna, planetas | ⚡ Via /api/display |
+| `/api/stations` | Lista de estaciones | ⚡ Via /api/display |
+| `/api/forecast/local` | Pronóstico barométrico | ⚡ Via /api/display |
+| `/api/airquality` | Calidad del aire (AQI) | ⚡ Via /api/display |
+| `/api/alerts` | Alertas activas | ✅ Llamada separada |
 | `/api/history` | Datos históricos | ❌ Pendiente |
-| `/api/airquality` | Calidad del aire (AQI) | ❌ Pendiente |
 | `/api/airquality/imeca` | Índice IMECA | ❌ Pendiente |
 | `/api/climate/records` | Récords históricos | ❌ Pendiente |
 | `/api/climate/daily` | Resúmenes diarios | ❌ Pendiente |
@@ -93,8 +109,11 @@
 - [x] Humedad
 - [x] Presión con tendencia
 - [x] Viento con dirección
-- [x] Sol y luna
-- [ ] Comparación vs ayer (delta)
+- [x] Sol y luna (amanecer/atardecer/fase lunar)
+- [x] Comparación vs ayer (delta temperatura)
+- [x] Sincronización de hora desde servidor (con timezone)
+- [x] 3 redes WiFi con fallback automático
+- [x] Control de brillo (PWM)
 - [ ] Pronóstico barométrico texto
 - [ ] Widget calidad aire
 
@@ -249,13 +268,22 @@
 - Sin navegador → no imágenes satelitales/radar
 - Pantalla 1024x600 → optimizar para ese tamaño
 
-### APIs a agregar en ecowitt_api.h
+### APIs en ecowitt_api.h
+
+**Implementadas:**
 ```cpp
-bool fetchAirQuality(AirQualityData& data);     // /api/airquality
+// Endpoint optimizado - UNA llamada obtiene todo (en uso)
+bool fetchAll(WeatherData&, CompareData&, AlmanacData&, 
+              RemoteSensorData&, RemoteGatewayData&, int* tzOffset);
+
+bool fetchAlerts(AlertData& data);              // /api/alerts (separado)
+```
+
+**Pendientes de implementar:**
+```cpp
 bool fetchHistory(HistoryData& data, int hours); // /api/history
 bool fetchRecords(RecordsData& data);           // /api/climate/records
 bool fetchWindRose(WindRoseData& data);         // /api/wind/rose
-bool fetchForecast(ForecastData& data);         // /api/forecast
 ```
 
 ### Estructuras de datos a agregar en config.h

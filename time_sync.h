@@ -16,14 +16,22 @@
 static bool timeSynced = false;
 static unsigned long lastSyncMillis = 0;
 
+// Offset de timezone por defecto: UTC-6 para Ciudad de México
+#define DEFAULT_TIMEZONE_OFFSET  (-6)
+
+// Guarda el ultimo offset usado (para que otras funciones puedan consultarlo)
+static int g_timezoneOffset = DEFAULT_TIMEZONE_OFFSET;
+
 /**
  * Parsea timestamp ISO 8601 y ajusta el reloj del sistema
  * Formato esperado: "2026-07-17T04:11:01" o "2026-07-17T04:11:01.123456"
+ * El servidor envía UTC, aplicamos offset para hora local.
  *
- * @param isoTimestamp String con el timestamp del servidor
+ * @param isoTimestamp String con el timestamp del servidor (UTC)
+ * @param timezoneOffsetHours Offset de timezone en horas (ej: -6 para Mexico)
  * @return true si se pudo sincronizar
  */
-bool syncTimeFromServer(const char* isoTimestamp) {
+bool syncTimeFromServer(const char* isoTimestamp, int timezoneOffsetHours = DEFAULT_TIMEZONE_OFFSET) {
     if (isoTimestamp == nullptr || strlen(isoTimestamp) < 19) {
         Serial.println("[TIME] Timestamp invalido");
         return false;
@@ -39,7 +47,7 @@ bool syncTimeFromServer(const char* isoTimestamp) {
         return false;
     }
 
-    // Construir struct tm
+    // Construir struct tm (en UTC)
     struct tm timeinfo = {0};
     timeinfo.tm_year = year - 1900;  // Años desde 1900
     timeinfo.tm_mon = month - 1;      // Meses 0-11
@@ -49,13 +57,19 @@ bool syncTimeFromServer(const char* isoTimestamp) {
     timeinfo.tm_sec = second;
     timeinfo.tm_isdst = 0;            // Sin horario de verano
 
-    // Convertir a time_t (segundos desde epoch)
+    // Convertir a time_t (segundos desde epoch, tratando como UTC)
     time_t epochTime = mktime(&timeinfo);
 
     if (epochTime == -1) {
         Serial.println("[TIME] Error convirtiendo a epoch");
         return false;
     }
+
+    // Guardar el offset para otras funciones
+    g_timezoneOffset = timezoneOffsetHours;
+
+    // Aplicar offset de timezone (UTC -> local)
+    epochTime += timezoneOffsetHours * 3600;
 
     // Ajustar el reloj del sistema
     struct timeval tv;

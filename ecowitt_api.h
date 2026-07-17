@@ -459,9 +459,10 @@ public:
     /**
      * Endpoint optimizado: obtiene TODOS los datos en una sola llamada
      * Combina: current, stats, compare, almanac, forecast, airquality
+     * @param tzOffset Puntero para almacenar el offset de timezone (en horas, ej: -6)
      */
     bool fetchAll(WeatherData& weather, CompareData& compare, AlmanacData& almanac,
-                  RemoteSensorData& jardin, RemoteGatewayData& remoto) {
+                  RemoteSensorData& jardin, RemoteGatewayData& remoto, int* tzOffset = nullptr) {
         HTTPClient http;
         String url = String(_baseUrl) + "/api/display";
 
@@ -478,6 +479,11 @@ public:
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {
+                // === TIMEZONE ===
+                if (tzOffset != nullptr) {
+                    *tzOffset = doc["timezone_offset"] | -6;  // Default UTC-6 (Mexico)
+                }
+
                 // === CURRENT ===
                 JsonObject current = doc["current"];
                 weather.temp_outdoor = current["temperature_outdoor"] | 0.0f;

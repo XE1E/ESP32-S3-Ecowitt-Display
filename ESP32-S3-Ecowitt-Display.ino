@@ -522,10 +522,11 @@ void updateWeatherData() {
     // ========================================================================
     // Endpoint optimizado: UNA sola llamada obtiene todo
     // ========================================================================
-    if (ecowittApi.fetchAll(g_weather, g_compare, g_almanac, g_jardin, g_remoto)) {
-        // Sincronizar hora del sistema con el servidor
+    int serverTimezone = -6;  // Default Mexico
+    if (ecowittApi.fetchAll(g_weather, g_compare, g_almanac, g_jardin, g_remoto, &serverTimezone)) {
+        // Sincronizar hora del sistema con el servidor (usando timezone del server)
         if (strlen(g_weather.timestamp) > 0) {
-            syncTimeFromServer(g_weather.timestamp);
+            syncTimeFromServer(g_weather.timestamp, serverTimezone);
         }
 
         Serial.printf("[API] Principal: %.1f°C, %.0f%%, %.1f hPa\n",
