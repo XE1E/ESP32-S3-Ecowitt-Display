@@ -576,8 +576,9 @@ void updateDetailPrincipal() {
         lv_label_set_text(detail_principal_ui.pressure_trend, buf);
     }
 
-    // TODO: forecast_text desde /api/forecast (en g_weather o estructura separada)
-    lv_label_set_text(detail_principal_ui.forecast_text, "Pronostico: Sin cambios significativos");
+    // Pronóstico barométrico - PENDIENTE: necesita endpoint /api/forecast
+    lv_label_set_text(detail_principal_ui.forecast_text, "Pronostico: (pendiente servidor)");
+    lv_obj_set_style_text_color(detail_principal_ui.forecast_text, dp_text_muted(), 0);
 
     // Viento
     snprintf(buf, sizeof(buf), "%.0f km/h", g_weather.wind_speed);
@@ -608,8 +609,8 @@ void updateDetailPrincipal() {
     snprintf(buf, sizeof(buf), "Mes: %.1f mm", g_weather.rain_month);
     lv_label_set_text(detail_principal_ui.rain_month, buf);
 
-    // TODO: rain_year no está en WeatherData, agregar
-    lv_label_set_text(detail_principal_ui.rain_year, "Año: -- mm");
+    snprintf(buf, sizeof(buf), "Año: %.1f mm", g_weather.rain_year);
+    lv_label_set_text(detail_principal_ui.rain_year, buf);
 
     // UV
     snprintf(buf, sizeof(buf), "UV: %.0f", g_weather.uv);
@@ -623,14 +624,11 @@ void updateDetailPrincipal() {
     snprintf(buf, sizeof(buf), "Solar: %.0f W/m2", g_weather.solar_radiation);
     lv_label_set_text(detail_principal_ui.solar_radiation, buf);
 
-    // AQI - TODO: necesita estructura AirQualityData
-    // Por ahora placeholder
-    int aqi = 45;  // TODO: obtener de g_airquality
-    snprintf(buf, sizeof(buf), "AQI: %d", aqi);
-    lv_label_set_text(detail_principal_ui.aqi_value, buf);
-    lv_label_set_text(detail_principal_ui.aqi_level, getAqiLevel(aqi));
-    lv_obj_set_style_text_color(detail_principal_ui.aqi_level, getAqiColor(aqi), 0);
-    lv_obj_set_style_bg_color(detail_principal_ui.aqi_indicator, getAqiColor(aqi), 0);
+    // AQI - PENDIENTE: parsear airquality de /api/display y crear estructura
+    lv_label_set_text(detail_principal_ui.aqi_value, "AQI: --");
+    lv_label_set_text(detail_principal_ui.aqi_level, "(pendiente)");
+    lv_obj_set_style_text_color(detail_principal_ui.aqi_level, dp_text_muted(), 0);
+    lv_obj_set_style_bg_color(detail_principal_ui.aqi_indicator, dp_text_muted(), 0);
 
     // Sol y Luna
     if (g_almanac.valid) {
