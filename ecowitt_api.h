@@ -83,6 +83,9 @@ public:
                 data.temp_indoor = doc["temperature_indoor"] | 0.0f;
                 data.humidity_indoor = doc["humidity_indoor"] | 0.0f;
 
+                // Batería WS69 (sensor exterior) - true=OK, false=baja
+                data.battery_wh65 = doc["battery_wh65"] | true;
+
                 // Timestamp
                 strlcpy(data.timestamp,
                         doc["received_at"] | "",
@@ -116,10 +119,12 @@ public:
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {
-                data.temp_max = doc["temp_max"] | 0.0f;
-                data.temp_min = doc["temp_min"] | 0.0f;
-                data.wind_max = doc["wind_max"] | 0.0f;
-                data.rain_total = doc["rain_total"] | 0.0f;
+                // Estructura: {"stats": {"temperature_outdoor": {"min": X, "max": Y}}}
+                JsonObject stats = doc["stats"];
+                data.temp_max = stats["temperature_outdoor"]["max"] | 0.0f;
+                data.temp_min = stats["temperature_outdoor"]["min"] | 0.0f;
+                data.wind_max = stats["wind_gust"]["max"] | 0.0f;
+                data.rain_total = stats["rain_daily"]["max"] | 0.0f;
                 http.end();
                 return true;
             }

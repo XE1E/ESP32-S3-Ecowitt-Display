@@ -717,9 +717,16 @@ bool loadConfiguration(char *ssid, size_t ssid_len,
 
     bool configured = prefs.getBool("configured", false);
     if (configured) {
-        // Cargar red WiFi 1 (principal)
+        // Cargar red WiFi 1 (principal) - intentar nuevas claves
         String s = prefs.getString("wifi_ssid1", "");
         String p = prefs.getString("wifi_pass1", "");
+
+        // Migración: si no hay wifi_ssid1, intentar claves antiguas
+        if (s.length() == 0) {
+            s = prefs.getString("wifi_ssid", "");
+            p = prefs.getString("wifi_pass", "");
+        }
+
         String u = prefs.getString("server_url", "https://clima.xe1e.net");
 
         strncpy(ssid, s.c_str(), ssid_len - 1);

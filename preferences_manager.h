@@ -90,9 +90,19 @@ void setDefaultPreferences() {
 bool loadPreferences() {
     nvs.begin("ecowitt", true);  // Read-only
 
-    // WiFi (3 redes)
+    // WiFi (3 redes) - intentar nuevas claves primero
     String ssid1 = nvs.getString("wifi_ssid1", "");
     String pass1 = nvs.getString("wifi_pass1", "");
+
+    // Migración: si no hay wifi_ssid1, intentar claves antiguas
+    if (ssid1.length() == 0) {
+        ssid1 = nvs.getString("wifi_ssid", "");
+        pass1 = nvs.getString("wifi_pass", "");
+        if (ssid1.length() > 0) {
+            Serial.println("[PREFS] Migrando WiFi de claves antiguas...");
+        }
+    }
+
     strncpy(userPrefs.wifi_ssid1, ssid1.c_str(), sizeof(userPrefs.wifi_ssid1) - 1);
     strncpy(userPrefs.wifi_pass1, pass1.c_str(), sizeof(userPrefs.wifi_pass1) - 1);
 

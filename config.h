@@ -125,6 +125,9 @@ struct WeatherData {
     float temp_indoor;
     float humidity_indoor;
 
+    // Batería sensores (true=OK, false=baja)
+    bool battery_wh65;        // WS69 sensor exterior
+
     // Estadísticas del día
     float temp_max;
     float temp_min;

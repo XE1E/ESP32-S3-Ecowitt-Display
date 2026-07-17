@@ -2344,8 +2344,12 @@ void updateDashboardWeather() {
         lv_label_set_text(lbl_local_humidity, buf);
     }
     if (lbl_local_battery) {
-        // WS2910 tiene batería - TODO: obtener del API
-        snprintf(buf, sizeof(buf), "--%%");
+        // Batería del WS69 (sensor exterior)
+        if (g_weather.valid) {
+            snprintf(buf, sizeof(buf), "%s", g_weather.battery_wh65 ? "OK" : "Baja!");
+        } else {
+            snprintf(buf, sizeof(buf), "--");
+        }
         lv_label_set_text(lbl_local_battery, buf);
     }
 
@@ -2379,9 +2383,10 @@ void updateDashboardWeather() {
     }
     if (lbl_jardin_battery) {
         if (g_jardin.valid) {
-            snprintf(buf, sizeof(buf), "%d%%", g_jardin.battery);
+            // battery es 100 (OK) o 10 (baja)
+            snprintf(buf, sizeof(buf), "%s", g_jardin.battery > 50 ? "OK" : "Baja!");
         } else {
-            snprintf(buf, sizeof(buf), "--%%");
+            snprintf(buf, sizeof(buf), "--");
         }
         lv_label_set_text(lbl_jardin_battery, buf);
     }

@@ -58,14 +58,17 @@ void ch422g_set_pin(uint8_t pin, bool state) {
 }
 
 void ch422g_set_backlight_pwm(uint8_t brightness) {
-    // brightness: 0-100
+    // brightness: 0-100 (porcentaje)
     if (brightness > 100) brightness = 100;
     if (brightness < 1) brightness = 1;
 
     // Logarithmic curve for perceptual linearity
     float normalized = brightness / 100.0f;
     float pwm_float = 255.0f * (pow(10.0f, normalized) - 1.0f) / 9.0f;
-    uint8_t pwm_value = constrain((int)pwm_float, 3, 247);
+    uint8_t pwm_value = constrain((int)pwm_float, 8, 247);
+
+    // Invertir: backlight es activo-bajo (mayor PWM = más oscuro)
+    pwm_value = 255 - pwm_value;
 
     ch422g_write_cmd(CH422G_PWM_CMD, pwm_value);
 }
