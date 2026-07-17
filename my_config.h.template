@@ -9,11 +9,20 @@
 #define MY_CONFIG_H
 
 // ============================================================================
-// WiFi
+// WiFi (soporta hasta 3 redes con fallback automático)
 // ============================================================================
 
-#define WIFI_SSID     "TU_SSID"
-#define WIFI_PASSWORD "TU_PASSWORD"
+// Red principal
+#define WIFI_SSID1     "TU_SSID_PRINCIPAL"
+#define WIFI_PASSWORD1 "TU_PASSWORD1"
+
+// Red secundaria (opcional - dejar vacío si no se usa)
+#define WIFI_SSID2     ""
+#define WIFI_PASSWORD2 ""
+
+// Red terciaria (opcional - dejar vacío si no se usa)
+#define WIFI_SSID3     ""
+#define WIFI_PASSWORD3 ""
 
 // ============================================================================
 // API del servidor Ecowitt
@@ -26,13 +35,11 @@
 #define UPDATE_INTERVAL_MS  60000
 
 // ============================================================================
-// Ubicación (para NTP y pronóstico)
+// Ubicación (para UI)
 // ============================================================================
 
+// Nombre mostrado en header (la hora se sincroniza desde el servidor)
 #define LOCATION_NAME "Ciudad de México"
-#define LATITUDE      19.4326
-#define LONGITUDE     -99.1332
-#define TIMEZONE      "America/Mexico_City"
 
 // ============================================================================
 // Opciones de display
