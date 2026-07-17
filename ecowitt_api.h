@@ -501,6 +501,9 @@ public:
 
                 weather.rain_rate = current["rain_rate"] | 0.0f;
                 weather.rain_day = current["rain_daily"] | 0.0f;
+                weather.rain_week = current["rain_weekly"] | 0.0f;
+                weather.rain_month = current["rain_monthly"] | 0.0f;
+                weather.rain_year = current["rain_yearly"] | 0.0f;
                 weather.uv = current["uv_index"] | 0.0f;
                 weather.solar_radiation = current["solar_radiation"] | 0.0f;
                 weather.feels_like = current["feels_like"] | weather.temp_outdoor;

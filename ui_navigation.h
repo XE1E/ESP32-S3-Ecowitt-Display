@@ -13,11 +13,11 @@
 #include <Arduino.h>
 #include <lvgl.h>
 #include "config.h"
+#include "ui_detail_principal.h"
 
 // Forward declarations
 void createHistoryScreen();
 void createSettingsScreen();
-void createDetailPrincipal();
 void createDetailLocal();
 void createDetailJardin();
 void createDetailRemoto();
@@ -95,8 +95,9 @@ void navigateToScreen(ScreenType screen) {
             target = scr_dashboard;
             break;
         case SCREEN_DETAIL_PRINCIPAL:
-            if (!scr_detail_principal) createDetailPrincipal();
-            target = scr_detail_principal;
+            if (!getDetailPrincipalScreen()) createDetailPrincipal();
+            updateDetailPrincipal();  // Actualizar datos antes de mostrar
+            target = getDetailPrincipalScreen();
             break;
         case SCREEN_DETAIL_LOCAL:
             if (!scr_detail_local) createDetailLocal();
@@ -804,156 +805,6 @@ lv_obj_t* createDetailCard(lv_obj_t *parent, int x, int y, int w, int h, const c
     lv_obj_align(lbl_title, LV_ALIGN_TOP_LEFT, 10, 8);
 
     return card;
-}
-
-/**
- * Pantalla detalle PRINCIPAL (Estacion Ecowitt)
- */
-void createDetailPrincipal() {
-    extern WeatherData g_weather;
-    extern CompareData g_compare;
-    extern AlmanacData g_almanac;
-
-    scr_detail_principal = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(scr_detail_principal, DETAIL_BG, 0);
-    lv_obj_clear_flag(scr_detail_principal, LV_OBJ_FLAG_SCROLLABLE);
-
-    createDetailHeader(scr_detail_principal, "ESTACION PRINCIPAL", "Ecowitt GW2000", DETAIL_COLOR_PRINCIPAL);
-
-    int y_start = 85;
-    int card_h = 240;
-    int gap = 12;
-
-    // Card Temperatura (izquierda)
-    lv_obj_t *card_temp = createDetailCard(scr_detail_principal, gap, y_start, 330, card_h, "TEMPERATURA", DETAIL_COLOR_PRINCIPAL);
-
-    lv_obj_t *temp_icon = lv_label_create(card_temp);
-    lv_label_set_text(temp_icon, WI_THERMOMETER);
-    lv_obj_set_style_text_font(temp_icon, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(temp_icon, DETAIL_COLOR_PRINCIPAL, 0);
-    lv_obj_align(temp_icon, LV_ALIGN_TOP_LEFT, 10, 35);
-
-    lv_obj_t *temp_val = lv_label_create(card_temp);
-    lv_label_set_text(temp_val, "24.5°C");
-    lv_obj_set_style_text_color(temp_val, DETAIL_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(temp_val, &lv_font_montserrat_48, 0);
-    lv_obj_align(temp_val, LV_ALIGN_TOP_LEFT, 80, 35);
-
-    lv_obj_t *feels = lv_label_create(card_temp);
-    lv_label_set_text(feels, "Sensacion: 23.5°C");
-    lv_obj_set_style_text_color(feels, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(feels, LV_ALIGN_TOP_LEFT, 15, 100);
-
-    lv_obj_t *dew = lv_label_create(card_temp);
-    lv_label_set_text(dew, "Punto de rocio: 14.2°C");
-    lv_obj_set_style_text_color(dew, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(dew, LV_ALIGN_TOP_LEFT, 15, 125);
-
-    lv_obj_t *maxmin = lv_label_create(card_temp);
-    lv_label_set_text(maxmin, LV_SYMBOL_UP " Max: 28°C    " LV_SYMBOL_DOWN " Min: 18°C");
-    lv_obj_set_style_text_color(maxmin, DETAIL_TEXT_SECONDARY, 0);
-    lv_obj_align(maxmin, LV_ALIGN_BOTTOM_LEFT, 15, -15);
-
-    // Card Humedad y Presion (centro)
-    lv_obj_t *card_hp = createDetailCard(scr_detail_principal, gap + 330 + gap, y_start, 330, card_h, "HUMEDAD / PRESION", lv_color_hex(0x67E8F9));
-
-    lv_obj_t *hum_icon = lv_label_create(card_hp);
-    lv_label_set_text(hum_icon, WI_HUMIDITY);
-    lv_obj_set_style_text_font(hum_icon, &weather_icons_32, 0);
-    lv_obj_set_style_text_color(hum_icon, lv_color_hex(0x67E8F9), 0);
-    lv_obj_align(hum_icon, LV_ALIGN_TOP_LEFT, 10, 40);
-
-    lv_obj_t *hum_val = lv_label_create(card_hp);
-    lv_label_set_text(hum_val, "65%");
-    lv_obj_set_style_text_color(hum_val, lv_color_hex(0x67E8F9), 0);
-    lv_obj_set_style_text_font(hum_val, &lv_font_montserrat_28, 0);
-    lv_obj_align(hum_val, LV_ALIGN_TOP_LEFT, 55, 35);
-
-    lv_obj_t *pres_icon = lv_label_create(card_hp);
-    lv_label_set_text(pres_icon, WI_BAROMETER);
-    lv_obj_set_style_text_font(pres_icon, &weather_icons_32, 0);
-    lv_obj_set_style_text_color(pres_icon, lv_color_hex(0xC4B5FD), 0);
-    lv_obj_align(pres_icon, LV_ALIGN_TOP_LEFT, 10, 100);
-
-    lv_obj_t *pres_val = lv_label_create(card_hp);
-    lv_label_set_text(pres_val, "1012 hPa");
-    lv_obj_set_style_text_color(pres_val, lv_color_hex(0xC4B5FD), 0);
-    lv_obj_set_style_text_font(pres_val, &lv_font_montserrat_28, 0);
-    lv_obj_align(pres_val, LV_ALIGN_TOP_LEFT, 55, 100);
-
-    lv_obj_t *trend = lv_label_create(card_hp);
-    lv_label_set_text(trend, "Tendencia: " LV_SYMBOL_UP " Subiendo (+1.5 hPa/3h)");
-    lv_obj_set_style_text_color(trend, lv_color_hex(0x6EE7B7), 0);
-    lv_obj_align(trend, LV_ALIGN_TOP_LEFT, 15, 150);
-
-    // Card Viento (derecha)
-    lv_obj_t *card_wind = createDetailCard(scr_detail_principal, gap + 660 + gap, y_start, 330, card_h, "VIENTO", lv_color_hex(0x6EE7B7));
-
-    lv_obj_t *wind_icon = lv_label_create(card_wind);
-    lv_label_set_text(wind_icon, WI_STRONG_WIND);
-    lv_obj_set_style_text_font(wind_icon, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(wind_icon, lv_color_hex(0x6EE7B7), 0);
-    lv_obj_align(wind_icon, LV_ALIGN_TOP_LEFT, 10, 35);
-
-    lv_obj_t *wind_val = lv_label_create(card_wind);
-    lv_label_set_text(wind_val, "12 km/h");
-    lv_obj_set_style_text_color(wind_val, lv_color_hex(0x6EE7B7), 0);
-    lv_obj_set_style_text_font(wind_val, &lv_font_montserrat_28, 0);
-    lv_obj_align(wind_val, LV_ALIGN_TOP_LEFT, 80, 40);
-
-    lv_obj_t *wind_dir = lv_label_create(card_wind);
-    lv_label_set_text(wind_dir, "Direccion: NO 303°");
-    lv_obj_set_style_text_color(wind_dir, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(wind_dir, LV_ALIGN_TOP_LEFT, 15, 100);
-
-    lv_obj_t *gust = lv_label_create(card_wind);
-    lv_label_set_text(gust, "Rafagas: 18 km/h");
-    lv_obj_set_style_text_color(gust, lv_color_hex(0xFDE047), 0);
-    lv_obj_align(gust, LV_ALIGN_TOP_LEFT, 15, 125);
-
-    lv_obj_t *max_wind = lv_label_create(card_wind);
-    lv_label_set_text(max_wind, "Max hoy: 25 km/h");
-    lv_obj_set_style_text_color(max_wind, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(max_wind, LV_ALIGN_TOP_LEFT, 15, 150);
-
-    // Fila inferior: Lluvia, UV, Sol/Luna
-    int y2 = y_start + card_h + gap;
-    int card_w2 = (SCREEN_WIDTH - gap * 4) / 3;
-
-    lv_obj_t *card_rain = createDetailCard(scr_detail_principal, gap, y2, card_w2, 180, "PRECIPITACION", lv_color_hex(0x93C5FD));
-    lv_obj_t *rain_val = lv_label_create(card_rain);
-    lv_label_set_text(rain_val, "0.0 mm/h");
-    lv_obj_set_style_text_color(rain_val, lv_color_hex(0x93C5FD), 0);
-    lv_obj_set_style_text_font(rain_val, &lv_font_montserrat_28, 0);
-    lv_obj_align(rain_val, LV_ALIGN_TOP_LEFT, 15, 40);
-    lv_obj_t *rain_day = lv_label_create(card_rain);
-    lv_label_set_text(rain_day, "Hoy: 2.5 mm  |  Semana: 15 mm");
-    lv_obj_set_style_text_color(rain_day, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(rain_day, LV_ALIGN_TOP_LEFT, 15, 80);
-
-    lv_obj_t *card_uv = createDetailCard(scr_detail_principal, gap + card_w2 + gap, y2, card_w2, 180, "UV / SOLAR", lv_color_hex(0xFCD34D));
-    lv_obj_t *uv_val = lv_label_create(card_uv);
-    lv_label_set_text(uv_val, "UV: 3 (Moderado)");
-    lv_obj_set_style_text_color(uv_val, lv_color_hex(0xFCD34D), 0);
-    lv_obj_set_style_text_font(uv_val, &lv_font_montserrat_24, 0);
-    lv_obj_align(uv_val, LV_ALIGN_TOP_LEFT, 15, 40);
-    lv_obj_t *solar = lv_label_create(card_uv);
-    lv_label_set_text(solar, "Radiacion: 450 W/m2");
-    lv_obj_set_style_text_color(solar, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(solar, LV_ALIGN_TOP_LEFT, 15, 80);
-
-    lv_obj_t *card_sun = createDetailCard(scr_detail_principal, gap + (card_w2 + gap) * 2, y2, card_w2, 180, "SOL / LUNA", lv_color_hex(0xFFB800));
-    lv_obj_t *sunrise = lv_label_create(card_sun);
-    lv_label_set_text(sunrise, "Amanecer: 06:06  Atardecer: 19:18");
-    lv_obj_set_style_text_color(sunrise, lv_color_hex(0xFFB800), 0);
-    lv_obj_align(sunrise, LV_ALIGN_TOP_LEFT, 15, 40);
-    lv_obj_t *moon = lv_label_create(card_sun);
-    lv_label_set_text(moon, "Luna: Nueva (5%)");
-    lv_obj_set_style_text_color(moon, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(moon, LV_ALIGN_TOP_LEFT, 15, 70);
-
-    enableSwipeNavigation(scr_detail_principal);
-    Serial.println("[UI] Pantalla detalle Principal creada");
 }
 
 /**

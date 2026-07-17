@@ -1574,6 +1574,22 @@ void createMainPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     lv_obj_set_style_text_color(lbl_footer_moon, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(lbl_footer_moon, &lv_font_montserrat_18, 0);
     lv_obj_align(lbl_footer_moon, LV_ALIGN_RIGHT_MID, -8, 0);
+
+    // Hacer todas las sub-cards clickables para navegar al detalle
+    auto navCallback = [](lv_event_t *e) {
+        Serial.println("[TAP] Sub-card principal tocada!");
+        extern void navigateToScreenById(int);
+        navigateToScreenById(1);  // SCREEN_DETAIL_PRINCIPAL
+    };
+
+    // Agregar handler a cada sub-card
+    lv_obj_t *subcards[] = {sc_temp, sc_hp, sc_wind, sc_uv, sc_sunrise, sc_sunset, sc_moon};
+    for (int i = 0; i < 7; i++) {
+        if (subcards[i]) {
+            lv_obj_add_flag(subcards[i], LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_event_cb(subcards[i], navCallback, LV_EVENT_CLICKED, NULL);
+        }
+    }
 }
 
 /**
@@ -1806,9 +1822,13 @@ void createDashboard() {
     if (panel_main) {
         lv_obj_add_flag(panel_main, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(panel_main, [](lv_event_t *e) {
+            Serial.println("[TAP] Panel principal tocado!");
             extern void navigateToScreenById(int);
             navigateToScreenById(NAV_SCREEN_DETAIL_PRINCIPAL);
         }, LV_EVENT_CLICKED, NULL);
+        Serial.println("[UI] Tap handler agregado a panel_main");
+    } else {
+        Serial.println("[UI] ERROR: panel_main es NULL");
     }
 
     // Card Local -> Detalle Local

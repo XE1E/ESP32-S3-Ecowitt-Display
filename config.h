@@ -116,6 +116,7 @@ struct WeatherData {
     float rain_day;
     float rain_week;
     float rain_month;
+    float rain_year;
     float uv;
     float solar_radiation;
     float feels_like;
