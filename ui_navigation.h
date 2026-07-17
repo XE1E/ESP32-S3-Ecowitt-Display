@@ -441,25 +441,26 @@ void createSettingsScreen() {
     slider_brightness = lv_slider_create(card_display);
     lv_obj_set_width(slider_brightness, 300);
     lv_obj_align(slider_brightness, LV_ALIGN_TOP_LEFT, 100, 40);
-    lv_slider_set_range(slider_brightness, 10, 255);
-    lv_slider_set_value(slider_brightness, 200, LV_ANIM_OFF);
+    lv_slider_set_range(slider_brightness, 10, 100);  // Porcentaje 10-100%
+    lv_slider_set_value(slider_brightness, 80, LV_ANIM_OFF);
 
     lv_obj_t *lbl_bright_val = lv_label_create(card_display);
-    lv_label_set_text(lbl_bright_val, "78%");
+    lv_label_set_text(lbl_bright_val, "80%");
     lv_obj_align_to(lbl_bright_val, slider_brightness, LV_ALIGN_OUT_RIGHT_MID, 15, 0);
 
     lv_obj_add_event_cb(slider_brightness, [](lv_event_t *e) {
         lv_obj_t *slider = lv_event_get_target(e);
         int val = lv_slider_get_value(slider);
-        // Actualizar PWM del backlight
-        // analogWrite(LCD_BACKLIGHT, val);
+
+        // Aplicar brillo via CH422G PWM
+        setBacklight(val);
 
         // Actualizar label
         lv_obj_t *parent = lv_obj_get_parent(slider);
         lv_obj_t *label = lv_obj_get_child(parent, -1);
         if (label) {
             char buf[10];
-            snprintf(buf, sizeof(buf), "%d%%", val * 100 / 255);
+            snprintf(buf, sizeof(buf), "%d%%", val);
             lv_label_set_text(label, buf);
         }
     }, LV_EVENT_VALUE_CHANGED, NULL);

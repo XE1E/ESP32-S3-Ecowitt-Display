@@ -22,6 +22,7 @@
 #include "ecowitt_api.h"
 #include "bme280_sensor.h"
 #include "preferences_manager.h"
+#include "time_sync.h"
 
 // LVGL y display
 #include "display.h"
@@ -83,9 +84,9 @@ void onWizardDone(bool success) {
 
 // Iniciar operación normal (después de wizard o si ya configurado)
 void startNormalOperation() {
-    // Configurar NTP
-    configTzTime(TIMEZONE, "pool.ntp.org", "time.nist.gov");
-    Serial.println("[NTP] Sincronizando hora...");
+    // La hora se sincroniza desde el servidor (received_at)
+    // No se necesita NTP ni configurar timezone
+    Serial.println("[TIME] Hora se sincronizara desde el servidor...");
 
     // Verificar conexión al servidor
     Serial.println("[API] Verificando conexión al servidor...");
@@ -97,7 +98,7 @@ void startNormalOperation() {
         g_status.api_ok = false;
     }
 
-    // Primera carga de datos
+    // Primera carga de datos (también sincroniza la hora)
     updateWeatherData();
     updateAlmanac();
 
@@ -345,27 +346,16 @@ void loop() {
 // Conectar WiFi
 // ============================================================================
 
-void connectWiFi() {
-    // Usar preferencias si están configuradas, sino usar defines
-    const char* ssid;
-    const char* pass;
+bool tryConnectWiFi(const char* ssid, const char* pass, int networkNum) {
+    if (strlen(ssid) == 0) return false;
 
-    UserPreferences* prefs = getPreferences();
-    if (prefs->configured && strlen(prefs->wifi_ssid) > 0) {
-        ssid = prefs->wifi_ssid;
-        pass = prefs->wifi_pass;
-    } else {
-        ssid = WIFI_SSID;
-        pass = WIFI_PASSWORD;
-    }
+    Serial.printf("[WiFi] Red %d: Conectando a %s", networkNum, ssid);
 
-    Serial.printf("[WiFi] Conectando a %s", ssid);
-
-    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
     WiFi.begin(ssid, pass);
 
     int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
         delay(500);
         Serial.print(".");
         attempts++;
@@ -375,12 +365,41 @@ void connectWiFi() {
         Serial.println(" OK!");
         Serial.printf("[WiFi] IP: %s\n", WiFi.localIP().toString().c_str());
         Serial.printf("[WiFi] RSSI: %d dBm\n", WiFi.RSSI());
+        return true;
+    }
+
+    Serial.println(" FALLO");
+    return false;
+}
+
+void connectWiFi() {
+    WiFi.mode(WIFI_STA);
+
+    UserPreferences* prefs = getPreferences();
+
+    // Intentar las 3 redes configuradas en orden
+    if (prefs->configured) {
+        for (int i = 1; i <= 3; i++) {
+            if (hasWifiNetwork(i)) {
+                if (tryConnectWiFi(getWifiSSID(i), getWifiPassword(i), i)) {
+                    g_status.wifi_connected = true;
+                    g_status.wifi_rssi = WiFi.RSSI();
+                    return;
+                }
+            }
+        }
+    }
+
+    // Fallback: usar defines de my_config.h
+    Serial.println("[WiFi] Intentando red de respaldo (my_config.h)...");
+    if (tryConnectWiFi(WIFI_SSID, WIFI_PASSWORD, 0)) {
         g_status.wifi_connected = true;
         g_status.wifi_rssi = WiFi.RSSI();
-    } else {
-        Serial.println(" FALLO!");
-        g_status.wifi_connected = false;
+        return;
     }
+
+    Serial.println("[WiFi] No se pudo conectar a ninguna red!");
+    g_status.wifi_connected = false;
 }
 
 // ============================================================================
@@ -504,6 +523,11 @@ void updateWeatherData() {
     // Datos de la estación principal (WS69)
     // ========================================================================
     if (ecowittApi.fetchCurrent(g_weather)) {
+        // Sincronizar hora del sistema con el servidor
+        if (strlen(g_weather.timestamp) > 0) {
+            syncTimeFromServer(g_weather.timestamp);
+        }
+
         Serial.printf("[API] Principal: %.1f°C, %.0f%%, %.1f hPa\n",
                       g_weather.temp_outdoor,
                       g_weather.humidity_outdoor,

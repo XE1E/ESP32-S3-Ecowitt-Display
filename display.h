@@ -193,16 +193,16 @@ void initLVGL() {
 // ============================================================================
 
 void setBacklight(uint8_t brightness) {
-    // CH422G only supports on/off, not PWM
-    ch422g_set_pin(CH422G_BACKLIGHT, brightness > 0);
+    // brightness: 0-100 (porcentaje)
+    ch422g_set_backlight_pwm(brightness);
 }
 
 void backlightOn() {
-    ch422g_set_pin(CH422G_BACKLIGHT, true);
+    ch422g_set_backlight_pwm(80);  // 80% por defecto
 }
 
 void backlightOff() {
-    ch422g_set_pin(CH422G_BACKLIGHT, false);
+    ch422g_set_backlight_pwm(1);   // Minimo (no apagar completamente)
 }
 
 #endif // DISPLAY_H

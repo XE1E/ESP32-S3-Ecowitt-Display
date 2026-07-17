@@ -688,8 +688,15 @@ void saveConfiguration() {
     Preferences prefs;
     prefs.begin("ecowitt", false);
 
-    prefs.putString("wifi_ssid", scannedNetworks[selectedNetwork].c_str());
-    prefs.putString("wifi_pass", enteredPassword);
+    // Guardar como red WiFi 1 (principal)
+    prefs.putString("wifi_ssid1", scannedNetworks[selectedNetwork].c_str());
+    prefs.putString("wifi_pass1", enteredPassword);
+    // Limpiar redes 2 y 3 (se pueden configurar despues en ajustes)
+    prefs.putString("wifi_ssid2", "");
+    prefs.putString("wifi_pass2", "");
+    prefs.putString("wifi_ssid3", "");
+    prefs.putString("wifi_pass3", "");
+
     prefs.putString("server_url", enteredServerURL);
     prefs.putBool("configured", true);
 
@@ -710,8 +717,9 @@ bool loadConfiguration(char *ssid, size_t ssid_len,
 
     bool configured = prefs.getBool("configured", false);
     if (configured) {
-        String s = prefs.getString("wifi_ssid", "");
-        String p = prefs.getString("wifi_pass", "");
+        // Cargar red WiFi 1 (principal)
+        String s = prefs.getString("wifi_ssid1", "");
+        String p = prefs.getString("wifi_pass1", "");
         String u = prefs.getString("server_url", "https://clima.xe1e.net");
 
         strncpy(ssid, s.c_str(), ssid_len - 1);

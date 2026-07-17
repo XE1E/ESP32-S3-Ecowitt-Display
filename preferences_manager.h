@@ -20,9 +20,13 @@
 // ============================================================================
 
 struct UserPreferences {
-    // WiFi
-    char wifi_ssid[33];
-    char wifi_pass[65];
+    // WiFi (hasta 3 redes con fallback automatico)
+    char wifi_ssid1[33];
+    char wifi_pass1[65];
+    char wifi_ssid2[33];
+    char wifi_pass2[65];
+    char wifi_ssid3[33];
+    char wifi_pass3[65];
 
     // Servidor
     char server_url[128];
@@ -86,11 +90,21 @@ void setDefaultPreferences() {
 bool loadPreferences() {
     nvs.begin("ecowitt", true);  // Read-only
 
-    // WiFi
-    String ssid = nvs.getString("wifi_ssid", "");
-    String pass = nvs.getString("wifi_pass", "");
-    strncpy(userPrefs.wifi_ssid, ssid.c_str(), sizeof(userPrefs.wifi_ssid) - 1);
-    strncpy(userPrefs.wifi_pass, pass.c_str(), sizeof(userPrefs.wifi_pass) - 1);
+    // WiFi (3 redes)
+    String ssid1 = nvs.getString("wifi_ssid1", "");
+    String pass1 = nvs.getString("wifi_pass1", "");
+    strncpy(userPrefs.wifi_ssid1, ssid1.c_str(), sizeof(userPrefs.wifi_ssid1) - 1);
+    strncpy(userPrefs.wifi_pass1, pass1.c_str(), sizeof(userPrefs.wifi_pass1) - 1);
+
+    String ssid2 = nvs.getString("wifi_ssid2", "");
+    String pass2 = nvs.getString("wifi_pass2", "");
+    strncpy(userPrefs.wifi_ssid2, ssid2.c_str(), sizeof(userPrefs.wifi_ssid2) - 1);
+    strncpy(userPrefs.wifi_pass2, pass2.c_str(), sizeof(userPrefs.wifi_pass2) - 1);
+
+    String ssid3 = nvs.getString("wifi_ssid3", "");
+    String pass3 = nvs.getString("wifi_pass3", "");
+    strncpy(userPrefs.wifi_ssid3, ssid3.c_str(), sizeof(userPrefs.wifi_ssid3) - 1);
+    strncpy(userPrefs.wifi_pass3, pass3.c_str(), sizeof(userPrefs.wifi_pass3) - 1);
 
     // Servidor
     String url = nvs.getString("server_url", "https://clima.xe1e.net");
@@ -135,9 +149,13 @@ bool loadPreferences() {
 void savePreferences() {
     nvs.begin("ecowitt", false);  // Read-write
 
-    // WiFi
-    nvs.putString("wifi_ssid", userPrefs.wifi_ssid);
-    nvs.putString("wifi_pass", userPrefs.wifi_pass);
+    // WiFi (3 redes)
+    nvs.putString("wifi_ssid1", userPrefs.wifi_ssid1);
+    nvs.putString("wifi_pass1", userPrefs.wifi_pass1);
+    nvs.putString("wifi_ssid2", userPrefs.wifi_ssid2);
+    nvs.putString("wifi_pass2", userPrefs.wifi_pass2);
+    nvs.putString("wifi_ssid3", userPrefs.wifi_ssid3);
+    nvs.putString("wifi_pass3", userPrefs.wifi_pass3);
 
     // Servidor
     nvs.putString("server_url", userPrefs.server_url);
@@ -207,12 +225,26 @@ bool isConfigured() {
     return userPrefs.configured;
 }
 
-const char* getWifiSSID() {
-    return userPrefs.wifi_ssid;
+const char* getWifiSSID(int network = 1) {
+    switch(network) {
+        case 1: return userPrefs.wifi_ssid1;
+        case 2: return userPrefs.wifi_ssid2;
+        case 3: return userPrefs.wifi_ssid3;
+        default: return userPrefs.wifi_ssid1;
+    }
 }
 
-const char* getWifiPassword() {
-    return userPrefs.wifi_pass;
+const char* getWifiPassword(int network = 1) {
+    switch(network) {
+        case 1: return userPrefs.wifi_pass1;
+        case 2: return userPrefs.wifi_pass2;
+        case 3: return userPrefs.wifi_pass3;
+        default: return userPrefs.wifi_pass1;
+    }
+}
+
+bool hasWifiNetwork(int network) {
+    return strlen(getWifiSSID(network)) > 0;
 }
 
 const char* getServerURL() {
@@ -223,10 +255,26 @@ const char* getServerURL() {
 // Setters con guardado automático
 // ============================================================================
 
-void setWifiCredentials(const char* ssid, const char* pass) {
-    strncpy(userPrefs.wifi_ssid, ssid, sizeof(userPrefs.wifi_ssid) - 1);
-    strncpy(userPrefs.wifi_pass, pass, sizeof(userPrefs.wifi_pass) - 1);
+void setWifiCredentials(int network, const char* ssid, const char* pass) {
+    switch(network) {
+        case 1:
+            strncpy(userPrefs.wifi_ssid1, ssid, sizeof(userPrefs.wifi_ssid1) - 1);
+            strncpy(userPrefs.wifi_pass1, pass, sizeof(userPrefs.wifi_pass1) - 1);
+            break;
+        case 2:
+            strncpy(userPrefs.wifi_ssid2, ssid, sizeof(userPrefs.wifi_ssid2) - 1);
+            strncpy(userPrefs.wifi_pass2, pass, sizeof(userPrefs.wifi_pass2) - 1);
+            break;
+        case 3:
+            strncpy(userPrefs.wifi_ssid3, ssid, sizeof(userPrefs.wifi_ssid3) - 1);
+            strncpy(userPrefs.wifi_pass3, pass, sizeof(userPrefs.wifi_pass3) - 1);
+            break;
+    }
     savePreferences();
+}
+
+void clearWifiCredentials(int network) {
+    setWifiCredentials(network, "", "");
 }
 
 void setServerURL(const char* url) {
