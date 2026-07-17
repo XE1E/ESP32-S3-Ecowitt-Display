@@ -6,10 +6,11 @@ Display tactil de 7" para estacion meteorologica Ecowitt. Muestra en tiempo real
 
 - **Pantalla tactil 7" IPS** a color (1024x600)
 - **Datos en tiempo real** de tu estacion Ecowitt
-- **6 paneles grandes** - Temperatura, Humedad, Viento, Presion, Lluvia, Sol/Luna
-- **Tema claro/oscuro** - Estilo servidor web
-- **Interior + Exterior** - BME280 local + sensores de la estacion
-- **Alertas activas** - Muestra si hay alertas disparadas
+- **Dashboard con cards** - Temperatura, Humedad, Viento, Presion, Sol/Luna
+- **Multi-estacion** - Principal + Jardin (WN31) + Remoto (GW1100)
+- **3 redes WiFi** - Fallback automatico entre redes configuradas
+- **Sincronizacion hora** - Desde el servidor (sin NTP)
+- **Control de brillo** - Slider PWM en configuracion
 - **UI con LVGL 8.3** - Interfaz moderna y fluida
 - **Configuracion tactil** - WiFi y ajustes en pantalla
 
@@ -27,31 +28,14 @@ Display tactil de 7" para estacion meteorologica Ecowitt. Muestra en tiempo real
 | WiFi | 802.11 b/g/n 2.4GHz |
 | USB | Type-C (CDC + JTAG) |
 
-<p align="center">
-  <img src="docs/images/display-front.png" alt="Display frontal" width="400"/>
-</p>
+### Pines importantes
 
-<p align="center">
-  <img src="docs/images/display-back.png" alt="Display posterior con PCB" width="500"/>
-</p>
-
-### Diagrama de componentes
-
-<p align="center">
-  <img src="docs/images/board-pinout.png" alt="Pinout de la tarjeta" width="700"/>
-</p>
-
-**Componentes principales:**
-1. ESP32-S3-WROOM-1-N16R8 (WiFi/BT, 8MB PSRAM, 16MB Flash)
-2. Conector panel display
-3. Conector panel touch
-4. Slot tarjeta TF/SD
-5. Puerto USB Type-C
-6. UART1 Port
-8. Header I2C
-9. Header sensores
-17. Boton BOOT
-18. Boton RESET
+| Funcion | GPIO | Notas |
+|---------|------|-------|
+| I2C SDA | 8 | Bus compartido (touch, BME280) |
+| I2C SCL | 9 | Bus compartido |
+| Touch INT | 4 | LOW = touch activo |
+| Backlight | CH422G | Control PWM via I2C |
 
 ### Sensor interior (opcional)
 
@@ -60,29 +44,65 @@ Display tactil de 7" para estacion meteorologica Ecowitt. Muestra en tiempo real
 | BME280 | I2C (GPIO 8/9) |
 | Direccion | 0x76 o 0x77 |
 
-## Conexion
-
-El display se conecta a tu servidor Ecowitt via WiFi:
+## Arquitectura
 
 ```
 ┌─────────────────────┐         ┌─────────────────────┐
 │  Display 7" tactil  │  WiFi   │  Servidor Ecowitt   │
 │  ESP32-S3 + LVGL    │ <-----> │  clima.xe1e.net     │
-│                     │  HTTPS  │  /api/current       │
+│                     │  HTTPS  │  /api/display       │
 └─────────────────────┘         └─────────────────────┘
 ```
 
-## API Endpoints
+El display usa un **endpoint optimizado** (`/api/display`) que combina todos los datos en una sola llamada HTTP.
 
-```
-GET /api/current      - Datos actuales (temp, humedad, viento, lluvia, UV...)
-GET /api/stats/daily  - Estadisticas del dia (max, min, totales)
-GET /api/compare      - Comparacion vs ayer
-GET /api/alerts       - Alertas activas
-GET /api/almanac      - Sol, luna, planetas
+## Configuracion PlatformIO (Recomendado)
+
+### Instalacion
+
+1. Instala [PlatformIO](https://platformio.org/install)
+2. Clona este repositorio
+3. Copia `my_config.h.template` a `my_config.h`
+4. Edita `my_config.h` con tu WiFi y URL de API
+5. Compila y sube:
+
+```bash
+pio run -t upload
 ```
 
-## Configuracion Arduino IDE
+### platformio.ini
+
+```ini
+[env:esp32s3]
+platform = espressif32
+board = esp32-s3-devkitc-1
+framework = arduino
+
+; Flash y PSRAM para Waveshare 16MB/8MB
+board_build.flash_mode = qio
+board_build.f_flash = 80000000L
+board_upload.flash_size = 16MB
+board_build.partitions = default_16MB.csv
+board_build.arduino.memory_type = qio_opi
+board_build.psram_type = opi
+
+build_flags =
+    -DBOARD_HAS_PSRAM
+    -DCONFIG_SPIRAM_MODE_OCT=1
+    -DLV_CONF_INCLUDE_SIMPLE=1
+
+monitor_speed = 115200
+upload_speed = 921600
+
+lib_deps =
+    lvgl/lvgl@~8.3.0
+    moononournation/GFX Library for Arduino@1.3.7
+    bblanchon/ArduinoJson@^7.0.0
+    adafruit/Adafruit BME280 Library@^2.2.0
+    tonywestonuk/GT911 Lite@^1.0.0
+```
+
+## Configuracion Arduino IDE (Alternativo)
 
 | Setting | Valor |
 |---------|-------|
@@ -93,7 +113,7 @@ GET /api/almanac      - Sol, luna, planetas
 | PSRAM | OPI PSRAM |
 | Partition Scheme | 16M Flash (3M APP/9.9MB FATFS) |
 
-## Librerias requeridas
+### Librerias requeridas
 
 | Libreria | Version | Notas |
 |----------|---------|-------|
@@ -104,28 +124,46 @@ GET /api/almanac      - Sol, luna, planetas
 | Adafruit BME280 | Latest | Sensor interior (opcional) |
 | GT911 Lite | 1.0.2 | Touch controller |
 
-## Instalacion
+### Instalacion Arduino
 
-1. Clona este repositorio
-2. Abre `ESP32-S3-Ecowitt-Display.ino` en Arduino IDE
-3. Copia `my_config.h.template` a `my_config.h`
-4. Edita `my_config.h` con tu WiFi y URL de API
-5. Copia `lv_conf.h` a tu carpeta `Arduino/libraries/`
-6. Compila y sube al ESP32-S3
+1. Abre `ESP32-S3-Ecowitt-Display.ino` en Arduino IDE
+2. Copia `my_config.h.template` a `my_config.h`
+3. Edita `my_config.h` con tu WiFi y URL de API
+4. Copia `lv_conf.h` a tu carpeta `Arduino/libraries/`
+5. Compila y sube al ESP32-S3
 
 ## Configuracion inicial
 
 Al primer arranque aparece el wizard de configuracion:
-1. Selecciona tu red WiFi
+1. Selecciona tu red WiFi (soporta hasta 3 redes)
 2. Ingresa la contrasena
 3. Configura la URL de tu servidor Ecowitt
-4. El display reinicia y comienza a mostrar datos
+4. Ajusta el brillo de pantalla
+5. El display reinicia y comienza a mostrar datos
+
+## API del Servidor
+
+El display consume el endpoint optimizado `/api/display`:
+
+```json
+{
+  "timezone_offset": -6,
+  "current": { "temperature_outdoor": 25.3, ... },
+  "stats": { "temperature_outdoor": { "min": 18, "max": 28 } },
+  "compare": { "temp_diff": 2.3 },
+  "almanac": { "sunrise": "06:07", "sunset": "20:18" },
+  "stations": { "ch1": {...}, "gw1100": {...} }
+}
+```
+
+Ver [docs/API.md](docs/API.md) para documentacion completa.
 
 ## Estructura del proyecto
 
 ```
 ESP32-S3-Ecowitt-Display/
 ├── ESP32-S3-Ecowitt-Display.ino   # Archivo principal
+├── platformio.ini                  # Config PlatformIO
 ├── config.h                        # Estructuras de datos
 ├── my_config.h                     # Tu configuracion (gitignore)
 ├── my_config.h.template            # Plantilla de configuracion
@@ -133,33 +171,41 @@ ESP32-S3-Ecowitt-Display/
 ├── display.h                       # Inicializacion display RGB
 ├── touch.h                         # Driver touch GT911
 ├── ecowitt_api.h                   # Cliente API REST
-├── preferences_manager.h           # Persistencia NVS
+├── time_sync.h                     # Sincronizacion hora con servidor
+├── preferences_manager.h           # Persistencia NVS (WiFi, config)
 ├── bme280_sensor.h                 # Sensor interior
 │
-├── ui_dashboard.h                  # Pantalla principal (6 cards)
-├── ui_navigation.h                 # Navegacion y swipe
-├── ui_wizard.h                     # Wizard de configuracion
+├── ui.h                            # Controlador UI principal
+├── ui_dashboard.h                  # Pantalla principal (cards)
+├── ui_settings.h                   # Pantalla configuracion
+├── ui_components.h                 # Componentes reutilizables
 │
-├── lv_conf.h                       # Config LVGL (copiar a libraries/)
+├── lv_conf.h                       # Config LVGL
+├── fonts/                          # Fuentes custom (Weather Icons)
 │
 ├── docs/
 │   ├── README.md                   # Indice de documentacion
-│   ├── TODO.md                     # Tareas pendientes
-│   ├── DEVELOPMENT_PLAN.md         # Plan de desarrollo
+│   ├── PLAN_FUNCIONALIDADES.md     # Plan de desarrollo
+│   ├── API.md                      # Referencia API servidor
 │   └── archivo/                    # Docs obsoletos
-│       ├── PLAN.md
-│       └── DEV_STATUS.md
 │
 └── unused_waveshare/               # Codigo original Waveshare (referencia)
 ```
 
 ## Notas tecnicas
 
-- **I2C:** GPIO 8 (SDA), GPIO 9 (SCL) - NO 19/20
-- **Touch INT:** GPIO 4 (LOW = touch activo)
-- **Pixel clock:** 15 MHz (estable, sin tearing)
-- **Buffer LVGL:** 200 lineas en PSRAM
-- **Fuentes:** Montserrat 12-48px
+| Parametro | Valor |
+|-----------|-------|
+| Pixel clock | 15 MHz (estable, sin tearing) |
+| Buffer LVGL | 200 lineas en PSRAM |
+| I2C | GPIO 8 (SDA), GPIO 9 (SCL) |
+| Touch INT | GPIO 4 (LOW = touch activo) |
+| Fuentes | Montserrat 12, 14, 16, 18, 20, 24, 28, 36, 40, 48 px |
+
+## Documentacion
+
+- [Plan de Funcionalidades](docs/PLAN_FUNCIONALIDADES.md) - Roadmap y fases
+- [API Reference](docs/API.md) - Documentacion del servidor
 
 ## Licencia
 
