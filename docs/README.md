@@ -13,6 +13,7 @@ Documentos completados u obsoletos en [`archivo/`](archivo/):
 
 | Documento | Estado |
 |-----------|--------|
+| [DEVELOPMENT_PLAN.md](archivo/DEVELOPMENT_PLAN.md) | Plan integral (supersedido) |
 | [PLAN.md](archivo/PLAN.md) | Plan inicial (supersedido) |
 | [DEV_STATUS.md](archivo/DEV_STATUS.md) | Debug del touch (resuelto) |
 | [TODO.md](archivo/TODO.md) | Lista de tareas (migrado a PLAN_FUNCIONALIDADES) |
