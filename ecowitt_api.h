@@ -353,8 +353,9 @@ public:
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {
-                data.temperature = doc["temperature_outdoor"] | doc["temperature"] | 0.0f;
-                data.humidity = doc["humidity_outdoor"] | doc["humidity"] | 0.0f;
+                // GW1100 usa _indoor, otros gateways pueden usar _outdoor o sin sufijo
+                data.temperature = doc["temperature_outdoor"] | doc["temperature_indoor"] | doc["temperature"] | 0.0f;
+                data.humidity = doc["humidity_outdoor"] | doc["humidity_indoor"] | doc["humidity"] | 0.0f;
                 data.pressure = doc["pressure_relative"] | doc["pressure"] | 0.0f;
                 data.temp_max = doc["temp_max"] | data.temperature;
                 data.temp_min = doc["temp_min"] | data.temperature;

@@ -490,8 +490,8 @@ void simulateWeatherData() {
 
 void updateWeatherData() {
     // === MODO SIMULADOR ===
-    // Comentar la siguiente línea para usar datos reales del API
-    #define USE_SIMULATOR
+    // Descomentar la siguiente línea para usar datos simulados
+    // #define USE_SIMULATOR
 
     #ifdef USE_SIMULATOR
     simulateWeatherData();
