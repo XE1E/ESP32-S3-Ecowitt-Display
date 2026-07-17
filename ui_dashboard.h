@@ -29,27 +29,27 @@ struct ThemeColors {
     lv_color_t accent;
 };
 
-// Tema claro - colores suaves y profesionales
+// Tema claro - ALINEADO CON SERVIDOR WEB clima.xe1e.net
 static const ThemeColors THEME_LIGHT = {
-    .bg = LV_COLOR_MAKE(0xF0, 0xF2, 0xF5),
-    .card = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
-    .border = LV_COLOR_MAKE(0xE0, 0xE0, 0xE0),
-    .text_primary = LV_COLOR_MAKE(0x1A, 0x1A, 0x1A),
-    .text_secondary = LV_COLOR_MAKE(0x55, 0x55, 0x55),
-    .text_muted = LV_COLOR_MAKE(0x88, 0x88, 0x88),
+    .bg = LV_COLOR_MAKE(0xF8, 0xFA, 0xFC),        // slate-50
+    .card = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),      // --surface light
+    .border = LV_COLOR_MAKE(0xE2, 0xE8, 0xF0),    // --line light
+    .text_primary = LV_COLOR_MAKE(0x16, 0x23, 0x2F),   // --ink light
+    .text_secondary = LV_COLOR_MAKE(0x47, 0x55, 0x69), // slate-600
+    .text_muted = LV_COLOR_MAKE(0x55, 0x67, 0x7A),     // --muted light
     .header_bg = LV_COLOR_MAKE(0xFF, 0xFF, 0xFF),
-    .accent = LV_COLOR_MAKE(0x21, 0x96, 0xF3),
+    .accent = LV_COLOR_MAKE(0x25, 0x63, 0xA8),         // link color light
 };
 
-// Tema oscuro - estilo servidor (0f1a2a base)
+// Tema oscuro - ALINEADO CON SERVIDOR WEB clima.xe1e.net
 static const ThemeColors THEME_DARK = {
-    .bg = LV_COLOR_MAKE(0x0B, 0x11, 0x20),        // Body gradient base
-    .card = LV_COLOR_MAKE(0x1A, 0x25, 0x35),      // Card approx 5% white
-    .border = LV_COLOR_MAKE(0x2A, 0x35, 0x45),    // Border
+    .bg = LV_COLOR_MAKE(0x0A, 0x14, 0x22),        // --surface mas oscuro para contraste
+    .card = LV_COLOR_MAKE(0x1E, 0x2D, 0x40),      // card mas clara para destacar
+    .border = LV_COLOR_MAKE(0x3A, 0x4A, 0x5A),    // borde mas visible
     .text_primary = LV_COLOR_MAKE(0xE8, 0xED, 0xF5),   // --ink
     .text_secondary = LV_COLOR_MAKE(0xCB, 0xD5, 0xE1), // slate-300
     .text_muted = LV_COLOR_MAKE(0x84, 0x96, 0xA6),     // --muted
-    .header_bg = LV_COLOR_MAKE(0x0A, 0x0F, 0x1C),      // Appbar
+    .header_bg = LV_COLOR_MAKE(0x0A, 0x0F, 0x1A),      // Appbar rgba(10,15,26,0.82)
     .accent = LV_COLOR_MAKE(0x60, 0xA5, 0xFA),         // blue-400
 };
 
@@ -87,21 +87,24 @@ void saveUIPreferences() {
 #define COLOR_YELLOW        lv_color_hex(0xFACC15)  // yellow-400
 #define COLOR_RED           lv_color_hex(0xF87171)  // red-400
 
-// Colores de iconos por concepto - TEMA OSCURO (brillantes)
-#define COLOR_TEMP_DARK     lv_color_hex(0xFB923C)  // orange-400 - temperatura
+// Colores de iconos - ALINEADOS CON SERVIDOR WEB (tailwind.config weather)
+// TEMA OSCURO (brillantes para fondo oscuro)
+#define COLOR_TEMP_DARK     lv_color_hex(0xFF6B6B)  // weather-hot del servidor
 #define COLOR_HUMIDITY_DARK lv_color_hex(0x22D3EE)  // cyan-400 - humedad
 #define COLOR_PRESSURE_DARK lv_color_hex(0xA78BFA)  // violet-400 - presion
-#define COLOR_WIND_DARK     lv_color_hex(0x34D399)  // emerald-400 - viento
+#define COLOR_WIND_DARK     lv_color_hex(0x7BC8A4)  // weather-wind del servidor
 #define COLOR_BATTERY_DARK  lv_color_hex(0xA3E635)  // lime-400 - bateria
-#define COLOR_RAIN_DARK     lv_color_hex(0x60A5FA)  // blue-400 - lluvia
+#define COLOR_RAIN_DARK     lv_color_hex(0x4A90D9)  // weather-rain del servidor
+#define COLOR_COLD_DARK     lv_color_hex(0x88C8F7)  // weather-cold del servidor
 
-// Colores de iconos por concepto - TEMA CLARO (mas saturados)
-#define COLOR_TEMP_LIGHT    lv_color_hex(0xEA580C)  // orange-600 - temperatura
+// TEMA CLARO (mas saturados)
+#define COLOR_TEMP_LIGHT    lv_color_hex(0xDC2626)  // red-600
 #define COLOR_HUMIDITY_LIGHT lv_color_hex(0x0891B2) // cyan-600 - humedad
 #define COLOR_PRESSURE_LIGHT lv_color_hex(0x7C3AED) // violet-600 - presion
 #define COLOR_WIND_LIGHT    lv_color_hex(0x059669)  // emerald-600 - viento
 #define COLOR_BATTERY_LIGHT lv_color_hex(0x65A30D)  // lime-600 - bateria
 #define COLOR_RAIN_LIGHT    lv_color_hex(0x2563EB)  // blue-600 - lluvia
+#define COLOR_COLD_LIGHT    lv_color_hex(0x0284C7)  // sky-600
 
 // Colores dinamicos segun tema (para iconos)
 #define COLOR_TEMP          (darkMode ? COLOR_TEMP_DARK : COLOR_TEMP_LIGHT)
@@ -111,15 +114,15 @@ void saveUIPreferences() {
 #define COLOR_BATTERY       (darkMode ? COLOR_BATTERY_DARK : COLOR_BATTERY_LIGHT)
 #define COLOR_RAIN          (darkMode ? COLOR_RAIN_DARK : COLOR_RAIN_LIGHT)
 
-// Colores fijos (funcionan en ambos temas)
-#define COLOR_SUN           lv_color_hex(0xF59E0B)  // amber-500 - sol
-#define COLOR_UV            lv_color_hex(0xEAB308)  // yellow-500 - uv
+// Colores fijos - ALINEADOS CON SERVIDOR WEB
+#define COLOR_SUN           lv_color_hex(0xFFB800)  // weather-sun del servidor
+#define COLOR_UV            lv_color_hex(0xFFB800)  // weather-sun del servidor
 
 // Aliases para compatibilidad
 #define COLOR_CYAN          COLOR_HUMIDITY
 #define COLOR_VIOLET        COLOR_PRESSURE
 #define COLOR_TEMP_HOT      COLOR_TEMP
-#define COLOR_TEMP_COLD     (darkMode ? lv_color_hex(0x7DD3FC) : lv_color_hex(0x0284C7))
+#define COLOR_TEMP_COLD     (darkMode ? COLOR_COLD_DARK : COLOR_COLD_LIGHT)
 
 // Iconos usando simbolos LVGL
 #define ICON_WIFI       LV_SYMBOL_WIFI
@@ -233,6 +236,7 @@ static lv_obj_t *lbl_footer_moon = nullptr;
 
 static lv_style_t style_card;
 static lv_style_t style_card_pressed;
+static lv_style_t style_subcard;      // Estilo para boxes internos (como en SunMoon)
 static lv_style_t style_header;
 static lv_style_t style_footer;
 static bool styles_initialized = false;
@@ -256,10 +260,10 @@ void initDashboardStyles() {
     lv_style_set_shadow_spread(&style_card, 4);
     lv_style_set_pad_all(&style_card, CARD_PADDING);
 
-    // Borde sutil con glow en tema oscuro
+    // Borde mas visible para definir cards contra el fondo
     lv_style_set_border_width(&style_card, darkMode ? 1 : 1);
-    lv_style_set_border_color(&style_card, darkMode ? lv_color_hex(0x374151) : COLOR_BORDER);
-    lv_style_set_border_opa(&style_card, LV_OPA_60);
+    lv_style_set_border_color(&style_card, darkMode ? lv_color_hex(0x4A5568) : COLOR_BORDER);
+    lv_style_set_border_opa(&style_card, LV_OPA_80);
 
     // Estilo header con sombra inferior
     lv_style_init(&style_header);
@@ -292,6 +296,18 @@ void initDashboardStyles() {
     lv_style_set_transform_width(&style_card_pressed, -2);
     lv_style_set_transform_height(&style_card_pressed, -2);
 
+    // Estilo sub-card (boxes internos como en SunMoon del servidor)
+    // Replica: bg-white/10 para mas contraste, rounded-lg, borde sutil
+    lv_style_init(&style_subcard);
+    lv_style_set_bg_color(&style_subcard, darkMode ? lv_color_hex(0x2A3A4A) : lv_color_hex(0xE8EDF5));
+    lv_style_set_bg_opa(&style_subcard, LV_OPA_COVER);
+    lv_style_set_radius(&style_subcard, 10);
+    lv_style_set_border_width(&style_subcard, 1);
+    lv_style_set_border_color(&style_subcard, darkMode ? lv_color_hex(0x3A4A5A) : lv_color_hex(0xD0D8E0));
+    lv_style_set_border_opa(&style_subcard, LV_OPA_60);
+    lv_style_set_shadow_width(&style_subcard, 0);
+    lv_style_set_pad_all(&style_subcard, 8);
+
     styles_initialized = true;
 }
 
@@ -307,6 +323,19 @@ lv_obj_t* createCard(lv_obj_t *parent, int x, int y, int w, int h) {
     lv_obj_add_style(card, &style_card_pressed, LV_STATE_PRESSED);
     lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
     return card;
+}
+
+/**
+ * Crear sub-card (box interno) - estilo servidor web
+ * Usado para agrupar elementos dentro de un panel (ej: Amanecer | Atardecer | Luna)
+ */
+lv_obj_t* createSubCard(lv_obj_t *parent, int x, int y, int w, int h) {
+    lv_obj_t *subcard = lv_obj_create(parent);
+    lv_obj_set_pos(subcard, x, y);
+    lv_obj_set_size(subcard, w, h);
+    lv_obj_add_style(subcard, &style_subcard, 0);
+    lv_obj_clear_flag(subcard, LV_OBJ_FLAG_SCROLLABLE);
+    return subcard;
 }
 
 // ============================================================================
@@ -342,47 +371,48 @@ void createHeader(lv_obj_t *parent) {
     lv_obj_set_style_text_font(station_loc, &lv_font_montserrat_18, 0);
     lv_obj_align(station_loc, LV_ALIGN_LEFT_MID, 10, 5);
 
-    // Portable (BME280) - más abajo para no encimar con reloj
-    lbl_header_portable = lv_label_create(header);
-    lv_label_set_text(lbl_header_portable, "Portable: --.-°C  --%");
-    lv_obj_set_style_text_color(lbl_header_portable, COLOR_TEMP, 0);
-    lv_obj_set_style_text_font(lbl_header_portable, &lv_font_montserrat_14, 0);
-    lv_obj_align(lbl_header_portable, LV_ALIGN_LEFT_MID, 10, 28);
-
     // === Centro: Fecha + Hora ===
     lbl_status_text = lv_label_create(header);  // Fecha
     lv_label_set_text(lbl_status_text, "Martes 14 de Julio");
     lv_obj_set_style_text_color(lbl_status_text, COLOR_TEXT_MUTED, 0);
     lv_obj_set_style_text_font(lbl_status_text, &lv_font_montserrat_16, 0);
-    lv_obj_align(lbl_status_text, LV_ALIGN_CENTER, 0, -25);
+    lv_obj_align(lbl_status_text, LV_ALIGN_CENTER, 0, -18);
 
     lbl_header_time = lv_label_create(header);  // Hora
     lv_label_set_text(lbl_header_time, "22:59:21");
     lv_obj_set_style_text_color(lbl_header_time, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(lbl_header_time, &lv_font_montserrat_28, 0);
-    lv_obj_align(lbl_header_time, LV_ALIGN_CENTER, 0, 5);
+    lv_obj_align(lbl_header_time, LV_ALIGN_CENTER, 0, 8);
 
-    // === Lado derecho: WiFi + Toggles ===
+    // === Lado derecho: WiFi + Toggles (mas grandes, separados, con fondo) ===
 
-    // WiFi indicator (cambia color: verde=conectado, rojo=desconectado)
-    lbl_wifi_rssi = lv_label_create(header);
+    // WiFi indicator con fondo
+    lv_obj_t *wifi_btn = lv_btn_create(header);
+    lv_obj_set_size(wifi_btn, 42, 36);
+    lv_obj_align(wifi_btn, LV_ALIGN_RIGHT_MID, -215, 0);
+    lv_obj_set_style_bg_color(wifi_btn, COLOR_BORDER, 0);
+    lv_obj_set_style_radius(wifi_btn, 8, 0);
+    lv_obj_set_style_shadow_width(wifi_btn, 0, 0);
+    lv_obj_clear_flag(wifi_btn, LV_OBJ_FLAG_CLICKABLE);
+
+    lbl_wifi_rssi = lv_label_create(wifi_btn);
     lv_label_set_text(lbl_wifi_rssi, LV_SYMBOL_WIFI);
     lv_obj_set_style_text_color(lbl_wifi_rssi, COLOR_GREEN, 0);
-    lv_obj_set_style_text_font(lbl_wifi_rssi, &lv_font_montserrat_18, 0);
-    lv_obj_align(lbl_wifi_rssi, LV_ALIGN_RIGHT_MID, -175, 0);
+    lv_obj_set_style_text_font(lbl_wifi_rssi, &lv_font_montserrat_24, 0);
+    lv_obj_center(lbl_wifi_rssi);
 
-    // Unit toggle (°C / °F)
+    // Unit toggle (°C / °F) - mas grande
     btn_unit = lv_btn_create(header);
-    lv_obj_set_size(btn_unit, 50, 32);
-    lv_obj_align(btn_unit, LV_ALIGN_RIGHT_MID, -120, 0);
+    lv_obj_set_size(btn_unit, 54, 36);
+    lv_obj_align(btn_unit, LV_ALIGN_RIGHT_MID, -145, 0);
     lv_obj_set_style_bg_color(btn_unit, COLOR_BORDER, 0);
-    lv_obj_set_style_radius(btn_unit, 6, 0);
+    lv_obj_set_style_radius(btn_unit, 8, 0);
     lv_obj_set_style_shadow_width(btn_unit, 0, 0);
 
     lv_obj_t *unit_label = lv_label_create(btn_unit);
     lv_label_set_text(unit_label, useCelsius ? "°C" : "°F");
     lv_obj_set_style_text_color(unit_label, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(unit_label, &lv_font_montserrat_18, 0);
+    lv_obj_set_style_text_font(unit_label, &lv_font_montserrat_24, 0);
     lv_obj_center(unit_label);
 
     lv_obj_add_event_cb(btn_unit, [](lv_event_t *e) {
@@ -395,12 +425,12 @@ void createHeader(lv_obj_t *parent) {
         updateDashboardWeather();
     }, LV_EVENT_CLICKED, NULL);
 
-    // Theme toggle (luna/sol con iconos weather)
+    // Theme toggle (luna/sol) - mas grande
     btn_theme = lv_btn_create(header);
-    lv_obj_set_size(btn_theme, 42, 32);
+    lv_obj_set_size(btn_theme, 48, 36);
     lv_obj_align(btn_theme, LV_ALIGN_RIGHT_MID, -85, 0);
     lv_obj_set_style_bg_color(btn_theme, COLOR_BORDER, 0);
-    lv_obj_set_style_radius(btn_theme, 6, 0);
+    lv_obj_set_style_radius(btn_theme, 8, 0);
     lv_obj_set_style_shadow_width(btn_theme, 0, 0);
 
     lv_obj_t *theme_icon = lv_label_create(btn_theme);
@@ -413,24 +443,24 @@ void createHeader(lv_obj_t *parent) {
         darkMode = !darkMode;
         lv_obj_t *btn = lv_event_get_target(e);
         lv_obj_t *icon = lv_obj_get_child(btn, 0);
-        // Luna para modo oscuro, Sol para modo claro
         lv_label_set_text(icon, darkMode ? WI_NIGHT_CLEAR : WI_DAY_SUNNY);
         lv_obj_set_style_text_color(icon, darkMode ? lv_color_hex(0xFCD34D) : lv_color_hex(0xF59E0B), 0);
         saveUIPreferences();
         refreshDashboardTheme();
     }, LV_EVENT_CLICKED, NULL);
 
-    // Settings button
+    // Settings button - mas grande
     btn_settings = lv_btn_create(header);
-    lv_obj_set_size(btn_settings, 36, 28);
-    lv_obj_align(btn_settings, LV_ALIGN_RIGHT_MID, -40, 0);
+    lv_obj_set_size(btn_settings, 42, 36);
+    lv_obj_align(btn_settings, LV_ALIGN_RIGHT_MID, -30, 0);
     lv_obj_set_style_bg_color(btn_settings, COLOR_BORDER, 0);
-    lv_obj_set_style_radius(btn_settings, 14, 0);
+    lv_obj_set_style_radius(btn_settings, 8, 0);
     lv_obj_set_style_shadow_width(btn_settings, 0, 0);
 
     lv_obj_t *settings_icon = lv_label_create(btn_settings);
     lv_label_set_text(settings_icon, LV_SYMBOL_SETTINGS);
     lv_obj_set_style_text_color(settings_icon, COLOR_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_font(settings_icon, &lv_font_montserrat_24, 0);
     lv_obj_center(settings_icon);
 }
 
@@ -1141,10 +1171,14 @@ void createRainPanel(lv_obj_t *parent, int x, int y, int w, int h) {
 }
 
 // ============================================================================
-// Panel Sol y Luna estilo servidor
+// Panel Sol y Luna - NUEVO DISENO estilo servidor web
+// Layout: Card con 3 sub-cards (Amanecer | Atardecer | Luna) + footer
 // ============================================================================
 
 static lv_obj_t *panel_sun_moon = nullptr;
+static lv_obj_t *subcard_sunrise = nullptr;
+static lv_obj_t *subcard_sunset = nullptr;
+static lv_obj_t *subcard_moon = nullptr;
 static lv_obj_t *lbl_sunrise_val = nullptr;
 static lv_obj_t *lbl_sunset_val = nullptr;
 static lv_obj_t *lbl_moon_icon = nullptr;
@@ -1164,67 +1198,90 @@ void createSunMoonPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     lv_obj_t *title = lv_label_create(panel_sun_moon);
     lv_label_set_text(title, "SOL Y LUNA");
     lv_obj_set_style_text_color(title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_14, 0);
     lv_obj_align_to(title, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
 
-    // Amanecer - con icono
-    lv_obj_t *sunrise_icon = lv_label_create(panel_sun_moon);
+    // Calcular dimensiones de sub-cards (3 columnas con gap)
+    int content_y = 25;
+    int gap = 6;
+    int subcard_w = (w - CARD_PADDING * 2 - gap * 2) / 3;
+    int subcard_h = h - content_y - 35 - CARD_PADDING;  // Espacio para titulo y footer
+
+    // ========== SUB-CARD 1: Amanecer ==========
+    subcard_sunrise = createSubCard(panel_sun_moon, 0, content_y, subcard_w, subcard_h);
+
+    lv_obj_t *sunrise_icon = lv_label_create(subcard_sunrise);
     lv_label_set_text(sunrise_icon, WI_SUNRISE);
     lv_obj_set_style_text_font(sunrise_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(sunrise_icon, COLOR_SUN, 0);
-    lv_obj_align(sunrise_icon, LV_ALIGN_TOP_LEFT, 10, 30);
+    lv_obj_align(sunrise_icon, LV_ALIGN_TOP_MID, 0, 2);
 
-    lbl_sunrise_val = lv_label_create(panel_sun_moon);
-    lv_label_set_text(lbl_sunrise_val, "06:06");
-    lv_obj_set_style_text_color(lbl_sunrise_val, COLOR_SUN, 0);
-    lv_obj_set_style_text_font(lbl_sunrise_val, &lv_font_montserrat_24, 0);
-    lv_obj_align_to(lbl_sunrise_val, sunrise_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+    lv_obj_t *sunrise_label = lv_label_create(subcard_sunrise);
+    lv_label_set_text(sunrise_label, "Amanecer");
+    lv_obj_set_style_text_color(sunrise_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(sunrise_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(sunrise_label, LV_ALIGN_CENTER, 0, 5);
 
-    // Atardecer - con icono
-    lv_obj_t *sunset_icon = lv_label_create(panel_sun_moon);
+    lbl_sunrise_val = lv_label_create(subcard_sunrise);
+    lv_label_set_text(lbl_sunrise_val, "06:07 a.m.");
+    lv_obj_set_style_text_color(lbl_sunrise_val, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(lbl_sunrise_val, &lv_font_montserrat_16, 0);
+    lv_obj_align(lbl_sunrise_val, LV_ALIGN_BOTTOM_MID, 0, -2);
+
+    // ========== SUB-CARD 2: Atardecer ==========
+    subcard_sunset = createSubCard(panel_sun_moon, subcard_w + gap, content_y, subcard_w, subcard_h);
+
+    lv_obj_t *sunset_icon = lv_label_create(subcard_sunset);
     lv_label_set_text(sunset_icon, WI_SUNSET);
     lv_obj_set_style_text_font(sunset_icon, &weather_icons_32, 0);
-    lv_obj_set_style_text_color(sunset_icon, COLOR_TEMP_HOT, 0);
-    lv_obj_align(sunset_icon, LV_ALIGN_TOP_LEFT, 10, 65);
+    lv_obj_set_style_text_color(sunset_icon, COLOR_SUN, 0);
+    lv_obj_align(sunset_icon, LV_ALIGN_TOP_MID, 0, 2);
 
-    lbl_sunset_val = lv_label_create(panel_sun_moon);
-    lv_label_set_text(lbl_sunset_val, "19:18");
-    lv_obj_set_style_text_color(lbl_sunset_val, COLOR_TEMP_HOT, 0);
-    lv_obj_set_style_text_font(lbl_sunset_val, &lv_font_montserrat_24, 0);
-    lv_obj_align_to(lbl_sunset_val, sunset_icon, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+    lv_obj_t *sunset_label = lv_label_create(subcard_sunset);
+    lv_label_set_text(sunset_label, "Atardecer");
+    lv_obj_set_style_text_color(sunset_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(sunset_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(sunset_label, LV_ALIGN_CENTER, 0, 5);
 
-    // Luna - Icono (Weather Icons)
-    lbl_moon_icon = lv_label_create(panel_sun_moon);
-    lv_label_set_text(lbl_moon_icon, WI_MOON_NEW);
+    lbl_sunset_val = lv_label_create(subcard_sunset);
+    lv_label_set_text(lbl_sunset_val, "07:18 p.m.");
+    lv_obj_set_style_text_color(lbl_sunset_val, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(lbl_sunset_val, &lv_font_montserrat_16, 0);
+    lv_obj_align(lbl_sunset_val, LV_ALIGN_BOTTOM_MID, 0, -2);
+
+    // ========== SUB-CARD 3: Luna ==========
+    subcard_moon = createSubCard(panel_sun_moon, (subcard_w + gap) * 2, content_y, subcard_w, subcard_h);
+
+    lbl_moon_icon = lv_label_create(subcard_moon);
+    lv_label_set_text(lbl_moon_icon, WI_MOON_WAXING_CRES);
     lv_obj_set_style_text_font(lbl_moon_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(lbl_moon_icon, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_align(lbl_moon_icon, LV_ALIGN_TOP_LEFT, 10, 100);
+    lv_obj_align(lbl_moon_icon, LV_ALIGN_TOP_MID, 0, 2);
 
-    lbl_moon_val = lv_label_create(panel_sun_moon);
-    lv_label_set_text(lbl_moon_val, "Nueva (5%)");
+    lv_obj_t *moon_label = lv_label_create(subcard_moon);
+    lv_label_set_text(moon_label, "Luna");
+    lv_obj_set_style_text_color(moon_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(moon_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(moon_label, LV_ALIGN_CENTER, 0, 5);
+
+    lbl_moon_val = lv_label_create(subcard_moon);
+    lv_label_set_text(lbl_moon_val, "Creciente");
     lv_obj_set_style_text_color(lbl_moon_val, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(lbl_moon_val, &lv_font_montserrat_18, 0);
-    lv_obj_align_to(lbl_moon_val, lbl_moon_icon, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+    lv_obj_set_style_text_font(lbl_moon_val, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_moon_val, LV_ALIGN_BOTTOM_MID, 0, -2);
 
-    // Horas de luz
-    lv_obj_t *daylight_lbl = lv_label_create(panel_sun_moon);
-    lv_label_set_text(daylight_lbl, "Horas de luz:");
-    lv_obj_set_style_text_color(daylight_lbl, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(daylight_lbl, &lv_font_montserrat_16, 0);
-    lv_obj_align(daylight_lbl, LV_ALIGN_TOP_LEFT, 10, 140);
+    // ========== FOOTER: Horas de luz ==========
+    lv_obj_t *daylight_prefix = lv_label_create(panel_sun_moon);
+    lv_label_set_text(daylight_prefix, "Horas de luz:");
+    lv_obj_set_style_text_color(daylight_prefix, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(daylight_prefix, &lv_font_montserrat_12, 0);
+    lv_obj_align(daylight_prefix, LV_ALIGN_BOTTOM_LEFT, 5, -5);
 
     lbl_daylight = lv_label_create(panel_sun_moon);
-    lv_label_set_text(lbl_daylight, "13 h 12 min");
-    lv_obj_set_style_text_color(lbl_daylight, COLOR_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(lbl_daylight, &lv_font_montserrat_20, 0);
-    lv_obj_align_to(lbl_daylight, daylight_lbl, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
-
-    // Indice UV (abajo)
-    lv_obj_t *uv_lbl = lv_label_create(panel_sun_moon);
-    lv_label_set_text(uv_lbl, "Indice UV: 3 (Moderado)");
-    lv_obj_set_style_text_color(uv_lbl, COLOR_UV, 0);
-    lv_obj_set_style_text_font(uv_lbl, &lv_font_montserrat_16, 0);
-    lv_obj_align(uv_lbl, LV_ALIGN_BOTTOM_LEFT, 10, -5);
+    lv_label_set_text(lbl_daylight, "13 h 11 min");
+    lv_obj_set_style_text_color(lbl_daylight, COLOR_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_font(lbl_daylight, &lv_font_montserrat_14, 0);
+    lv_obj_align_to(lbl_daylight, daylight_prefix, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
 }
 
 // ============================================================================
@@ -1243,7 +1300,7 @@ static lv_obj_t *lbl_main_pressure = nullptr;
 static lv_obj_t *lbl_main_pressure_trend = nullptr;
 static lv_obj_t *lbl_main_wind = nullptr;
 static lv_obj_t *lbl_main_wind_dir = nullptr;
-static lv_obj_t *lbl_main_wind_icon = nullptr;
+static lv_obj_t *lbl_main_wind_dir_icon = nullptr;
 static lv_obj_t *lbl_main_gust = nullptr;
 static lv_obj_t *lbl_main_uv = nullptr;
 static lv_obj_t *lbl_main_imeca = nullptr;
@@ -1277,246 +1334,252 @@ static lv_obj_t *lbl_remoto_pressure = nullptr;
 void createMainPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     panel_main = createCard(parent, x, y, w, h);
 
-    // Borde superior con acento de color (efecto visual distintivo)
-    lv_obj_t *accent_line = lv_obj_create(panel_main);
-    lv_obj_set_size(accent_line, w - 24, 3);
-    lv_obj_align(accent_line, LV_ALIGN_TOP_MID, 0, -8);
-    lv_obj_set_style_bg_color(accent_line, COLOR_ACCENT, 0);
-    lv_obj_set_style_bg_opa(accent_line, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(accent_line, 2, 0);
-    lv_obj_set_style_border_width(accent_line, 0, 0);
-    lv_obj_clear_flag(accent_line, LV_OBJ_FLAG_SCROLLABLE);
+    // Dimensiones de sub-cards
+    int sc_h = h - 20;  // altura de sub-cards
+    int gap = 6;
+    int sc1_w = 320;    // Temperatura (muy ancha para icono condicion)
+    int sc2_w = 180;    // Humedad+Presion
+    int sc3_w = 175;    // Viento
+    int sc4_w = 115;    // UV+IMECA
+    int sc5_x = sc1_w + sc2_w + sc3_w + sc4_w + gap * 4;
+    int sc5_w = w - sc5_x - 15;  // Sol/Luna (muy angosta ~190px)
 
-    // ========== COLUMNA 1: Temperatura (izquierda) ==========
+    // ========== SUB-CARD 1: Temperatura ==========
+    lv_obj_t *sc_temp = createSubCard(panel_main, 0, 5, sc1_w, sc_h);
 
-    // Temperatura grande con unidad (arriba)
-    lbl_main_temp = lv_label_create(panel_main);
-    lv_label_set_text(lbl_main_temp, "24.5°C");
+    // Temperatura grande
+    lbl_main_temp = lv_label_create(sc_temp);
+    lv_label_set_text(lbl_main_temp, "24.5°");
     lv_obj_set_style_text_color(lbl_main_temp, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(lbl_main_temp, &lv_font_montserrat_48, 0);
-    lv_obj_align(lbl_main_temp, LV_ALIGN_TOP_LEFT, 10, 5);
+    lv_obj_align(lbl_main_temp, LV_ALIGN_TOP_LEFT, 8, 5);
 
-    // Icono de condicion (al lado de temperatura)
-    lbl_main_condition_icon = lv_label_create(panel_main);
+    // Icono condicion (al lado de temp)
+    lbl_main_condition_icon = lv_label_create(sc_temp);
     lv_label_set_text(lbl_main_condition_icon, WI_DAY_SUNNY);
     lv_obj_set_style_text_font(lbl_main_condition_icon, &weather_icons_48, 0);
     lv_obj_set_style_text_color(lbl_main_condition_icon, COLOR_SUN, 0);
-    lv_obj_align(lbl_main_condition_icon, LV_ALIGN_TOP_LEFT, 160, 5);
+    lv_obj_align(lbl_main_condition_icon, LV_ALIGN_TOP_RIGHT, -8, 5);
 
-    // Condicion texto (debajo del icono)
-    lbl_main_condition = lv_label_create(panel_main);
+    // Condicion texto
+    lbl_main_condition = lv_label_create(sc_temp);
     lv_label_set_text(lbl_main_condition, "Despejado");
     lv_obj_set_style_text_color(lbl_main_condition, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(lbl_main_condition, &lv_font_montserrat_18, 0);
-    lv_obj_align(lbl_main_condition, LV_ALIGN_TOP_LEFT, 10, 60);
+    lv_obj_set_style_text_font(lbl_main_condition, &lv_font_montserrat_16, 0);
+    lv_obj_align(lbl_main_condition, LV_ALIGN_TOP_LEFT, 8, 58);
 
-    // Sensacion termica con unidad
-    lbl_main_feels = lv_label_create(panel_main);
-    lv_label_set_text(lbl_main_feels, "Sensacion 23.5°C");
+    // Sensacion termica
+    lbl_main_feels = lv_label_create(sc_temp);
+    lv_label_set_text(lbl_main_feels, "ST 23.5°");
     lv_obj_set_style_text_color(lbl_main_feels, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(lbl_main_feels, &lv_font_montserrat_16, 0);
-    lv_obj_align(lbl_main_feels, LV_ALIGN_TOP_LEFT, 10, 85);
+    lv_obj_set_style_text_font(lbl_main_feels, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_main_feels, LV_ALIGN_TOP_LEFT, 8, 78);
 
-    // Max / Min con texto explicito
-    lbl_main_maxmin = lv_label_create(panel_main);
-    lv_label_set_text(lbl_main_maxmin, "Max 28°C  Min 18°C");
+    // Max/Min en linea separada
+    lbl_main_maxmin = lv_label_create(sc_temp);
+    lv_label_set_text(lbl_main_maxmin, "18.0/28.0");
     lv_obj_set_style_text_color(lbl_main_maxmin, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(lbl_main_maxmin, &lv_font_montserrat_18, 0);
-    lv_obj_align(lbl_main_maxmin, LV_ALIGN_TOP_LEFT, 10, 110);
+    lv_obj_set_style_text_font(lbl_main_maxmin, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_main_maxmin, LV_ALIGN_TOP_LEFT, 8, 96);
 
-    // Lluvia (si hay)
-    lv_obj_t *rain_icon = lv_label_create(panel_main);
+    // Lluvia (bajado)
+    lv_obj_t *rain_icon = lv_label_create(sc_temp);
     lv_label_set_text(rain_icon, WI_RAIN);
     lv_obj_set_style_text_font(rain_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(rain_icon, COLOR_RAIN, 0);
-    lv_obj_align(rain_icon, LV_ALIGN_TOP_LEFT, 10, 135);
+    lv_obj_align(rain_icon, LV_ALIGN_BOTTOM_LEFT, 5, 2);
 
-    lv_obj_t *rain_label = lv_label_create(panel_main);
+    lv_obj_t *rain_label = lv_label_create(sc_temp);
     lv_label_set_text(rain_label, "0.0 mm/h");
     lv_obj_set_style_text_color(rain_label, COLOR_RAIN, 0);
-    lv_obj_set_style_text_font(rain_label, &lv_font_montserrat_18, 0);
-    lv_obj_align(rain_label, LV_ALIGN_TOP_LEFT, 50, 140);
+    lv_obj_set_style_text_font(rain_label, &lv_font_montserrat_16, 0);
+    lv_obj_align(rain_label, LV_ALIGN_BOTTOM_LEFT, 42, -3);
 
-    // ========== COLUMNA 2: Humedad + Presion (centro-izq) ==========
-    int col2_x = 230;
+    // ========== SUB-CARD 2: Humedad + Presion ==========
+    lv_obj_t *sc_hp = createSubCard(panel_main, sc1_w + gap, 5, sc2_w, sc_h);
 
-    // Titulo humedad
-    lv_obj_t *hum_title = lv_label_create(panel_main);
-    lv_label_set_text(hum_title, "Humedad");
-    lv_obj_set_style_text_color(hum_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(hum_title, &lv_font_montserrat_16, 0);
-    lv_obj_align(hum_title, LV_ALIGN_TOP_LEFT, col2_x, 8);
-
-    // Icono + valor humedad (COLOR_HUMIDITY - cyan)
-    lv_obj_t *hum_icon = lv_label_create(panel_main);
+    // Humedad (bajado 15px)
+    lv_obj_t *hum_icon = lv_label_create(sc_hp);
     lv_label_set_text(hum_icon, WI_HUMIDITY);
     lv_obj_set_style_text_font(hum_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(hum_icon, COLOR_HUMIDITY, 0);
-    lv_obj_align(hum_icon, LV_ALIGN_TOP_LEFT, col2_x, 28);
+    lv_obj_align(hum_icon, LV_ALIGN_TOP_LEFT, 5, 18);
 
-    lbl_main_humidity = lv_label_create(panel_main);
+    lbl_main_humidity = lv_label_create(sc_hp);
     lv_label_set_text(lbl_main_humidity, "65%");
     lv_obj_set_style_text_color(lbl_main_humidity, COLOR_HUMIDITY, 0);
-    lv_obj_set_style_text_font(lbl_main_humidity, &lv_font_montserrat_40, 0);
-    lv_obj_align(lbl_main_humidity, LV_ALIGN_TOP_LEFT, col2_x + 45, 25);
+    lv_obj_set_style_text_font(lbl_main_humidity, &lv_font_montserrat_28, 0);
+    lv_obj_align(lbl_main_humidity, LV_ALIGN_TOP_LEFT, 45, 18);
 
-    // Titulo presion
-    lv_obj_t *pres_title = lv_label_create(panel_main);
-    lv_label_set_text(pres_title, "Presion");
-    lv_obj_set_style_text_color(pres_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(pres_title, &lv_font_montserrat_16, 0);
-    lv_obj_align(pres_title, LV_ALIGN_TOP_LEFT, col2_x, 75);
+    lv_obj_t *hum_label = lv_label_create(sc_hp);
+    lv_label_set_text(hum_label, "Humedad");
+    lv_obj_set_style_text_color(hum_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(hum_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(hum_label, LV_ALIGN_TOP_LEFT, 45, 50);
 
-    // Icono + valor presion (COLOR_PRESSURE - violeta)
-    lv_obj_t *pres_icon = lv_label_create(panel_main);
+    // Presion (bajado mas)
+    lv_obj_t *pres_icon = lv_label_create(sc_hp);
     lv_label_set_text(pres_icon, WI_BAROMETER);
     lv_obj_set_style_text_font(pres_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(pres_icon, COLOR_PRESSURE, 0);
-    lv_obj_align(pres_icon, LV_ALIGN_TOP_LEFT, col2_x, 95);
+    lv_obj_align(pres_icon, LV_ALIGN_TOP_LEFT, 5, 80);
 
-    lbl_main_pressure = lv_label_create(panel_main);
-    lv_label_set_text(lbl_main_pressure, "1012 mb");
+    lbl_main_pressure = lv_label_create(sc_hp);
+    lv_label_set_text(lbl_main_pressure, "1012");
     lv_obj_set_style_text_color(lbl_main_pressure, COLOR_PRESSURE, 0);
-    lv_obj_set_style_text_font(lbl_main_pressure, &lv_font_montserrat_40, 0);
-    lv_obj_align(lbl_main_pressure, LV_ALIGN_TOP_LEFT, col2_x + 45, 88);
+    lv_obj_set_style_text_font(lbl_main_pressure, &lv_font_montserrat_28, 0);
+    lv_obj_align(lbl_main_pressure, LV_ALIGN_TOP_LEFT, 45, 80);
 
-    lbl_main_pressure_trend = lv_label_create(panel_main);
+    lbl_main_pressure_trend = lv_label_create(sc_hp);
     lv_label_set_text(lbl_main_pressure_trend, LV_SYMBOL_UP);
     lv_obj_set_style_text_color(lbl_main_pressure_trend, COLOR_GREEN, 0);
-    lv_obj_set_style_text_font(lbl_main_pressure_trend, &lv_font_montserrat_20, 0);
-    lv_obj_align_to(lbl_main_pressure_trend, lbl_main_pressure, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+    lv_obj_set_style_text_font(lbl_main_pressure_trend, &lv_font_montserrat_16, 0);
+    lv_obj_align(lbl_main_pressure_trend, LV_ALIGN_TOP_RIGHT, -8, 85);
 
-    // ========== COLUMNA 3: Viento (centro-der) ==========
-    int col3_x = 450;
+    lv_obj_t *pres_label = lv_label_create(sc_hp);
+    lv_label_set_text(pres_label, "Presion mb");
+    lv_obj_set_style_text_color(pres_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(pres_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(pres_label, LV_ALIGN_TOP_LEFT, 45, 112);
 
-    // Titulo viento
-    lv_obj_t *wind_title = lv_label_create(panel_main);
-    lv_label_set_text(wind_title, "Viento");
-    lv_obj_set_style_text_color(wind_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(wind_title, &lv_font_montserrat_16, 0);
-    lv_obj_align(wind_title, LV_ALIGN_TOP_LEFT, col3_x, 8);
+    // ========== SUB-CARD 3: Viento ==========
+    lv_obj_t *sc_wind = createSubCard(panel_main, sc1_w + sc2_w + gap * 2, 5, sc3_w, sc_h);
 
-    // Icono viento
-    lv_obj_t *wind_icon = lv_label_create(panel_main);
+    lv_obj_t *wind_icon = lv_label_create(sc_wind);
     lv_label_set_text(wind_icon, WI_STRONG_WIND);
     lv_obj_set_style_text_font(wind_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(wind_icon, COLOR_WIND, 0);
-    lv_obj_align(wind_icon, LV_ALIGN_TOP_LEFT, col3_x, 28);
+    lv_obj_align(wind_icon, LV_ALIGN_TOP_LEFT, 8, 8);
 
-    // Velocidad viento (grande con unidad)
-    lbl_main_wind = lv_label_create(panel_main);
+    lbl_main_wind = lv_label_create(sc_wind);
     lv_label_set_text(lbl_main_wind, "12 km/h");
     lv_obj_set_style_text_color(lbl_main_wind, COLOR_WIND, 0);
-    lv_obj_set_style_text_font(lbl_main_wind, &lv_font_montserrat_28, 0);
-    lv_obj_align(lbl_main_wind, LV_ALIGN_TOP_LEFT, col3_x + 45, 25);
+    lv_obj_set_style_text_font(lbl_main_wind, &lv_font_montserrat_24, 0);
+    lv_obj_align(lbl_main_wind, LV_ALIGN_TOP_LEFT, 50, 10);
 
-    // Direccion del viento (sin icono - no está en la fuente)
-    lv_obj_t *dir_label = lv_label_create(panel_main);
-    lv_label_set_text(dir_label, "Dir:");
-    lv_obj_set_style_text_color(dir_label, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(dir_label, &lv_font_montserrat_16, 0);
-    lv_obj_align(dir_label, LV_ALIGN_TOP_LEFT, col3_x, 68);
+    lv_obj_t *wind_label = lv_label_create(sc_wind);
+    lv_label_set_text(wind_label, "Viento");
+    lv_obj_set_style_text_color(wind_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(wind_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(wind_label, LV_ALIGN_TOP_LEFT, 50, 38);
 
-    lbl_main_wind_dir = lv_label_create(panel_main);
+    // Direccion - icono + texto
+    lbl_main_wind_dir_icon = lv_label_create(sc_wind);
+    lv_label_set_text(lbl_main_wind_dir_icon, WI_DIR_N);
+    lv_obj_set_style_text_font(lbl_main_wind_dir_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(lbl_main_wind_dir_icon, COLOR_WIND, 0);
+    lv_obj_align(lbl_main_wind_dir_icon, LV_ALIGN_TOP_LEFT, 8, 62);
+
+    lbl_main_wind_dir = lv_label_create(sc_wind);
     lv_label_set_text(lbl_main_wind_dir, "NO 303°");
-    lv_obj_set_style_text_color(lbl_main_wind_dir, COLOR_WIND, 0);
-    lv_obj_set_style_text_font(lbl_main_wind_dir, &lv_font_montserrat_24, 0);
-    lv_obj_align(lbl_main_wind_dir, LV_ALIGN_TOP_LEFT, col3_x + 40, 65);
+    lv_obj_set_style_text_color(lbl_main_wind_dir, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(lbl_main_wind_dir, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_main_wind_dir, LV_ALIGN_TOP_LEFT, 45, 72);
 
     // Rafagas
-    lbl_main_gust = lv_label_create(panel_main);
-    lv_label_set_text(lbl_main_gust, "Rafagas 18 km/h");
+    lbl_main_gust = lv_label_create(sc_wind);
+    lv_label_set_text(lbl_main_gust, "Raf 18 km/h");
     lv_obj_set_style_text_color(lbl_main_gust, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(lbl_main_gust, &lv_font_montserrat_16, 0);
-    lv_obj_align(lbl_main_gust, LV_ALIGN_TOP_LEFT, col3_x, 110);
+    lv_obj_set_style_text_font(lbl_main_gust, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_main_gust, LV_ALIGN_BOTTOM_LEFT, 8, -8);
 
-    // ========== COLUMNA 4: UV + IMECA (derecha) ==========
-    int col4_x = 680;
+    // ========== SUB-CARD 4: UV + IMECA ==========
+    lv_obj_t *sc_uv = createSubCard(panel_main, sc1_w + sc2_w + sc3_w + gap * 3, 5, sc4_w, sc_h);
 
-    // UV Index
-    lv_obj_t *uv_title = lv_label_create(panel_main);
-    lv_label_set_text(uv_title, "UV");
-    lv_obj_set_style_text_color(uv_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(uv_title, &lv_font_montserrat_16, 0);
-    lv_obj_align(uv_title, LV_ALIGN_TOP_LEFT, col4_x, 8);
-
-    lv_obj_t *uv_icon = lv_label_create(panel_main);
+    // UV
+    lv_obj_t *uv_icon = lv_label_create(sc_uv);
     lv_label_set_text(uv_icon, WI_DAY_SUNNY);
     lv_obj_set_style_text_font(uv_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(uv_icon, COLOR_UV, 0);
-    lv_obj_align(uv_icon, LV_ALIGN_TOP_LEFT, col4_x, 28);
+    lv_obj_align(uv_icon, LV_ALIGN_TOP_LEFT, 8, 8);
 
-    lbl_main_uv = lv_label_create(panel_main);
+    lbl_main_uv = lv_label_create(sc_uv);
     lv_label_set_text(lbl_main_uv, "5");
     lv_obj_set_style_text_color(lbl_main_uv, COLOR_UV, 0);
-    lv_obj_set_style_text_font(lbl_main_uv, &lv_font_montserrat_40, 0);
-    lv_obj_align(lbl_main_uv, LV_ALIGN_TOP_LEFT, col4_x + 50, 22);
+    lv_obj_set_style_text_font(lbl_main_uv, &lv_font_montserrat_28, 0);
+    lv_obj_align(lbl_main_uv, LV_ALIGN_TOP_LEFT, 55, 8);
 
-    // IMECA (calidad del aire)
-    lv_obj_t *imeca_title = lv_label_create(panel_main);
-    lv_label_set_text(imeca_title, "IMECA");
-    lv_obj_set_style_text_color(imeca_title, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(imeca_title, &lv_font_montserrat_16, 0);
-    lv_obj_align(imeca_title, LV_ALIGN_TOP_LEFT, col4_x, 75);
+    lv_obj_t *uv_label = lv_label_create(sc_uv);
+    lv_label_set_text(uv_label, "UV");
+    lv_obj_set_style_text_color(uv_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(uv_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(uv_label, LV_ALIGN_TOP_LEFT, 55, 40);
 
-    lv_obj_t *imeca_icon = lv_label_create(panel_main);
-    lv_label_set_text(imeca_icon, WI_FOG);  // Icono para calidad del aire
+    // IMECA
+    lv_obj_t *imeca_icon = lv_label_create(sc_uv);
+    lv_label_set_text(imeca_icon, WI_FOG);
     lv_obj_set_style_text_font(imeca_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(imeca_icon, COLOR_GREEN, 0);
-    lv_obj_align(imeca_icon, LV_ALIGN_TOP_LEFT, col4_x, 95);
+    lv_obj_align(imeca_icon, LV_ALIGN_TOP_LEFT, 8, 70);
 
-    lbl_main_imeca = lv_label_create(panel_main);
+    lbl_main_imeca = lv_label_create(sc_uv);
     lv_label_set_text(lbl_main_imeca, "45");
     lv_obj_set_style_text_color(lbl_main_imeca, COLOR_GREEN, 0);
-    lv_obj_set_style_text_font(lbl_main_imeca, &lv_font_montserrat_40, 0);
-    lv_obj_align(lbl_main_imeca, LV_ALIGN_TOP_LEFT, col4_x + 50, 88);
+    lv_obj_set_style_text_font(lbl_main_imeca, &lv_font_montserrat_28, 0);
+    lv_obj_align(lbl_main_imeca, LV_ALIGN_TOP_LEFT, 55, 70);
 
-    // ========== COLUMNA 5: Sol/Luna (extremo derecho) ==========
-    int col5_x = 820;
+    lv_obj_t *imeca_label = lv_label_create(sc_uv);
+    lv_label_set_text(imeca_label, "IMECA");
+    lv_obj_set_style_text_color(imeca_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(imeca_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(imeca_label, LV_ALIGN_TOP_LEFT, 55, 102);
 
-    // Amanecer
-    lv_obj_t *sunrise_icon = lv_label_create(panel_main);
+    // ========== COLUMNA 5: Sol/Luna con SUB-CARDS (estilo servidor) ==========
+    int col5_x = sc1_w + sc2_w + sc3_w + sc4_w + gap * 4;
+    int col5_w = w - col5_x - 15;  // Ancho restante
+    int subcard_h = 52;
+    int subcard_gap = 4;
+
+    // Sub-card Amanecer (compacto: icono + hora)
+    lv_obj_t *sc_sunrise = createSubCard(panel_main, col5_x, 5, col5_w, subcard_h);
+
+    lv_obj_t *sunrise_icon = lv_label_create(sc_sunrise);
     lv_label_set_text(sunrise_icon, WI_SUNRISE);
     lv_obj_set_style_text_font(sunrise_icon, &weather_icons_32, 0);
-    lv_obj_set_style_text_color(sunrise_icon, COLOR_TEMP_HOT, 0);
-    lv_obj_align(sunrise_icon, LV_ALIGN_TOP_LEFT, col5_x, 10);
+    lv_obj_set_style_text_color(sunrise_icon, COLOR_SUN, 0);
+    lv_obj_align(sunrise_icon, LV_ALIGN_LEFT_MID, 5, 0);
 
-    lbl_footer_sunrise = lv_label_create(panel_main);
-    lv_label_set_text(lbl_footer_sunrise, "06:45");
-    lv_obj_set_style_text_color(lbl_footer_sunrise, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(lbl_footer_sunrise, &lv_font_montserrat_20, 0);
-    lv_obj_align(lbl_footer_sunrise, LV_ALIGN_TOP_LEFT, col5_x + 45, 15);
+    lbl_footer_sunrise = lv_label_create(sc_sunrise);
+    lv_label_set_text(lbl_footer_sunrise, "06:07");
+    lv_obj_set_style_text_color(lbl_footer_sunrise, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(lbl_footer_sunrise, &lv_font_montserrat_18, 0);
+    lv_obj_align(lbl_footer_sunrise, LV_ALIGN_RIGHT_MID, -8, 0);
 
-    // Atardecer
-    lv_obj_t *sunset_icon = lv_label_create(panel_main);
+    // Sub-card Atardecer (compacto: icono + hora)
+    lv_obj_t *sc_sunset = createSubCard(panel_main, col5_x, 5 + subcard_h + subcard_gap, col5_w, subcard_h);
+
+    lv_obj_t *sunset_icon = lv_label_create(sc_sunset);
     lv_label_set_text(sunset_icon, WI_SUNSET);
     lv_obj_set_style_text_font(sunset_icon, &weather_icons_32, 0);
-    lv_obj_set_style_text_color(sunset_icon, COLOR_TEMP_HOT, 0);
-    lv_obj_align(sunset_icon, LV_ALIGN_TOP_LEFT, col5_x, 50);
+    lv_obj_set_style_text_color(sunset_icon, COLOR_SUN, 0);
+    lv_obj_align(sunset_icon, LV_ALIGN_LEFT_MID, 5, 0);
 
-    lbl_footer_sunset = lv_label_create(panel_main);
-    lv_label_set_text(lbl_footer_sunset, "20:15");
-    lv_obj_set_style_text_color(lbl_footer_sunset, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(lbl_footer_sunset, &lv_font_montserrat_20, 0);
-    lv_obj_align(lbl_footer_sunset, LV_ALIGN_TOP_LEFT, col5_x + 45, 55);
+    lbl_footer_sunset = lv_label_create(sc_sunset);
+    lv_label_set_text(lbl_footer_sunset, "19:18");
+    lv_obj_set_style_text_color(lbl_footer_sunset, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(lbl_footer_sunset, &lv_font_montserrat_18, 0);
+    lv_obj_align(lbl_footer_sunset, LV_ALIGN_RIGHT_MID, -8, 0);
 
-    // Luna (usando WI_MOON_FULL que está en la fuente)
-    lv_obj_t *moon_icon = lv_label_create(panel_main);
-    lv_label_set_text(moon_icon, WI_MOON_FULL);
+    // Sub-card Luna (compacto: icono + porcentaje)
+    lv_obj_t *sc_moon = createSubCard(panel_main, col5_x, 5 + (subcard_h + subcard_gap) * 2, col5_w, subcard_h);
+
+    lv_obj_t *moon_icon = lv_label_create(sc_moon);
+    lv_label_set_text(moon_icon, WI_MOON_WAXING_CRES);
     lv_obj_set_style_text_font(moon_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(moon_icon, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_align(moon_icon, LV_ALIGN_TOP_LEFT, col5_x, 90);
+    lv_obj_align(moon_icon, LV_ALIGN_LEFT_MID, 5, 0);
 
-    lbl_footer_moon = lv_label_create(panel_main);
-    lv_label_set_text(lbl_footer_moon, "85%");
-    lv_obj_set_style_text_color(lbl_footer_moon, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(lbl_footer_moon, &lv_font_montserrat_20, 0);
-    lv_obj_align(lbl_footer_moon, LV_ALIGN_TOP_LEFT, col5_x + 45, 95);
+    lbl_footer_moon = lv_label_create(sc_moon);
+    lv_label_set_text(lbl_footer_moon, "82%");
+    lv_obj_set_style_text_color(lbl_footer_moon, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(lbl_footer_moon, &lv_font_montserrat_18, 0);
+    lv_obj_align(lbl_footer_moon, LV_ALIGN_RIGHT_MID, -8, 0);
 }
 
 /**
  * Card de ubicacion generica (Local, Jardin, Remoto)
- * Layout mejorado: valores grandes, colores consistentes por concepto
+ * Layout estilo servidor: titulo + grid 2x2 de sub-cards
+ * Similar a RemoteStationCard del servidor web
  */
 lv_obj_t* createLocationCard(lv_obj_t *parent, int x, int y, int w, int h,
                              const char* title, lv_color_t accent,
@@ -1525,87 +1588,116 @@ lv_obj_t* createLocationCard(lv_obj_t *parent, int x, int y, int w, int h,
                              const char* extra_label_text) {
     lv_obj_t *card = createCard(parent, x, y, w, h);
 
-    // Indicador de color (barra vertical)
-    lv_obj_t *indicator = lv_obj_create(card);
-    lv_obj_set_size(indicator, 4, h - 20);
+    // === HEADER: Titulo + Indicador de color ===
+    lv_obj_t *header_row = lv_obj_create(card);
+    lv_obj_set_size(header_row, w - 24, 32);
+    lv_obj_align(header_row, LV_ALIGN_TOP_MID, 0, -5);
+    lv_obj_set_style_bg_opa(header_row, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(header_row, 0, 0);
+    lv_obj_set_style_pad_all(header_row, 0, 0);
+    lv_obj_clear_flag(header_row, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Indicador de color (circulo pequeno)
+    lv_obj_t *indicator = lv_obj_create(header_row);
+    lv_obj_set_size(indicator, 10, 10);
     lv_obj_set_style_bg_color(indicator, accent, 0);
     lv_obj_set_style_bg_opa(indicator, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(indicator, 2, 0);
+    lv_obj_set_style_radius(indicator, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_border_width(indicator, 0, 0);
     lv_obj_align(indicator, LV_ALIGN_LEFT_MID, 0, 0);
 
     // Titulo
-    lv_obj_t *title_lbl = lv_label_create(card);
+    lv_obj_t *title_lbl = lv_label_create(header_row);
     lv_label_set_text(title_lbl, title);
-    lv_obj_set_style_text_color(title_lbl, COLOR_TEXT_SECONDARY, 0);
+    lv_obj_set_style_text_color(title_lbl, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(title_lbl, &lv_font_montserrat_18, 0);
-    lv_obj_align(title_lbl, LV_ALIGN_TOP_LEFT, 15, 5);
+    lv_obj_align(title_lbl, LV_ALIGN_LEFT_MID, 18, 0);
 
-    // Icono termometro (COLOR_TEMP - naranja)
-    lv_obj_t *thermo = lv_label_create(card);
-    lv_label_set_text(thermo, WI_THERMOMETER);
-    lv_obj_set_style_text_font(thermo, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(thermo, COLOR_TEMP, 0);
-    lv_obj_align(thermo, LV_ALIGN_TOP_LEFT, 15, 35);
+    // === GRID 1x3 DE SUB-CARDS (sin min/max) ===
+    int grid_y = 35;
+    int gap = 8;
+    int sc_w = (w - 24 - gap * 2) / 3;  // 3 columnas
+    int sc_h = h - grid_y - 25;  // altura completa
 
-    // Temperatura grande con unidad (COLOR_TEMP)
-    *temp_lbl = lv_label_create(card);
-    lv_label_set_text(*temp_lbl, "22.5°C");
+    // Determinar tipo de campo extra
+    bool is_battery = extra_label_text && (strstr(extra_label_text, "Bat") != nullptr);
+    bool is_pressure = extra_label_text && (strstr(extra_label_text, "mb") != nullptr || strstr(extra_label_text, "hPa") != nullptr);
+
+    // --- Sub-card 1: Temperatura ---
+    lv_obj_t *sc_temp = createSubCard(card, 0, grid_y, sc_w, sc_h);
+
+    lv_obj_t *temp_icon = lv_label_create(sc_temp);
+    lv_label_set_text(temp_icon, WI_THERMOMETER);
+    lv_obj_set_style_text_font(temp_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(temp_icon, COLOR_TEMP, 0);
+    lv_obj_align(temp_icon, LV_ALIGN_TOP_MID, 0, 5);
+
+    *temp_lbl = lv_label_create(sc_temp);
+    lv_label_set_text(*temp_lbl, "22.5°");
     lv_obj_set_style_text_color(*temp_lbl, COLOR_TEMP, 0);
-    lv_obj_set_style_text_font(*temp_lbl, &lv_font_montserrat_48, 0);
-    lv_obj_align(*temp_lbl, LV_ALIGN_TOP_LEFT, 75, 35);
+    lv_obj_set_style_text_font(*temp_lbl, &lv_font_montserrat_28, 0);
+    lv_obj_align(*temp_lbl, LV_ALIGN_CENTER, 0, 15);
 
-    // Max/Min con texto explicito y unidades
-    *maxmin_lbl = lv_label_create(card);
-    lv_label_set_text(*maxmin_lbl, "Max 25°C  Min 20°C");
-    lv_obj_set_style_text_color(*maxmin_lbl, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_set_style_text_font(*maxmin_lbl, &lv_font_montserrat_18, 0);
-    lv_obj_align(*maxmin_lbl, LV_ALIGN_TOP_LEFT, 15, 100);
+    lv_obj_t *temp_label = lv_label_create(sc_temp);
+    lv_label_set_text(temp_label, "Temp");
+    lv_obj_set_style_text_color(temp_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(temp_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(temp_label, LV_ALIGN_BOTTOM_LEFT, 8, -3);
 
-    // === FILA INFERIOR: Humedad + Extra (bateria/presion) ===
-    int row_y = 135;
+    // Max/Min pequeño (arriba del label Temp)
+    *maxmin_lbl = lv_label_create(sc_temp);
+    lv_label_set_text(*maxmin_lbl, "18/28");
+    lv_obj_set_style_text_color(*maxmin_lbl, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(*maxmin_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_align(*maxmin_lbl, LV_ALIGN_BOTTOM_RIGHT, -8, -32);
 
-    // Humedad (COLOR_HUMIDITY - cyan)
-    lv_obj_t *hum_icon = lv_label_create(card);
+    // --- Sub-card 2: Humedad ---
+    lv_obj_t *sc_hum = createSubCard(card, sc_w + gap, grid_y, sc_w, sc_h);
+
+    lv_obj_t *hum_icon = lv_label_create(sc_hum);
     lv_label_set_text(hum_icon, WI_HUMIDITY);
     lv_obj_set_style_text_font(hum_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(hum_icon, COLOR_HUMIDITY, 0);
-    lv_obj_align(hum_icon, LV_ALIGN_TOP_LEFT, 15, row_y);
+    lv_obj_align(hum_icon, LV_ALIGN_TOP_MID, 0, 5);
 
-    *humidity_lbl = lv_label_create(card);
+    *humidity_lbl = lv_label_create(sc_hum);
     lv_label_set_text(*humidity_lbl, "58%");
     lv_obj_set_style_text_color(*humidity_lbl, COLOR_HUMIDITY, 0);
     lv_obj_set_style_text_font(*humidity_lbl, &lv_font_montserrat_28, 0);
-    lv_obj_align(*humidity_lbl, LV_ALIGN_TOP_LEFT, 55, row_y);
+    lv_obj_align(*humidity_lbl, LV_ALIGN_CENTER, 0, 15);
 
-    // Campo extra con icono (bateria o presion)
-    if (extra_lbl && extra_label_text) {
-        // Determinar si es bateria o presion por el texto
-        bool is_battery = (strstr(extra_label_text, "Bat") != nullptr);
-        bool is_pressure = (strstr(extra_label_text, "mb") != nullptr || strstr(extra_label_text, "hPa") != nullptr);
+    lv_obj_t *hum_label = lv_label_create(sc_hum);
+    lv_label_set_text(hum_label, "Humedad");
+    lv_obj_set_style_text_color(hum_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(hum_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(hum_label, LV_ALIGN_BOTTOM_MID, 0, -8);
 
-        // Icono segun tipo
-        lv_obj_t *extra_icon = lv_label_create(card);
-        if (is_battery) {
-            lv_label_set_text(extra_icon, LV_SYMBOL_BATTERY_FULL);
-            lv_obj_set_style_text_color(extra_icon, COLOR_BATTERY, 0);
-            lv_obj_set_style_text_font(extra_icon, &lv_font_montserrat_24, 0);
-        } else if (is_pressure) {
-            lv_label_set_text(extra_icon, WI_BAROMETER);
-            lv_obj_set_style_text_color(extra_icon, COLOR_PRESSURE, 0);
-            lv_obj_set_style_text_font(extra_icon, &weather_icons_32, 0);
-        } else {
-            lv_label_set_text(extra_icon, "");
-        }
-        lv_obj_align(extra_icon, LV_ALIGN_TOP_RIGHT, -70, row_y);
+    // --- Sub-card 3: Extra - Bateria o Presion (tercera columna) ---
+    lv_obj_t *sc_extra = createSubCard(card, (sc_w + gap) * 2, grid_y, sc_w, sc_h);
 
-        // Valor (pegado al icono)
-        *extra_lbl = lv_label_create(card);
-        lv_label_set_text(*extra_lbl, "--");
-        lv_obj_set_style_text_color(*extra_lbl, is_battery ? COLOR_BATTERY : COLOR_PRESSURE, 0);
-        lv_obj_set_style_text_font(*extra_lbl, &lv_font_montserrat_28, 0);
-        lv_obj_align(*extra_lbl, LV_ALIGN_TOP_RIGHT, -10, row_y);
+    lv_obj_t *extra_icon = lv_label_create(sc_extra);
+    if (is_battery) {
+        lv_label_set_text(extra_icon, LV_SYMBOL_BATTERY_FULL);
+        lv_obj_set_style_text_font(extra_icon, &lv_font_montserrat_28, 0);
+        lv_obj_set_style_text_color(extra_icon, COLOR_BATTERY, 0);
+    } else if (is_pressure) {
+        lv_label_set_text(extra_icon, WI_BAROMETER);
+        lv_obj_set_style_text_font(extra_icon, &weather_icons_32, 0);
+        lv_obj_set_style_text_color(extra_icon, COLOR_PRESSURE, 0);
     }
+    lv_obj_align(extra_icon, LV_ALIGN_TOP_MID, 0, 5);
+
+    *extra_lbl = lv_label_create(sc_extra);
+    lv_label_set_text(*extra_lbl, "--");
+    lv_obj_set_style_text_color(*extra_lbl, is_battery ? COLOR_BATTERY : COLOR_PRESSURE, 0);
+    lv_obj_set_style_text_font(*extra_lbl, &lv_font_montserrat_28, 0);
+    lv_obj_align(*extra_lbl, LV_ALIGN_CENTER, 0, 15);
+
+    lv_obj_t *extra_label = lv_label_create(sc_extra);
+    lv_label_set_text(extra_label, is_battery ? "Bateria" : "Presion");
+    lv_obj_set_style_text_color(extra_label, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(extra_label, &lv_font_montserrat_12, 0);
+    lv_obj_align(extra_label, LV_ALIGN_BOTTOM_MID, 0, -8);
 
     return card;
 }
@@ -1642,7 +1734,7 @@ void createDashboard() {
     // Card LOCAL (WS2910 - Interior)
     card_local = createLocationCard(scr_dashboard,
         gap, y2, card_w, card_h,
-        "LOCAL (WS2910)", COLOR_GREEN,
+        "INTERIOR (WS2910)", COLOR_GREEN,
         &lbl_local_temp, &lbl_local_maxmin, &lbl_local_humidity,
         &lbl_local_battery, "Bat:");
 
@@ -1660,23 +1752,48 @@ void createDashboard() {
         &lbl_remoto_temp, &lbl_remoto_maxmin, &lbl_remoto_humidity,
         &lbl_remoto_pressure, "mb:");
 
-    // === BANNER DE ESTADO (abajo) ===
+    // === BANNER DE ESTADO (abajo) - Estilo servidor ===
     int banner_y = SCREEN_HEIGHT - banner_h;
     banner_status = lv_obj_create(scr_dashboard);
     lv_obj_set_pos(banner_status, 0, banner_y);
     lv_obj_set_size(banner_status, SCREEN_WIDTH, banner_h);
-    lv_obj_set_style_bg_color(banner_status, darkMode ? lv_color_hex(0x0A0F1C) : lv_color_hex(0xE8EAED), 0);
+    lv_obj_set_style_bg_color(banner_status, darkMode ? lv_color_hex(0x0A1018) : lv_color_hex(0xF1F5F9), 0);
     lv_obj_set_style_bg_opa(banner_status, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(banner_status, 0, 0);
+    lv_obj_set_style_border_width(banner_status, 1, 0);
+    lv_obj_set_style_border_side(banner_status, LV_BORDER_SIDE_TOP, 0);
+    lv_obj_set_style_border_color(banner_status, darkMode ? lv_color_hex(0x1E2D40) : lv_color_hex(0xE2E8F0), 0);
     lv_obj_set_style_radius(banner_status, 0, 0);
     lv_obj_set_style_pad_all(banner_status, 0, 0);
     lv_obj_clear_flag(banner_status, LV_OBJ_FLAG_SCROLLABLE);
 
+    // Izquierda: Estado del servidor con badge
+    lv_obj_t *badge_online = lv_obj_create(banner_status);
+    lv_obj_set_size(badge_online, 12, 12);
+    lv_obj_set_style_bg_color(badge_online, COLOR_GREEN, 0);
+    lv_obj_set_style_bg_opa(badge_online, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(badge_online, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_border_width(badge_online, 0, 0);
+    lv_obj_align(badge_online, LV_ALIGN_LEFT_MID, 15, 0);
+
     lbl_server_status = lv_label_create(banner_status);
-    lv_label_set_text(lbl_server_status, LV_SYMBOL_OK " Servidor Online  |  Actualizado: --:--:--");
+    lv_label_set_text(lbl_server_status, "En vivo");
     lv_obj_set_style_text_color(lbl_server_status, COLOR_GREEN, 0);
-    lv_obj_set_style_text_font(lbl_server_status, &lv_font_montserrat_18, 0);
-    lv_obj_align(lbl_server_status, LV_ALIGN_LEFT_MID, 20, 0);
+    lv_obj_set_style_text_font(lbl_server_status, &lv_font_montserrat_16, 0);
+    lv_obj_align(lbl_server_status, LV_ALIGN_LEFT_MID, 32, 0);
+
+    // Centro: Portable (BME280)
+    lbl_header_portable = lv_label_create(banner_status);
+    lv_label_set_text(lbl_header_portable, "Portable: --.-°C  --%");
+    lv_obj_set_style_text_color(lbl_header_portable, COLOR_TEMP, 0);
+    lv_obj_set_style_text_font(lbl_header_portable, &lv_font_montserrat_16, 0);
+    lv_obj_align(lbl_header_portable, LV_ALIGN_CENTER, 0, 0);
+
+    // Derecha: Info del servidor
+    lv_obj_t *lbl_server_info = lv_label_create(banner_status);
+    lv_label_set_text(lbl_server_info, "clima.xe1e.net");
+    lv_obj_set_style_text_color(lbl_server_info, COLOR_TEXT_MUTED, 0);
+    lv_obj_set_style_text_font(lbl_server_info, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_server_info, LV_ALIGN_RIGHT_MID, -15, 0);
 
     // === TAP HANDLERS para navegacion a pantallas de detalle ===
     // Definiciones de pantallas (deben coincidir con ui_navigation.h)
@@ -2139,7 +2256,10 @@ void updateDashboardWeather() {
         snprintf(buf, sizeof(buf), "%.0f km/h", g_weather.wind_speed);
         lv_label_set_text(lbl_main_wind, buf);
     }
-    // lbl_main_wind_icon removido - icono no disponible en fuente
+    if (lbl_main_wind_dir_icon) {
+        const char* dir_icon = getWindDirectionIcon((int)g_weather.wind_dir);
+        lv_label_set_text(lbl_main_wind_dir_icon, dir_icon);
+    }
     if (lbl_main_wind_dir) {
         snprintf(buf, sizeof(buf), "%s %d°", g_weather.wind_dir_cardinal, (int)g_weather.wind_dir);
         lv_label_set_text(lbl_main_wind_dir, buf);
@@ -2212,7 +2332,7 @@ void updateDashboardWeather() {
     }
     if (lbl_local_maxmin) {
         // WS2910 no tiene max/min disponible en API por ahora
-        snprintf(buf, sizeof(buf), "Max --°%s  Min --°%s", tempUnit(), tempUnit());
+        snprintf(buf, sizeof(buf), "--/--");
         lv_label_set_text(lbl_local_maxmin, buf);
     }
     if (lbl_local_humidity) {
@@ -2241,11 +2361,11 @@ void updateDashboardWeather() {
     }
     if (lbl_jardin_maxmin) {
         if (g_jardin.valid) {
-            snprintf(buf, sizeof(buf), "Max %.0f°%s  Min %.0f°%s",
-                     toDisplayTemp(g_jardin.temp_max), tempUnit(),
-                     toDisplayTemp(g_jardin.temp_min), tempUnit());
+            snprintf(buf, sizeof(buf), "%.1f/%.1f",
+                     toDisplayTemp(g_jardin.temp_min),
+                     toDisplayTemp(g_jardin.temp_max));
         } else {
-            snprintf(buf, sizeof(buf), "Max --°%s  Min --°%s", tempUnit(), tempUnit());
+            snprintf(buf, sizeof(buf), "--/--");
         }
         lv_label_set_text(lbl_jardin_maxmin, buf);
     }
@@ -2278,11 +2398,11 @@ void updateDashboardWeather() {
     }
     if (lbl_remoto_maxmin) {
         if (g_remoto.valid) {
-            snprintf(buf, sizeof(buf), "Max %.0f°%s  Min %.0f°%s",
-                     toDisplayTemp(g_remoto.temp_max), tempUnit(),
-                     toDisplayTemp(g_remoto.temp_min), tempUnit());
+            snprintf(buf, sizeof(buf), "%.1f/%.1f",
+                     toDisplayTemp(g_remoto.temp_min),
+                     toDisplayTemp(g_remoto.temp_max));
         } else {
-            snprintf(buf, sizeof(buf), "Max --°%s  Min --°%s", tempUnit(), tempUnit());
+            snprintf(buf, sizeof(buf), "--/--");
         }
         lv_label_set_text(lbl_remoto_maxmin, buf);
     }
@@ -2349,7 +2469,8 @@ void refreshDashboardTheme() {
         if (lbl_main_humidity) lv_obj_set_style_text_color(lbl_main_humidity, COLOR_HUMIDITY, 0);
         if (lbl_main_pressure) lv_obj_set_style_text_color(lbl_main_pressure, COLOR_PRESSURE, 0);
         if (lbl_main_wind) lv_obj_set_style_text_color(lbl_main_wind, COLOR_WIND, 0);
-        if (lbl_main_wind_dir) lv_obj_set_style_text_color(lbl_main_wind_dir, COLOR_WIND, 0);
+        if (lbl_main_wind_dir_icon) lv_obj_set_style_text_color(lbl_main_wind_dir_icon, COLOR_WIND, 0);
+        if (lbl_main_wind_dir) lv_obj_set_style_text_color(lbl_main_wind_dir, COLOR_TEXT_MUTED, 0);
 
         // Cards de ubicacion
         if (lbl_local_temp) lv_obj_set_style_text_color(lbl_local_temp, COLOR_TEMP, 0);

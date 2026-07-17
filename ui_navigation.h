@@ -156,7 +156,7 @@ static lv_obj_t *page_dots[SCREEN_COUNT] = {nullptr};
 void createPageIndicator(lv_obj_t *parent) {
     page_indicator = lv_obj_create(parent);
     lv_obj_set_size(page_indicator, 80, 20);
-    lv_obj_align(page_indicator, LV_ALIGN_BOTTOM_MID, 0, -60);
+    lv_obj_align(page_indicator, LV_ALIGN_BOTTOM_MID, 0, -38);
     lv_obj_set_style_bg_opa(page_indicator, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(page_indicator, 0, 0);
     lv_obj_clear_flag(page_indicator, LV_OBJ_FLAG_SCROLLABLE);
@@ -707,39 +707,55 @@ void showTemperatureModal() {
 
 #include "weather_icons.h"
 
-// Colores para cada ubicacion
+// Colores para cada ubicacion - alineados con tema
 #define DETAIL_COLOR_PRINCIPAL  lv_color_hex(0x60A5FA)  // blue-400
-#define DETAIL_COLOR_LOCAL      lv_color_hex(0x6EE7B7)  // green-300
-#define DETAIL_COLOR_JARDIN     lv_color_hex(0x6EE7B7)  // emerald-300
-#define DETAIL_COLOR_REMOTO     lv_color_hex(0xC4B5FD)  // violet-300
+#define DETAIL_COLOR_LOCAL      lv_color_hex(0x4ADE80)  // green-400
+#define DETAIL_COLOR_JARDIN     lv_color_hex(0x7BC8A4)  // weather-wind
+#define DETAIL_COLOR_REMOTO     lv_color_hex(0xA78BFA)  // violet-400
 
-// Boton volver generico
+// Colores de texto para detalles (accesibles desde ui_dashboard.h)
+extern bool darkMode;
+#define DETAIL_TEXT_PRIMARY     (darkMode ? lv_color_hex(0xE8EDF5) : lv_color_hex(0x16232F))
+#define DETAIL_TEXT_SECONDARY   (darkMode ? lv_color_hex(0xCBD5E1) : lv_color_hex(0x475569))
+#define DETAIL_TEXT_MUTED       (darkMode ? lv_color_hex(0x8496A6) : lv_color_hex(0x55677A))
+#define DETAIL_BG               (darkMode ? lv_color_hex(0x0A1422) : lv_color_hex(0xF8FAFC))
+#define DETAIL_CARD_BG          (darkMode ? lv_color_hex(0x1E2D40) : lv_color_hex(0xFFFFFF))
+#define DETAIL_HEADER_BG        (darkMode ? lv_color_hex(0x0A1018) : lv_color_hex(0xFFFFFF))
+#define DETAIL_BORDER           (darkMode ? lv_color_hex(0x3A4A5A) : lv_color_hex(0xE2E8F0))
+
+// Boton volver generico - estilo servidor
 lv_obj_t* createBackButton(lv_obj_t *parent) {
     lv_obj_t *btn = lv_btn_create(parent);
-    lv_obj_set_size(btn, 100, 40);
-    lv_obj_align(btn, LV_ALIGN_TOP_LEFT, 15, 15);
-    lv_obj_set_style_bg_color(btn, lv_color_hex(0x374151), 0);
+    lv_obj_set_size(btn, 100, 36);
+    lv_obj_align(btn, LV_ALIGN_TOP_LEFT, 15, 17);
+    lv_obj_set_style_bg_color(btn, darkMode ? lv_color_hex(0x2A3A4A) : lv_color_hex(0xE8EDF5), 0);
     lv_obj_set_style_radius(btn, 8, 0);
+    lv_obj_set_style_border_width(btn, 1, 0);
+    lv_obj_set_style_border_color(btn, DETAIL_BORDER, 0);
+    lv_obj_set_style_shadow_width(btn, 0, 0);
     lv_obj_add_event_cb(btn, [](lv_event_t *e) {
         navigateToScreen(SCREEN_DASHBOARD);
     }, LV_EVENT_CLICKED, NULL);
 
     lv_obj_t *lbl = lv_label_create(btn);
     lv_label_set_text(lbl, LV_SYMBOL_LEFT " Volver");
-    lv_obj_set_style_text_color(lbl, lv_color_white(), 0);
+    lv_obj_set_style_text_color(lbl, DETAIL_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
     lv_obj_center(lbl);
     return btn;
 }
 
-// Header de pantalla de detalle
+// Header de pantalla de detalle - estilo servidor
 void createDetailHeader(lv_obj_t *parent, const char* title, const char* subtitle, lv_color_t accent) {
     // Fondo del header
     lv_obj_t *header_bg = lv_obj_create(parent);
     lv_obj_set_size(header_bg, SCREEN_WIDTH, 70);
     lv_obj_set_pos(header_bg, 0, 0);
-    lv_obj_set_style_bg_color(header_bg, lv_color_hex(0x1F2937), 0);
+    lv_obj_set_style_bg_color(header_bg, DETAIL_HEADER_BG, 0);
     lv_obj_set_style_radius(header_bg, 0, 0);
-    lv_obj_set_style_border_width(header_bg, 0, 0);
+    lv_obj_set_style_border_width(header_bg, 1, 0);
+    lv_obj_set_style_border_side(header_bg, LV_BORDER_SIDE_BOTTOM, 0);
+    lv_obj_set_style_border_color(header_bg, DETAIL_BORDER, 0);
     lv_obj_clear_flag(header_bg, LV_OBJ_FLAG_SCROLLABLE);
 
     createBackButton(parent);
@@ -747,7 +763,7 @@ void createDetailHeader(lv_obj_t *parent, const char* title, const char* subtitl
     // Titulo
     lv_obj_t *lbl_title = lv_label_create(parent);
     lv_label_set_text(lbl_title, title);
-    lv_obj_set_style_text_color(lbl_title, lv_color_white(), 0);
+    lv_obj_set_style_text_color(lbl_title, DETAIL_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(lbl_title, &lv_font_montserrat_24, 0);
     lv_obj_align(lbl_title, LV_ALIGN_TOP_MID, 0, 15);
 
@@ -759,7 +775,7 @@ void createDetailHeader(lv_obj_t *parent, const char* title, const char* subtitl
     lv_obj_align(lbl_sub, LV_ALIGN_TOP_MID, 0, 45);
 }
 
-// Card generico para pantalla de detalle
+// Card generico para pantalla de detalle - estilo servidor
 lv_obj_t* createDetailCard(lv_obj_t *parent, int x, int y, int w, int h, const char* title, lv_color_t accent) {
     extern lv_style_t style_card;
 
@@ -769,18 +785,22 @@ lv_obj_t* createDetailCard(lv_obj_t *parent, int x, int y, int w, int h, const c
     lv_obj_add_style(card, &style_card, 0);
     lv_obj_clear_flag(card, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Indicador + titulo
-    lv_obj_t *indicator = lv_label_create(card);
-    lv_label_set_text(indicator, "|");
-    lv_obj_set_style_text_color(indicator, accent, 0);
-    lv_obj_set_style_text_font(indicator, &lv_font_montserrat_18, 0);
-    lv_obj_align(indicator, LV_ALIGN_TOP_LEFT, 5, 5);
+    // Barra de acento superior
+    lv_obj_t *accent_bar = lv_obj_create(card);
+    lv_obj_set_size(accent_bar, w - 24, 3);
+    lv_obj_align(accent_bar, LV_ALIGN_TOP_MID, 0, -8);
+    lv_obj_set_style_bg_color(accent_bar, accent, 0);
+    lv_obj_set_style_bg_opa(accent_bar, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(accent_bar, 2, 0);
+    lv_obj_set_style_border_width(accent_bar, 0, 0);
+    lv_obj_clear_flag(accent_bar, LV_OBJ_FLAG_SCROLLABLE);
 
+    // Titulo con color muted
     lv_obj_t *lbl_title = lv_label_create(card);
     lv_label_set_text(lbl_title, title);
-    lv_obj_set_style_text_color(lbl_title, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(lbl_title, DETAIL_TEXT_MUTED, 0);
     lv_obj_set_style_text_font(lbl_title, &lv_font_montserrat_14, 0);
-    lv_obj_align_to(lbl_title, indicator, LV_ALIGN_OUT_RIGHT_MID, 8, 0);
+    lv_obj_align(lbl_title, LV_ALIGN_TOP_LEFT, 10, 8);
 
     return card;
 }
@@ -794,7 +814,7 @@ void createDetailPrincipal() {
     extern AlmanacData g_almanac;
 
     scr_detail_principal = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(scr_detail_principal, lv_color_hex(0x111827), 0);
+    lv_obj_set_style_bg_color(scr_detail_principal, DETAIL_BG, 0);
     lv_obj_clear_flag(scr_detail_principal, LV_OBJ_FLAG_SCROLLABLE);
 
     createDetailHeader(scr_detail_principal, "ESTACION PRINCIPAL", "Ecowitt GW2000", DETAIL_COLOR_PRINCIPAL);
@@ -814,23 +834,23 @@ void createDetailPrincipal() {
 
     lv_obj_t *temp_val = lv_label_create(card_temp);
     lv_label_set_text(temp_val, "24.5°C");
-    lv_obj_set_style_text_color(temp_val, lv_color_white(), 0);
+    lv_obj_set_style_text_color(temp_val, DETAIL_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(temp_val, &lv_font_montserrat_48, 0);
     lv_obj_align(temp_val, LV_ALIGN_TOP_LEFT, 80, 35);
 
     lv_obj_t *feels = lv_label_create(card_temp);
     lv_label_set_text(feels, "Sensacion: 23.5°C");
-    lv_obj_set_style_text_color(feels, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(feels, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(feels, LV_ALIGN_TOP_LEFT, 15, 100);
 
     lv_obj_t *dew = lv_label_create(card_temp);
     lv_label_set_text(dew, "Punto de rocio: 14.2°C");
-    lv_obj_set_style_text_color(dew, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(dew, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(dew, LV_ALIGN_TOP_LEFT, 15, 125);
 
     lv_obj_t *maxmin = lv_label_create(card_temp);
     lv_label_set_text(maxmin, LV_SYMBOL_UP " Max: 28°C    " LV_SYMBOL_DOWN " Min: 18°C");
-    lv_obj_set_style_text_color(maxmin, lv_color_hex(0xD1D5DB), 0);
+    lv_obj_set_style_text_color(maxmin, DETAIL_TEXT_SECONDARY, 0);
     lv_obj_align(maxmin, LV_ALIGN_BOTTOM_LEFT, 15, -15);
 
     // Card Humedad y Presion (centro)
@@ -845,7 +865,7 @@ void createDetailPrincipal() {
     lv_obj_t *hum_val = lv_label_create(card_hp);
     lv_label_set_text(hum_val, "65%");
     lv_obj_set_style_text_color(hum_val, lv_color_hex(0x67E8F9), 0);
-    lv_obj_set_style_text_font(hum_val, &lv_font_montserrat_36, 0);
+    lv_obj_set_style_text_font(hum_val, &lv_font_montserrat_28, 0);
     lv_obj_align(hum_val, LV_ALIGN_TOP_LEFT, 55, 35);
 
     lv_obj_t *pres_icon = lv_label_create(card_hp);
@@ -877,12 +897,12 @@ void createDetailPrincipal() {
     lv_obj_t *wind_val = lv_label_create(card_wind);
     lv_label_set_text(wind_val, "12 km/h");
     lv_obj_set_style_text_color(wind_val, lv_color_hex(0x6EE7B7), 0);
-    lv_obj_set_style_text_font(wind_val, &lv_font_montserrat_36, 0);
+    lv_obj_set_style_text_font(wind_val, &lv_font_montserrat_28, 0);
     lv_obj_align(wind_val, LV_ALIGN_TOP_LEFT, 80, 40);
 
     lv_obj_t *wind_dir = lv_label_create(card_wind);
     lv_label_set_text(wind_dir, "Direccion: NO 303°");
-    lv_obj_set_style_text_color(wind_dir, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(wind_dir, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(wind_dir, LV_ALIGN_TOP_LEFT, 15, 100);
 
     lv_obj_t *gust = lv_label_create(card_wind);
@@ -892,7 +912,7 @@ void createDetailPrincipal() {
 
     lv_obj_t *max_wind = lv_label_create(card_wind);
     lv_label_set_text(max_wind, "Max hoy: 25 km/h");
-    lv_obj_set_style_text_color(max_wind, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(max_wind, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(max_wind, LV_ALIGN_TOP_LEFT, 15, 150);
 
     // Fila inferior: Lluvia, UV, Sol/Luna
@@ -907,7 +927,7 @@ void createDetailPrincipal() {
     lv_obj_align(rain_val, LV_ALIGN_TOP_LEFT, 15, 40);
     lv_obj_t *rain_day = lv_label_create(card_rain);
     lv_label_set_text(rain_day, "Hoy: 2.5 mm  |  Semana: 15 mm");
-    lv_obj_set_style_text_color(rain_day, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(rain_day, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(rain_day, LV_ALIGN_TOP_LEFT, 15, 80);
 
     lv_obj_t *card_uv = createDetailCard(scr_detail_principal, gap + card_w2 + gap, y2, card_w2, 180, "UV / SOLAR", lv_color_hex(0xFCD34D));
@@ -918,7 +938,7 @@ void createDetailPrincipal() {
     lv_obj_align(uv_val, LV_ALIGN_TOP_LEFT, 15, 40);
     lv_obj_t *solar = lv_label_create(card_uv);
     lv_label_set_text(solar, "Radiacion: 450 W/m2");
-    lv_obj_set_style_text_color(solar, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(solar, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(solar, LV_ALIGN_TOP_LEFT, 15, 80);
 
     lv_obj_t *card_sun = createDetailCard(scr_detail_principal, gap + (card_w2 + gap) * 2, y2, card_w2, 180, "SOL / LUNA", lv_color_hex(0xFFB800));
@@ -928,7 +948,7 @@ void createDetailPrincipal() {
     lv_obj_align(sunrise, LV_ALIGN_TOP_LEFT, 15, 40);
     lv_obj_t *moon = lv_label_create(card_sun);
     lv_label_set_text(moon, "Luna: Nueva (5%)");
-    lv_obj_set_style_text_color(moon, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(moon, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(moon, LV_ALIGN_TOP_LEFT, 15, 70);
 
     enableSwipeNavigation(scr_detail_principal);
@@ -942,7 +962,7 @@ void createDetailLocal() {
     extern LocalSensorData g_local;
 
     scr_detail_local = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(scr_detail_local, lv_color_hex(0x111827), 0);
+    lv_obj_set_style_bg_color(scr_detail_local, DETAIL_BG, 0);
     lv_obj_clear_flag(scr_detail_local, LV_OBJ_FLAG_SCROLLABLE);
 
     createDetailHeader(scr_detail_local, "SENSOR LOCAL", "BME280 Interior", DETAIL_COLOR_LOCAL);
@@ -962,13 +982,13 @@ void createDetailLocal() {
 
     lv_obj_t *temp_val = lv_label_create(card);
     lv_label_set_text(temp_val, "22.5°C");
-    lv_obj_set_style_text_color(temp_val, lv_color_white(), 0);
+    lv_obj_set_style_text_color(temp_val, DETAIL_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(temp_val, &lv_font_montserrat_48, 0);
     lv_obj_align(temp_val, LV_ALIGN_TOP_LEFT, 90, 35);
 
     lv_obj_t *maxmin = lv_label_create(card);
     lv_label_set_text(maxmin, LV_SYMBOL_UP " 25°  " LV_SYMBOL_DOWN " 20°");
-    lv_obj_set_style_text_color(maxmin, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(maxmin, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(maxmin, LV_ALIGN_TOP_LEFT, 20, 100);
 
     // Humedad
@@ -994,7 +1014,7 @@ void createDetailLocal() {
     lv_obj_t *pres_val = lv_label_create(card);
     lv_label_set_text(pres_val, "1018 hPa");
     lv_obj_set_style_text_color(pres_val, lv_color_hex(0xC4B5FD), 0);
-    lv_obj_set_style_text_font(pres_val, &lv_font_montserrat_36, 0);
+    lv_obj_set_style_text_font(pres_val, &lv_font_montserrat_28, 0);
     lv_obj_align(pres_val, LV_ALIGN_TOP_RIGHT, -20, 45);
 
     // Diferencia vs exterior
@@ -1030,7 +1050,7 @@ void createDetailJardin() {
     extern RemoteSensorData g_jardin;
 
     scr_detail_jardin = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(scr_detail_jardin, lv_color_hex(0x111827), 0);
+    lv_obj_set_style_bg_color(scr_detail_jardin, DETAIL_BG, 0);
     lv_obj_clear_flag(scr_detail_jardin, LV_OBJ_FLAG_SCROLLABLE);
 
     createDetailHeader(scr_detail_jardin, "SENSOR JARDIN", "Ecowitt WN31", DETAIL_COLOR_JARDIN);
@@ -1049,13 +1069,13 @@ void createDetailJardin() {
 
     lv_obj_t *temp_val = lv_label_create(card);
     lv_label_set_text(temp_val, "19.8°C");
-    lv_obj_set_style_text_color(temp_val, lv_color_white(), 0);
+    lv_obj_set_style_text_color(temp_val, DETAIL_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(temp_val, &lv_font_montserrat_48, 0);
     lv_obj_align(temp_val, LV_ALIGN_TOP_LEFT, 90, 35);
 
     lv_obj_t *maxmin = lv_label_create(card);
     lv_label_set_text(maxmin, LV_SYMBOL_UP " 24°  " LV_SYMBOL_DOWN " 15°");
-    lv_obj_set_style_text_color(maxmin, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(maxmin, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(maxmin, LV_ALIGN_TOP_LEFT, 20, 100);
 
     // Humedad
@@ -1111,7 +1131,7 @@ void createDetailRemoto() {
     extern RemoteGatewayData g_remoto;
 
     scr_detail_remoto = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(scr_detail_remoto, lv_color_hex(0x111827), 0);
+    lv_obj_set_style_bg_color(scr_detail_remoto, DETAIL_BG, 0);
     lv_obj_clear_flag(scr_detail_remoto, LV_OBJ_FLAG_SCROLLABLE);
 
     createDetailHeader(scr_detail_remoto, "ESTACION REMOTA", "Ecowitt GW1100", DETAIL_COLOR_REMOTO);
@@ -1130,13 +1150,13 @@ void createDetailRemoto() {
 
     lv_obj_t *temp_val = lv_label_create(card);
     lv_label_set_text(temp_val, "21.2°C");
-    lv_obj_set_style_text_color(temp_val, lv_color_white(), 0);
+    lv_obj_set_style_text_color(temp_val, DETAIL_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(temp_val, &lv_font_montserrat_48, 0);
     lv_obj_align(temp_val, LV_ALIGN_TOP_LEFT, 90, 35);
 
     lv_obj_t *maxmin = lv_label_create(card);
     lv_label_set_text(maxmin, LV_SYMBOL_UP " 26°  " LV_SYMBOL_DOWN " 17°");
-    lv_obj_set_style_text_color(maxmin, lv_color_hex(0x9CA3AF), 0);
+    lv_obj_set_style_text_color(maxmin, DETAIL_TEXT_MUTED, 0);
     lv_obj_align(maxmin, LV_ALIGN_TOP_LEFT, 20, 100);
 
     // Humedad
@@ -1162,7 +1182,7 @@ void createDetailRemoto() {
     lv_obj_t *pres_val = lv_label_create(card);
     lv_label_set_text(pres_val, "1015 hPa");
     lv_obj_set_style_text_color(pres_val, DETAIL_COLOR_REMOTO, 0);
-    lv_obj_set_style_text_font(pres_val, &lv_font_montserrat_36, 0);
+    lv_obj_set_style_text_font(pres_val, &lv_font_montserrat_28, 0);
     lv_obj_align(pres_val, LV_ALIGN_TOP_RIGHT, -30, 45);
 
     // Diferencia vs principal
