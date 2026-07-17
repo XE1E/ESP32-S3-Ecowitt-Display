@@ -4,8 +4,8 @@
 
 | Documento | Descripcion |
 |-----------|-------------|
-| [TODO.md](TODO.md) | Lista de tareas pendientes y completadas |
-| [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) | Plan de desarrollo por fases |
+| [PLAN_FUNCIONALIDADES.md](PLAN_FUNCIONALIDADES.md) | Plan de funcionalidades, navegacion y fases |
+| [API.md](API.md) | Referencia del API del servidor Ecowitt |
 
 ## Archivo
 
@@ -13,8 +13,10 @@ Documentos completados u obsoletos en [`archivo/`](archivo/):
 
 | Documento | Estado |
 |-----------|--------|
-| [PLAN.md](archivo/PLAN.md) | Plan inicial detallado (supersedido por DEVELOPMENT_PLAN) |
-| [DEV_STATUS.md](archivo/DEV_STATUS.md) | Estado de debug del touch (resuelto) |
+| [PLAN.md](archivo/PLAN.md) | Plan inicial (supersedido) |
+| [DEV_STATUS.md](archivo/DEV_STATUS.md) | Debug del touch (resuelto) |
+| [TODO.md](archivo/TODO.md) | Lista de tareas (migrado a PLAN_FUNCIONALIDADES) |
+| [REDISENO_UI.md](archivo/REDISENO_UI.md) | Rediseno UI (completado) |
 
 ## Documentos en Raiz
 
