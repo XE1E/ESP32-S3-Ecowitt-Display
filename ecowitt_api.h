@@ -215,16 +215,18 @@ public:
             DeserializationError error = deserializeJson(doc, payload);
 
             if (!error) {
+                // API usa "rise"/"set", no "sunrise"/"sunset"
                 strlcpy(data.sunrise,
-                        doc["sun"]["sunrise"] | "00:00",
+                        doc["sun"]["rise"] | "00:00",
                         sizeof(data.sunrise));
                 strlcpy(data.sunset,
-                        doc["sun"]["sunset"] | "00:00",
+                        doc["sun"]["set"] | "00:00",
                         sizeof(data.sunset));
                 strlcpy(data.moon_phase,
                         doc["moon"]["phase"] | "",
                         sizeof(data.moon_phase));
-                data.moon_illumination = doc["moon"]["illumination"] | 0;
+                // illumination viene como float (ej: 10.0)
+                data.moon_illumination = doc["moon"]["illumination"].as<int>();
                 data.valid = true;
                 http.end();
                 return true;

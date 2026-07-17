@@ -1463,18 +1463,18 @@ void createMainPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     lv_obj_set_style_text_font(wind_label, &lv_font_montserrat_12, 0);
     lv_obj_align(wind_label, LV_ALIGN_TOP_LEFT, 50, 38);
 
-    // Direccion - icono + texto
+    // Direccion - icono + texto (mas grandes para visibilidad)
     lbl_main_wind_dir_icon = lv_label_create(sc_wind);
     lv_label_set_text(lbl_main_wind_dir_icon, WI_DIR_N);
-    lv_obj_set_style_text_font(lbl_main_wind_dir_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_font(lbl_main_wind_dir_icon, &weather_icons_48, 0);
     lv_obj_set_style_text_color(lbl_main_wind_dir_icon, COLOR_WIND, 0);
-    lv_obj_align(lbl_main_wind_dir_icon, LV_ALIGN_TOP_LEFT, 8, 62);
+    lv_obj_align(lbl_main_wind_dir_icon, LV_ALIGN_TOP_LEFT, 5, 55);
 
     lbl_main_wind_dir = lv_label_create(sc_wind);
     lv_label_set_text(lbl_main_wind_dir, "NO 303°");
-    lv_obj_set_style_text_color(lbl_main_wind_dir, COLOR_TEXT_MUTED, 0);
-    lv_obj_set_style_text_font(lbl_main_wind_dir, &lv_font_montserrat_14, 0);
-    lv_obj_align(lbl_main_wind_dir, LV_ALIGN_TOP_LEFT, 45, 72);
+    lv_obj_set_style_text_color(lbl_main_wind_dir, COLOR_TEXT_PRIMARY, 0);
+    lv_obj_set_style_text_font(lbl_main_wind_dir, &lv_font_montserrat_18, 0);
+    lv_obj_align(lbl_main_wind_dir, LV_ALIGN_TOP_LEFT, 55, 68);
 
     // Rafagas
     lbl_main_gust = lv_label_create(sc_wind);
