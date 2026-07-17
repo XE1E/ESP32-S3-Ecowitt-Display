@@ -39,6 +39,9 @@ WeatherData g_weather = {0};
 CompareData g_compare = {0};
 AlertData g_alerts = {0};
 AlmanacData g_almanac = {0};
+ForecastData g_forecast = {0};
+AirQualityData g_airquality = {0};
+StatsData g_stats = {0};
 SystemStatus g_status = {0};
 LocalSensorData g_local = {0};
 RemoteSensorData g_jardin = {0};
@@ -523,7 +526,8 @@ void updateWeatherData() {
     // Endpoint optimizado: UNA sola llamada obtiene todo
     // ========================================================================
     int serverTimezone = -6;  // Default Mexico
-    if (ecowittApi.fetchAll(g_weather, g_compare, g_almanac, g_jardin, g_remoto, &serverTimezone)) {
+    if (ecowittApi.fetchAll(g_weather, g_compare, g_almanac, g_jardin, g_remoto,
+                            &serverTimezone, &g_forecast, &g_airquality, &g_stats)) {
         // Sincronizar hora del sistema con el servidor (usando timezone del server)
         if (strlen(g_weather.timestamp) > 0) {
             syncTimeFromServer(g_weather.timestamp, serverTimezone);
@@ -546,6 +550,17 @@ void updateWeatherData() {
         if (g_remoto.valid) {
             Serial.printf("[API] Remoto: %.1f°C, %.0f%%\n",
                           g_remoto.temperature, g_remoto.humidity);
+        }
+        if (g_forecast.valid && g_forecast.available) {
+            Serial.printf("[API] Pronostico: %s\n", g_forecast.forecast);
+        }
+        if (g_airquality.valid) {
+            Serial.printf("[API] AQI: %d (%s)\n", g_airquality.aqi, g_airquality.station);
+        }
+        if (g_stats.valid && strlen(g_stats.temp_max_time) > 0) {
+            Serial.printf("[API] Max %.1f°C (%s), Min %.1f°C (%s)\n",
+                          g_stats.temp_max, g_stats.temp_max_time,
+                          g_stats.temp_min, g_stats.temp_min_time);
         }
 
         g_status.api_ok = true;

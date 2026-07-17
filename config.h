@@ -170,6 +170,39 @@ struct AlmanacData {
     bool valid;
 };
 
+// Pronóstico barométrico
+struct ForecastData {
+    char forecast[96];       // Texto del pronóstico
+    char trend_code[16];     // "steady", "rising", "falling", etc.
+    char trend_label[24];    // "estable", "subiendo", etc.
+    char trend_arrow[8];     // "→", "↑", "↓", etc.
+    float pressure;          // Presión actual
+    float delta_3h;          // Cambio en 3 horas
+    bool available;
+    bool valid;
+};
+
+// Calidad del aire
+struct AirQualityData {
+    int aqi;                 // Índice AQI (0-500)
+    float pm25;              // PM2.5 en μg/m³
+    float pm10;              // PM10 en μg/m³
+    char station[32];        // Estación de monitoreo
+    char dominant[16];       // Contaminante dominante
+    bool valid;
+};
+
+// Estadísticas con hora de extremos
+struct StatsData {
+    float temp_max;
+    float temp_min;
+    char temp_max_time[6];   // "14:30"
+    char temp_min_time[6];   // "06:15"
+    float wind_max;
+    char wind_max_time[6];
+    bool valid;
+};
+
 // Estado del sistema
 struct SystemStatus {
     bool wifi_connected;
@@ -199,6 +232,9 @@ extern WeatherData g_weather;
 extern CompareData g_compare;
 extern AlertData g_alerts;
 extern AlmanacData g_almanac;
+extern ForecastData g_forecast;
+extern AirQualityData g_airquality;
+extern StatsData g_stats;
 extern SystemStatus g_status;
 extern LocalSensorData g_local;
 extern RemoteSensorData g_jardin;      // HN31 en jardin

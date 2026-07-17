@@ -460,9 +460,14 @@ public:
      * Endpoint optimizado: obtiene TODOS los datos en una sola llamada
      * Combina: current, stats, compare, almanac, forecast, airquality
      * @param tzOffset Puntero para almacenar el offset de timezone (en horas, ej: -6)
+     * @param forecast Puntero a estructura de pronóstico (opcional)
+     * @param airquality Puntero a estructura de calidad del aire (opcional)
+     * @param stats Puntero a estructura de stats con horas (opcional)
      */
     bool fetchAll(WeatherData& weather, CompareData& compare, AlmanacData& almanac,
-                  RemoteSensorData& jardin, RemoteGatewayData& remoto, int* tzOffset = nullptr) {
+                  RemoteSensorData& jardin, RemoteGatewayData& remoto, int* tzOffset = nullptr,
+                  ForecastData* forecast = nullptr, AirQualityData* airquality = nullptr,
+                  StatsData* stats = nullptr) {
         HTTPClient http;
         String url = String(_baseUrl) + "/api/display";
 
@@ -515,11 +520,11 @@ public:
                 strlcpy(weather.timestamp, current["received_at"] | "", sizeof(weather.timestamp));
 
                 // === STATS (min/max del día) ===
-                JsonObject stats = doc["stats"];
-                weather.temp_max = stats["temperature_outdoor"]["max"] | 0.0f;
-                weather.temp_min = stats["temperature_outdoor"]["min"] | 0.0f;
-                weather.wind_max = stats["wind_gust"]["max"] | 0.0f;
-                weather.rain_total = stats["rain_daily"]["max"] | 0.0f;
+                JsonObject statsObj = doc["stats"];
+                weather.temp_max = statsObj["temperature_outdoor"]["max"] | 0.0f;
+                weather.temp_min = statsObj["temperature_outdoor"]["min"] | 0.0f;
+                weather.wind_max = statsObj["wind_gust"]["max"] | 0.0f;
+                weather.rain_total = statsObj["rain_daily"]["max"] | 0.0f;
 
                 weather.valid = true;
 
@@ -538,14 +543,90 @@ public:
                 almanac.moon_illumination = alm["moon_illumination"] | 0;
                 almanac.valid = true;
 
+                // === FORECAST (pronóstico barométrico) ===
+                if (forecast != nullptr && doc.containsKey("forecast")) {
+                    JsonObject fc = doc["forecast"];
+                    forecast->available = fc["available"] | false;
+                    if (forecast->available) {
+                        strlcpy(forecast->forecast, fc["forecast"] | "", sizeof(forecast->forecast));
+                        forecast->pressure = fc["pressure"] | 0.0f;
+                        forecast->delta_3h = fc["delta_3h"] | 0.0f;
+                        // Trend es un objeto anidado
+                        JsonObject trend = fc["trend"];
+                        strlcpy(forecast->trend_code, trend["code"] | "", sizeof(forecast->trend_code));
+                        strlcpy(forecast->trend_label, trend["label"] | "", sizeof(forecast->trend_label));
+                        strlcpy(forecast->trend_arrow, trend["arrow"] | "", sizeof(forecast->trend_arrow));
+                        forecast->valid = true;
+                    } else {
+                        forecast->valid = false;
+                    }
+                }
+
+                // === AIRQUALITY (calidad del aire) ===
+                if (airquality != nullptr && !doc["airquality"].isNull()) {
+                    JsonObject aq = doc["airquality"];
+                    airquality->aqi = aq["aqi"] | 0;
+                    airquality->pm25 = aq["pm25"] | 0.0f;
+                    airquality->pm10 = aq["pm10"] | 0.0f;  // May not be in response
+                    strlcpy(airquality->station, aq["station"] | "WAQI", sizeof(airquality->station));
+                    strlcpy(airquality->dominant, aq["dominant"] | "", sizeof(airquality->dominant));
+                    airquality->valid = (airquality->aqi > 0);
+                }
+
+                // === STATS con horas de extremos ===
+                if (stats != nullptr) {
+                    JsonObject st = doc["stats"];
+                    JsonObject temp_stats = st["temperature_outdoor"];
+                    stats->temp_max = temp_stats["max"] | 0.0f;
+                    stats->temp_min = temp_stats["min"] | 0.0f;
+
+                    // Obtener timezone offset para convertir UTC a local
+                    int tz = (tzOffset != nullptr) ? *tzOffset : -6;
+
+                    // Helper lambda: extrae HH:MM de ISO y aplica timezone
+                    auto extractLocalTime = [tz](const char* iso, char* out, size_t outSize) {
+                        out[0] = '\0';
+                        const char* t_pos = strchr(iso, 'T');
+                        if (t_pos && strlen(t_pos) >= 6) {
+                            int hour = (t_pos[1] - '0') * 10 + (t_pos[2] - '0');
+                            int minute = (t_pos[4] - '0') * 10 + (t_pos[5] - '0');
+                            // Aplicar timezone offset
+                            hour += tz;
+                            if (hour < 0) hour += 24;
+                            if (hour >= 24) hour -= 24;
+                            snprintf(out, outSize, "%02d:%02d", hour, minute);
+                        }
+                    };
+
+                    const char* max_iso = temp_stats["max_time"] | "";
+                    const char* min_iso = temp_stats["min_time"] | "";
+                    extractLocalTime(max_iso, stats->temp_max_time, sizeof(stats->temp_max_time));
+                    extractLocalTime(min_iso, stats->temp_min_time, sizeof(stats->temp_min_time));
+
+                    JsonObject wind_stats = st["wind_gust"];
+                    stats->wind_max = wind_stats["max"] | 0.0f;
+                    const char* wind_iso = wind_stats["max_time"] | "";
+                    extractLocalTime(wind_iso, stats->wind_max_time, sizeof(stats->wind_max_time));
+                    stats->valid = true;
+                }
+
                 // === STATIONS (ch1 = jardin, gw1100 = remoto) ===
                 JsonObject stations = doc["stations"];
 
+                // Primero intentar stations.ch1, si no existe, buscar en current
                 if (stations.containsKey("ch1")) {
                     JsonObject ch1 = stations["ch1"];
                     jardin.temperature = ch1["temperature"] | 0.0f;
                     jardin.humidity = ch1["humidity"] | 0.0f;
                     bool bat = ch1["battery"] | true;
+                    jardin.battery = bat ? 100 : 10;
+                    jardin.valid = true;
+                    jardin.last_update = millis();
+                } else if (!current["temperature_ch1"].isNull()) {
+                    // Fallback: WN31 data en la sección current
+                    jardin.temperature = current["temperature_ch1"] | 0.0f;
+                    jardin.humidity = current["humidity_ch1"] | 0.0f;
+                    bool bat = current["battery_ch1"] | true;
                     jardin.battery = bat ? 100 : 10;
                     jardin.valid = true;
                     jardin.last_update = millis();
