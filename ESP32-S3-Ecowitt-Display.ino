@@ -517,12 +517,12 @@ void updateWeatherData() {
     return;
     #endif
 
-    Serial.println("[API] Actualizando datos...");
+    Serial.println("[API] Actualizando datos (endpoint optimizado)...");
 
     // ========================================================================
-    // Datos de la estación principal (WS69)
+    // Endpoint optimizado: UNA sola llamada obtiene todo
     // ========================================================================
-    if (ecowittApi.fetchCurrent(g_weather)) {
+    if (ecowittApi.fetchAll(g_weather, g_compare, g_almanac, g_jardin, g_remoto)) {
         // Sincronizar hora del sistema con el servidor
         if (strlen(g_weather.timestamp) > 0) {
             syncTimeFromServer(g_weather.timestamp);
@@ -532,74 +532,33 @@ void updateWeatherData() {
                       g_weather.temp_outdoor,
                       g_weather.humidity_outdoor,
                       g_weather.pressure_rel);
-        Serial.printf("[API] Viento: %.1f km/h %s, Rafaga: %.1f\n",
-                      g_weather.wind_speed,
-                      g_weather.wind_dir_cardinal,
-                      g_weather.wind_gust);
-        Serial.printf("[API] Local (WS2910): %.1f°C, %.0f%%\n",
-                      g_weather.temp_indoor,
-                      g_weather.humidity_indoor);
+        Serial.printf("[API] Max/Min: %.1f/%.1f°C\n",
+                      g_weather.temp_max,
+                      g_weather.temp_min);
+        Serial.printf("[API] vs ayer: %+.1f°C\n", g_compare.temp_diff);
+        Serial.printf("[API] Sol: %s - %s\n", g_almanac.sunrise, g_almanac.sunset);
+
+        if (g_jardin.valid) {
+            Serial.printf("[API] Jardin: %.1f°C, %.0f%%\n",
+                          g_jardin.temperature, g_jardin.humidity);
+        }
+        if (g_remoto.valid) {
+            Serial.printf("[API] Remoto: %.1f°C, %.0f%%\n",
+                          g_remoto.temperature, g_remoto.humidity);
+        }
+
         g_status.api_ok = true;
     } else {
-        Serial.println("[API] ERROR: No se pudieron obtener datos principales");
+        Serial.println("[API] ERROR en fetchAll");
         g_status.api_ok = false;
         return;
     }
 
-    // Estadísticas del día
-    if (ecowittApi.fetchDailyStats(g_weather)) {
-        Serial.printf("[API] Hoy: Max %.1f°C, Min %.1f°C, Lluvia %.1f mm\n",
-                      g_weather.temp_max,
-                      g_weather.temp_min,
-                      g_weather.rain_total);
-    }
-
-    // Comparación vs ayer
-    if (ecowittApi.fetchCompare(g_compare)) {
-        Serial.printf("[API] vs ayer: %+.1f°C, %+.0f%% HR, %+.1f hPa\n",
-                      g_compare.temp_diff,
-                      g_compare.humidity_diff,
-                      g_compare.pressure_diff);
-    }
-
-    // Alertas
+    // Alertas (aún no incluidas en /api/display, se obtienen aparte)
     if (ecowittApi.fetchAlerts(g_alerts)) {
         if (g_alerts.has_alerts) {
-            Serial.printf("[API] %d ALERTAS ACTIVAS:\n", g_alerts.alert_count);
-            for (int i = 0; i < g_alerts.alert_count; i++) {
-                Serial.printf("       - %s\n", g_alerts.alerts[i]);
-            }
-        } else {
-            Serial.println("[API] Sin alertas activas");
+            Serial.printf("[API] %d ALERTAS ACTIVAS\n", g_alerts.alert_count);
         }
-    }
-
-    // ========================================================================
-    // Datos del sensor Jardín (WN31 canal 1)
-    // El WN31 envía datos como temperature_ch1, humidity_ch1, etc.
-    // ========================================================================
-    if (ecowittApi.fetchWN31Channel(1, g_jardin)) {
-        Serial.printf("[API] Jardin (WN31 ch1): %.1f°C, %.0f%%, Bat: %d%%\n",
-                      g_jardin.temperature,
-                      g_jardin.humidity,
-                      g_jardin.battery);
-    } else {
-        Serial.println("[API] Jardin (WN31): sin datos en canal 1");
-        g_jardin.valid = false;
-    }
-
-    // ========================================================================
-    // Datos del gateway remoto (GW1100)
-    // Estación secundaria accesible via ?station=gw1100
-    // ========================================================================
-    if (ecowittApi.fetchRemoteGateway("gw1100", g_remoto)) {
-        Serial.printf("[API] Remota (GW1100): %.1f°C, %.0f%%, %.0f hPa\n",
-                      g_remoto.temperature,
-                      g_remoto.humidity,
-                      g_remoto.pressure);
-    } else {
-        Serial.println("[API] Remota (GW1100): sin datos");
-        g_remoto.valid = false;
     }
 
     // ========================================================================

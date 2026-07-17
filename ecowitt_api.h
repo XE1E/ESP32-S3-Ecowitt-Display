@@ -456,6 +456,112 @@ public:
         }
     }
 
+    /**
+     * Endpoint optimizado: obtiene TODOS los datos en una sola llamada
+     * Combina: current, stats, compare, almanac, forecast, airquality
+     */
+    bool fetchAll(WeatherData& weather, CompareData& compare, AlmanacData& almanac,
+                  RemoteSensorData& jardin, RemoteGatewayData& remoto) {
+        HTTPClient http;
+        String url = String(_baseUrl) + "/api/display";
+
+        if (!beginRequest(http, url)) {
+            Serial.println("[API] Error iniciando conexion display");
+            return false;
+        }
+        http.setTimeout(15000);
+        int httpCode = http.GET();
+
+        if (httpCode == HTTP_CODE_OK) {
+            String payload = http.getString();
+            DynamicJsonDocument doc(8192);
+            DeserializationError error = deserializeJson(doc, payload);
+
+            if (!error) {
+                // === CURRENT ===
+                JsonObject current = doc["current"];
+                weather.temp_outdoor = current["temperature_outdoor"] | 0.0f;
+                weather.humidity_outdoor = current["humidity_outdoor"] | 0.0f;
+                weather.pressure_rel = current["pressure_relative"] | 0.0f;
+                weather.wind_speed = current["wind_speed"] | 0.0f;
+                weather.wind_gust = current["wind_gust"] | 0.0f;
+                weather.wind_dir = current["wind_direction"] | 0.0f;
+
+                int dir = (int)weather.wind_dir;
+                const char* cardinals[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE",
+                                           "S","SSO","SO","OSO","O","ONO","NO","NNO"};
+                int idx = ((dir + 11) / 22) % 16;
+                strlcpy(weather.wind_dir_cardinal, cardinals[idx], sizeof(weather.wind_dir_cardinal));
+
+                weather.rain_rate = current["rain_rate"] | 0.0f;
+                weather.rain_day = current["rain_daily"] | 0.0f;
+                weather.uv = current["uv_index"] | 0.0f;
+                weather.solar_radiation = current["solar_radiation"] | 0.0f;
+                weather.feels_like = current["feels_like"] | weather.temp_outdoor;
+                weather.dewpoint = current["dew_point"] | 0.0f;
+                weather.temp_indoor = current["temperature_indoor"] | 0.0f;
+                weather.humidity_indoor = current["humidity_indoor"] | 0.0f;
+                weather.battery_wh65 = current["battery_wh65"] | true;
+
+                strlcpy(weather.timestamp, current["received_at"] | "", sizeof(weather.timestamp));
+
+                // === STATS (min/max del día) ===
+                JsonObject stats = doc["stats"];
+                weather.temp_max = stats["temperature_outdoor"]["max"] | 0.0f;
+                weather.temp_min = stats["temperature_outdoor"]["min"] | 0.0f;
+                weather.wind_max = stats["wind_gust"]["max"] | 0.0f;
+                weather.rain_total = stats["rain_daily"]["max"] | 0.0f;
+
+                weather.valid = true;
+
+                // === COMPARE ===
+                JsonObject comp = doc["compare"];
+                compare.temp_diff = comp["temp_diff"] | 0.0f;
+                compare.humidity_diff = comp["humidity_diff"] | 0.0f;
+                compare.pressure_diff = comp["pressure_diff"] | 0.0f;
+                compare.valid = true;
+
+                // === ALMANAC ===
+                JsonObject alm = doc["almanac"];
+                strlcpy(almanac.sunrise, alm["sunrise"] | "00:00", sizeof(almanac.sunrise));
+                strlcpy(almanac.sunset, alm["sunset"] | "00:00", sizeof(almanac.sunset));
+                strlcpy(almanac.moon_phase, alm["moon_phase"] | "", sizeof(almanac.moon_phase));
+                almanac.moon_illumination = alm["moon_illumination"] | 0;
+                almanac.valid = true;
+
+                // === STATIONS (ch1 = jardin, gw1100 = remoto) ===
+                JsonObject stations = doc["stations"];
+
+                if (stations.containsKey("ch1")) {
+                    JsonObject ch1 = stations["ch1"];
+                    jardin.temperature = ch1["temperature"] | 0.0f;
+                    jardin.humidity = ch1["humidity"] | 0.0f;
+                    bool bat = ch1["battery"] | true;
+                    jardin.battery = bat ? 100 : 10;
+                    jardin.valid = true;
+                    jardin.last_update = millis();
+                }
+
+                if (stations.containsKey("gw1100")) {
+                    JsonObject gw = stations["gw1100"];
+                    remoto.temperature = gw["temperature"] | 0.0f;
+                    remoto.humidity = gw["humidity"] | 0.0f;
+                    remoto.pressure = gw["pressure"] | 0.0f;
+                    remoto.valid = true;
+                    remoto.last_update = millis();
+                }
+
+                http.end();
+                Serial.println("[API] fetchAll OK (1 llamada)");
+                return true;
+            }
+        }
+
+        http.end();
+        Serial.printf("[API] fetchAll error: %d\n", httpCode);
+        return false;
+    }
+
 private:
     const char* _baseUrl;
 };
