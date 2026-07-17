@@ -431,9 +431,48 @@ Acceso: Swipe desde Récords
 
 ---
 
+## Widgets Avanzados (LVGL)
+
+| Widget | Uso | Componente LVGL |
+|--------|-----|-----------------|
+| Gráficas historial | Temperatura, presión, lluvia | `lv_chart` |
+| Medidor presión | Barómetro circular con tendencia | `lv_meter` |
+| Rosa de vientos | Distribución direccional animada | `lv_meter` + custom |
+| Fase lunar | Indicador gráfico de luna | Custom canvas |
+| Sparklines | Mini gráficas en cards | `lv_chart` (line) |
+
+---
+
+## Conectividad (Futuro)
+
+| Feature | Descripción | Prioridad |
+|---------|-------------|-----------|
+| MQTT directo | Recibir datos sin polling HTTP | Media |
+| BLE config | Configuración inicial via Bluetooth | Baja |
+| OTA updates | Actualización firmware remota | Alta |
+
+---
+
 ## Notas Técnicas
 
-### Limitaciones ESP32
+### Hardware ESP32-S3
+| Parámetro | Valor |
+|-----------|-------|
+| Pixel clock | 15 MHz (estable, no usar 30MHz) |
+| Buffer LVGL | 200 líneas en PSRAM |
+| I2C SDA | GPIO 8 |
+| I2C SCL | GPIO 9 |
+| Touch INT | GPIO 4 (LOW = touch activo) |
+| Display | 1024x600 RGB |
+
+### Fuentes Disponibles
+```
+Tamaños: 12, 14, 16, 18, 20, 24, 28, 36, 40, 48 px
+Familia: Montserrat (LVGL default)
+Weather Icons: Convertidos para LVGL
+```
+
+### Limitaciones
 - RAM limitada para gráficas grandes → usar PSRAM
 - Sin navegador → no imágenes satelitales/radar
 - Pantalla 1024x600 → optimizar para ese tamaño
