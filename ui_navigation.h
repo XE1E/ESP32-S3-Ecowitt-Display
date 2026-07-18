@@ -21,6 +21,7 @@ void createSettingsScreen();
 void createDetailLocal();
 void createDetailJardin();
 void createDetailRemoto();
+void updateDetailRemoto();
 
 // ============================================================================
 // Pantallas disponibles
@@ -109,6 +110,7 @@ void navigateToScreen(ScreenType screen) {
             break;
         case SCREEN_DETAIL_REMOTO:
             if (!scr_detail_remoto) createDetailRemoto();
+            updateDetailRemoto();  // Actualizar datos antes de mostrar
             target = scr_detail_remoto;
             break;
         case SCREEN_HISTORY:
@@ -876,17 +878,22 @@ extern bool darkMode;
 #define DETAIL_TEXT_PRIMARY     (darkMode ? lv_color_hex(0xE8EDF5) : lv_color_hex(0x16232F))
 #define DETAIL_TEXT_SECONDARY   (darkMode ? lv_color_hex(0xCBD5E1) : lv_color_hex(0x475569))
 #define DETAIL_TEXT_MUTED       (darkMode ? lv_color_hex(0x8496A6) : lv_color_hex(0x55677A))
-#define DETAIL_BG               (darkMode ? lv_color_hex(0x0A1422) : lv_color_hex(0xF8FAFC))
-#define DETAIL_CARD_BG          (darkMode ? lv_color_hex(0x1E2D40) : lv_color_hex(0xFFFFFF))
-#define DETAIL_HEADER_BG        (darkMode ? lv_color_hex(0x0A1018) : lv_color_hex(0xFFFFFF))
-#define DETAIL_BORDER           (darkMode ? lv_color_hex(0x3A4A5A) : lv_color_hex(0xE2E8F0))
+// Paleta de 3 tonos grises uniforme (sin tintes verdes/azules)
+// Tono 1: casi negro (fondo) - 0x0A0E12
+// Tono 2: gris oscuro (cards, header) - 0x1A1F24
+// Tono 3: gris medio (sub-cards, botones) - 0x2A3238
+#define DETAIL_BG               (darkMode ? lv_color_hex(0x0A0E12) : lv_color_hex(0xF8FAFC))
+#define DETAIL_CARD_BG          (darkMode ? lv_color_hex(0x1A1F24) : lv_color_hex(0xFFFFFF))
+#define DETAIL_HEADER_BG        (darkMode ? lv_color_hex(0x1A1F24) : lv_color_hex(0xFFFFFF))
+#define DETAIL_SUBCARD_BG       (darkMode ? lv_color_hex(0x2A3238) : lv_color_hex(0xF1F5F9))
+#define DETAIL_BORDER           (darkMode ? lv_color_hex(0x3A4248) : lv_color_hex(0xE2E8F0))
 
-// Boton volver generico - estilo servidor
+// Boton volver generico - Tono 3 (gris medio)
 lv_obj_t* createBackButton(lv_obj_t *parent) {
     lv_obj_t *btn = lv_btn_create(parent);
     lv_obj_set_size(btn, 100, 36);
     lv_obj_align(btn, LV_ALIGN_TOP_LEFT, 15, 17);
-    lv_obj_set_style_bg_color(btn, darkMode ? lv_color_hex(0x2A3A4A) : lv_color_hex(0xE8EDF5), 0);
+    lv_obj_set_style_bg_color(btn, DETAIL_SUBCARD_BG, 0);  // Tono 3
     lv_obj_set_style_radius(btn, 8, 0);
     lv_obj_set_style_border_width(btn, 1, 0);
     lv_obj_set_style_border_color(btn, DETAIL_BORDER, 0);
@@ -1133,90 +1140,496 @@ void createDetailJardin() {
 }
 
 /**
- * Pantalla detalle REMOTO (GW110)
+ * Pantalla detalle REMOTO (GW1100) - Plan 3b
+ * Muestra valores actuales + gráficas de historial
  */
+
+// UI elements for remote detail
+static struct {
+    lv_obj_t *temp;
+    lv_obj_t *humidity;
+    lv_obj_t *pressure;
+    lv_obj_t *diff;
+    // Charts
+    lv_obj_t *chart_temp;
+    lv_obj_t *chart_hum;
+    lv_obj_t *chart_pres;
+    lv_chart_series_t *ser_temp;
+    lv_chart_series_t *ser_hum;
+    lv_chart_series_t *ser_pres;
+    lv_obj_t *stats_temp;
+    lv_obj_t *stats_hum;
+    lv_obj_t *stats_pres;
+} detail_remoto_ui = {0};
+
 void createDetailRemoto() {
     extern RemoteGatewayData g_remoto;
+    extern lv_style_t style_card;
+    extern bool darkMode;
+
+    // Paleta de 3 tonos grises (sin tintes verdes/azules)
+    lv_color_t bg_screen = darkMode ? lv_color_hex(0x0A0E12) : lv_color_hex(0xF8FAFC);   // Tono 1: casi negro
+    lv_color_t bg_card = darkMode ? lv_color_hex(0x1A1F24) : lv_color_hex(0xFFFFFF);     // Tono 2: gris oscuro
+    lv_color_t bg_subcard = darkMode ? lv_color_hex(0x2A3238) : lv_color_hex(0xF1F5F9);  // Tono 3: gris medio
+    lv_color_t border_color = darkMode ? lv_color_hex(0x3A4248) : lv_color_hex(0xE2E8F0);
 
     scr_detail_remoto = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(scr_detail_remoto, DETAIL_BG, 0);
+    lv_obj_set_style_bg_color(scr_detail_remoto, bg_screen, 0);  // Tono 1
     lv_obj_clear_flag(scr_detail_remoto, LV_OBJ_FLAG_SCROLLABLE);
 
     createDetailHeader(scr_detail_remoto, "ESTACION REMOTA", "Ecowitt GW1100", DETAIL_COLOR_REMOTO);
 
-    int y_start = 85;
+    // Layout estilo servidor: una card principal con grid 2x2 de sub-cards
     int gap = 12;
+    int y_start = 78;
 
-    lv_obj_t *card = createDetailCard(scr_detail_remoto, gap, y_start, SCREEN_WIDTH - gap * 2, 250, "LECTURAS ACTUALES", DETAIL_COLOR_REMOTO);
+    // Colores exactos del servidor (Tailwind)
+    lv_color_t color_temp = lv_color_hex(0xFCD34D);   // amber-300
+    lv_color_t color_hum = lv_color_hex(0x67E8F9);    // cyan-300
+    lv_color_t color_dew = lv_color_hex(0x6EE7B7);    // emerald-300
+    lv_color_t color_pres = lv_color_hex(0xC4B5FD);   // violet-300
 
-    // Temperatura
-    lv_obj_t *temp_icon = lv_label_create(card);
+    // === CARD PRINCIPAL - Tono 2: gris oscuro ===
+    lv_obj_t *main_card = lv_obj_create(scr_detail_remoto);
+    lv_obj_set_size(main_card, SCREEN_WIDTH - gap * 2, SCREEN_HEIGHT - y_start - gap);
+    lv_obj_set_pos(main_card, gap, y_start);
+    lv_obj_set_style_bg_color(main_card, bg_card, 0);  // Tono 2
+    lv_obj_set_style_bg_opa(main_card, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(main_card, 16, 0);  // rounded-2xl
+    lv_obj_set_style_border_width(main_card, 1, 0);
+    lv_obj_set_style_border_color(main_card, border_color, 0);
+    lv_obj_set_style_shadow_width(main_card, 30, 0);
+    lv_obj_set_style_shadow_color(main_card, lv_color_hex(0x000000), 0);
+    lv_obj_set_style_shadow_opa(main_card, darkMode ? LV_OPA_40 : LV_OPA_10, 0);
+    lv_obj_set_style_shadow_ofs_y(main_card, 8, 0);
+    lv_obj_set_style_pad_all(main_card, 16, 0);
+    lv_obj_clear_flag(main_card, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Título estilo servidor: card-title
+    lv_obj_t *lbl_title = lv_label_create(main_card);
+    lv_label_set_text(lbl_title, "LECTURAS EN VIVO");
+    lv_obj_set_style_text_font(lbl_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_title, darkMode ? lv_color_hex(0x94A3B8) : lv_color_hex(0x64748B), 0);
+    lv_obj_align(lbl_title, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    // Badge "en vivo" como el servidor
+    lv_obj_t *badge = lv_obj_create(main_card);
+    lv_obj_set_size(badge, 65, 22);
+    lv_obj_align(badge, LV_ALIGN_TOP_RIGHT, 0, -2);
+    lv_obj_set_style_bg_color(badge, lv_color_hex(0x34D399), 0);
+    lv_obj_set_style_bg_opa(badge, LV_OPA_20, 0);
+    lv_obj_set_style_radius(badge, 11, 0);
+    lv_obj_set_style_border_width(badge, 1, 0);
+    lv_obj_set_style_border_color(badge, lv_color_hex(0x34D399), 0);
+    lv_obj_set_style_border_opa(badge, LV_OPA_50, 0);
+    lv_obj_set_style_pad_all(badge, 0, 0);
+    lv_obj_clear_flag(badge, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *badge_txt = lv_label_create(badge);
+    lv_label_set_text(badge_txt, "EN VIVO");
+    lv_obj_set_style_text_font(badge_txt, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(badge_txt, lv_color_hex(0x6EE7B7), 0);
+    lv_obj_center(badge_txt);
+
+    // === GRID 2x2 de sub-cards (como RemoteStationCard del servidor) ===
+    int sc_w = (SCREEN_WIDTH - gap * 2 - 32 - 12) / 2;  // ~482px cada una
+    int sc_h = 195;
+    int grid_y = 30;
+
+    // --- Sub-card 1: Temperatura (top-left) - Tono 3 ---
+    lv_obj_t *sc_temp = lv_obj_create(main_card);
+    lv_obj_set_size(sc_temp, sc_w, sc_h);
+    lv_obj_set_pos(sc_temp, 0, grid_y);
+    lv_obj_set_style_bg_color(sc_temp, bg_subcard, 0);  // Tono 3
+    lv_obj_set_style_bg_opa(sc_temp, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(sc_temp, 10, 0);  // rounded-lg
+    lv_obj_set_style_border_width(sc_temp, 0, 0);
+    lv_obj_set_style_pad_all(sc_temp, 12, 0);
+    lv_obj_clear_flag(sc_temp, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *temp_icon = lv_label_create(sc_temp);
     lv_label_set_text(temp_icon, WI_THERMOMETER);
-    lv_obj_set_style_text_font(temp_icon, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(temp_icon, DETAIL_COLOR_REMOTO, 0);
-    lv_obj_align(temp_icon, LV_ALIGN_TOP_LEFT, 20, 40);
+    lv_obj_set_style_text_font(temp_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(temp_icon, color_temp, 0);
+    lv_obj_align(temp_icon, LV_ALIGN_TOP_MID, 0, 0);
 
-    lv_obj_t *temp_val = lv_label_create(card);
-    lv_label_set_text(temp_val, "21.2°C");
-    lv_obj_set_style_text_color(temp_val, DETAIL_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(temp_val, &lv_font_montserrat_48, 0);
-    lv_obj_align(temp_val, LV_ALIGN_TOP_LEFT, 90, 35);
+    detail_remoto_ui.temp = lv_label_create(sc_temp);
+    lv_label_set_text(detail_remoto_ui.temp, "--.-°C");
+    lv_obj_set_style_text_color(detail_remoto_ui.temp, color_temp, 0);
+    lv_obj_set_style_text_font(detail_remoto_ui.temp, &lv_font_montserrat_28, 0);
+    lv_obj_align(detail_remoto_ui.temp, LV_ALIGN_TOP_MID, 0, 40);
 
-    lv_obj_t *maxmin = lv_label_create(card);
-    lv_label_set_text(maxmin, LV_SYMBOL_UP " 26°  " LV_SYMBOL_DOWN " 17°");
-    lv_obj_set_style_text_color(maxmin, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(maxmin, LV_ALIGN_TOP_LEFT, 20, 100);
+    lv_obj_t *temp_lbl = lv_label_create(sc_temp);
+    lv_label_set_text(temp_lbl, "Temperatura");
+    lv_obj_set_style_text_font(temp_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(temp_lbl, darkMode ? lv_color_hex(0x94A3B8) : lv_color_hex(0x64748B), 0);
+    lv_obj_align(temp_lbl, LV_ALIGN_TOP_MID, 0, 72);
 
-    // Humedad
-    lv_obj_t *hum_icon = lv_label_create(card);
+    // Mini gráfica temperatura con cuadrícula punteada visible
+    lv_color_t grid_color = darkMode ? lv_color_hex(0x5A6570) : lv_color_hex(0xA0A8B0);
+    lv_color_t axis_color = darkMode ? lv_color_hex(0x8496A6) : lv_color_hex(0x64748B);
+
+    detail_remoto_ui.chart_temp = lv_chart_create(sc_temp);
+    lv_obj_set_size(detail_remoto_ui.chart_temp, sc_w - 60, 70);
+    lv_obj_align(detail_remoto_ui.chart_temp, LV_ALIGN_BOTTOM_RIGHT, -8, -18);
+    lv_chart_set_type(detail_remoto_ui.chart_temp, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(detail_remoto_ui.chart_temp, 36);
+    lv_chart_set_range(detail_remoto_ui.chart_temp, LV_CHART_AXIS_PRIMARY_Y, 15, 30);
+    lv_obj_set_style_line_width(detail_remoto_ui.chart_temp, 2, LV_PART_ITEMS);
+    lv_obj_set_style_size(detail_remoto_ui.chart_temp, 0, LV_PART_INDICATOR);
+    lv_obj_set_style_bg_opa(detail_remoto_ui.chart_temp, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(detail_remoto_ui.chart_temp, 0, 0);
+    lv_chart_set_div_line_count(detail_remoto_ui.chart_temp, 3, 6);
+    lv_obj_set_style_line_color(detail_remoto_ui.chart_temp, grid_color, LV_PART_MAIN);
+    lv_obj_set_style_line_opa(detail_remoto_ui.chart_temp, LV_OPA_70, LV_PART_MAIN);
+    lv_obj_set_style_line_dash_width(detail_remoto_ui.chart_temp, 4, LV_PART_MAIN);  // Punteada
+    lv_obj_set_style_line_dash_gap(detail_remoto_ui.chart_temp, 4, LV_PART_MAIN);
+    detail_remoto_ui.ser_temp = lv_chart_add_series(detail_remoto_ui.chart_temp, color_temp, LV_CHART_AXIS_PRIMARY_Y);
+
+    // Etiquetas eje Y (temperatura)
+    lv_obj_t *temp_max_lbl = lv_label_create(sc_temp);
+    lv_label_set_text(temp_max_lbl, "30°");
+    lv_obj_set_style_text_font(temp_max_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(temp_max_lbl, axis_color, 0);
+    lv_obj_align_to(temp_max_lbl, detail_remoto_ui.chart_temp, LV_ALIGN_OUT_LEFT_TOP, -2, 0);
+
+    lv_obj_t *temp_min_lbl = lv_label_create(sc_temp);
+    lv_label_set_text(temp_min_lbl, "15°");
+    lv_obj_set_style_text_font(temp_min_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(temp_min_lbl, axis_color, 0);
+    lv_obj_align_to(temp_min_lbl, detail_remoto_ui.chart_temp, LV_ALIGN_OUT_LEFT_BOTTOM, -2, 0);
+
+    // Etiquetas eje X (tiempo)
+    lv_obj_t *temp_t1 = lv_label_create(sc_temp);
+    lv_label_set_text(temp_t1, "-6h");
+    lv_obj_set_style_text_font(temp_t1, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(temp_t1, axis_color, 0);
+    lv_obj_align_to(temp_t1, detail_remoto_ui.chart_temp, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 2);
+
+    lv_obj_t *temp_t2 = lv_label_create(sc_temp);
+    lv_label_set_text(temp_t2, "Ahora");
+    lv_obj_set_style_text_font(temp_t2, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(temp_t2, axis_color, 0);
+    lv_obj_align_to(temp_t2, detail_remoto_ui.chart_temp, LV_ALIGN_OUT_BOTTOM_RIGHT, 0, 2);
+
+    // --- Sub-card 2: Humedad (top-right) - Tono 3 ---
+    lv_obj_t *sc_hum = lv_obj_create(main_card);
+    lv_obj_set_size(sc_hum, sc_w, sc_h);
+    lv_obj_set_pos(sc_hum, sc_w + 12, grid_y);
+    lv_obj_set_style_bg_color(sc_hum, bg_subcard, 0);  // Tono 3
+    lv_obj_set_style_bg_opa(sc_hum, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(sc_hum, 10, 0);
+    lv_obj_set_style_border_width(sc_hum, 0, 0);
+    lv_obj_set_style_pad_all(sc_hum, 12, 0);
+    lv_obj_clear_flag(sc_hum, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *hum_icon = lv_label_create(sc_hum);
     lv_label_set_text(hum_icon, WI_HUMIDITY);
-    lv_obj_set_style_text_font(hum_icon, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(hum_icon, lv_color_hex(0x67E8F9), 0);
-    lv_obj_align(hum_icon, LV_ALIGN_TOP_MID, -100, 40);
+    lv_obj_set_style_text_font(hum_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(hum_icon, color_hum, 0);
+    lv_obj_align(hum_icon, LV_ALIGN_TOP_MID, 0, 0);
 
-    lv_obj_t *hum_val = lv_label_create(card);
-    lv_label_set_text(hum_val, "65%");
-    lv_obj_set_style_text_color(hum_val, lv_color_hex(0x67E8F9), 0);
-    lv_obj_set_style_text_font(hum_val, &lv_font_montserrat_48, 0);
-    lv_obj_align(hum_val, LV_ALIGN_TOP_MID, 0, 35);
+    detail_remoto_ui.humidity = lv_label_create(sc_hum);
+    lv_label_set_text(detail_remoto_ui.humidity, "--%");
+    lv_obj_set_style_text_color(detail_remoto_ui.humidity, color_hum, 0);
+    lv_obj_set_style_text_font(detail_remoto_ui.humidity, &lv_font_montserrat_28, 0);
+    lv_obj_align(detail_remoto_ui.humidity, LV_ALIGN_TOP_MID, 0, 40);
 
-    // Presion
-    lv_obj_t *pres_icon = lv_label_create(card);
+    lv_obj_t *hum_lbl = lv_label_create(sc_hum);
+    lv_label_set_text(hum_lbl, "Humedad");
+    lv_obj_set_style_text_font(hum_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(hum_lbl, darkMode ? lv_color_hex(0x94A3B8) : lv_color_hex(0x64748B), 0);
+    lv_obj_align(hum_lbl, LV_ALIGN_TOP_MID, 0, 72);
+
+    detail_remoto_ui.chart_hum = lv_chart_create(sc_hum);
+    lv_obj_set_size(detail_remoto_ui.chart_hum, sc_w - 60, 70);
+    lv_obj_align(detail_remoto_ui.chart_hum, LV_ALIGN_BOTTOM_RIGHT, -8, -18);
+    lv_chart_set_type(detail_remoto_ui.chart_hum, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(detail_remoto_ui.chart_hum, 36);
+    lv_chart_set_range(detail_remoto_ui.chart_hum, LV_CHART_AXIS_PRIMARY_Y, 30, 100);
+    lv_obj_set_style_line_width(detail_remoto_ui.chart_hum, 2, LV_PART_ITEMS);
+    lv_obj_set_style_size(detail_remoto_ui.chart_hum, 0, LV_PART_INDICATOR);
+    lv_obj_set_style_bg_opa(detail_remoto_ui.chart_hum, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(detail_remoto_ui.chart_hum, 0, 0);
+    lv_chart_set_div_line_count(detail_remoto_ui.chart_hum, 3, 6);
+    lv_obj_set_style_line_color(detail_remoto_ui.chart_hum, grid_color, LV_PART_MAIN);
+    lv_obj_set_style_line_opa(detail_remoto_ui.chart_hum, LV_OPA_70, LV_PART_MAIN);
+    lv_obj_set_style_line_dash_width(detail_remoto_ui.chart_hum, 4, LV_PART_MAIN);  // Punteada
+    lv_obj_set_style_line_dash_gap(detail_remoto_ui.chart_hum, 4, LV_PART_MAIN);
+    detail_remoto_ui.ser_hum = lv_chart_add_series(detail_remoto_ui.chart_hum, color_hum, LV_CHART_AXIS_PRIMARY_Y);
+
+    // Etiquetas eje Y (humedad)
+    lv_obj_t *hum_max_lbl = lv_label_create(sc_hum);
+    lv_label_set_text(hum_max_lbl, "100%");
+    lv_obj_set_style_text_font(hum_max_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(hum_max_lbl, axis_color, 0);
+    lv_obj_align_to(hum_max_lbl, detail_remoto_ui.chart_hum, LV_ALIGN_OUT_LEFT_TOP, -2, 0);
+
+    lv_obj_t *hum_min_lbl = lv_label_create(sc_hum);
+    lv_label_set_text(hum_min_lbl, "30%");
+    lv_obj_set_style_text_font(hum_min_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(hum_min_lbl, axis_color, 0);
+    lv_obj_align_to(hum_min_lbl, detail_remoto_ui.chart_hum, LV_ALIGN_OUT_LEFT_BOTTOM, -2, 0);
+
+    // Etiquetas eje X (tiempo)
+    lv_obj_t *hum_t1 = lv_label_create(sc_hum);
+    lv_label_set_text(hum_t1, "-6h");
+    lv_obj_set_style_text_font(hum_t1, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(hum_t1, axis_color, 0);
+    lv_obj_align_to(hum_t1, detail_remoto_ui.chart_hum, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 2);
+
+    lv_obj_t *hum_t2 = lv_label_create(sc_hum);
+    lv_label_set_text(hum_t2, "Ahora");
+    lv_obj_set_style_text_font(hum_t2, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(hum_t2, axis_color, 0);
+    lv_obj_align_to(hum_t2, detail_remoto_ui.chart_hum, LV_ALIGN_OUT_BOTTOM_RIGHT, 0, 2);
+
+    // --- Sub-card 3: Punto de rocío + Sensación térmica (bottom-left) - Tono 3 ---
+    int row2_y = grid_y + sc_h + 12;
+    lv_obj_t *sc_derived = lv_obj_create(main_card);
+    lv_obj_set_size(sc_derived, sc_w, sc_h);
+    lv_obj_set_pos(sc_derived, 0, row2_y);
+    lv_obj_set_style_bg_color(sc_derived, bg_subcard, 0);  // Tono 3
+    lv_obj_set_style_bg_opa(sc_derived, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(sc_derived, 10, 0);
+    lv_obj_set_style_border_width(sc_derived, 0, 0);
+    lv_obj_set_style_pad_all(sc_derived, 12, 0);
+    lv_obj_clear_flag(sc_derived, LV_OBJ_FLAG_SCROLLABLE);
+
+    // Título de la card
+    lv_obj_t *derived_title = lv_label_create(sc_derived);
+    lv_label_set_text(derived_title, "DERIVADOS");
+    lv_obj_set_style_text_font(derived_title, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(derived_title, darkMode ? lv_color_hex(0x94A3B8) : lv_color_hex(0x64748B), 0);
+    lv_obj_align(derived_title, LV_ALIGN_TOP_MID, 0, 0);
+
+    // Punto de rocío (izquierda)
+    lv_obj_t *dew_icon = lv_label_create(sc_derived);
+    lv_label_set_text(dew_icon, WI_HUMIDITY);
+    lv_obj_set_style_text_font(dew_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(dew_icon, color_dew, 0);
+    lv_obj_align(dew_icon, LV_ALIGN_TOP_LEFT, 30, 30);
+
+    detail_remoto_ui.stats_temp = lv_label_create(sc_derived);  // Punto rocío
+    lv_label_set_text(detail_remoto_ui.stats_temp, "--.-°C");
+    lv_obj_set_style_text_color(detail_remoto_ui.stats_temp, color_dew, 0);
+    lv_obj_set_style_text_font(detail_remoto_ui.stats_temp, &lv_font_montserrat_24, 0);
+    lv_obj_align(detail_remoto_ui.stats_temp, LV_ALIGN_TOP_LEFT, 75, 35);
+
+    lv_obj_t *dew_lbl = lv_label_create(sc_derived);
+    lv_label_set_text(dew_lbl, "Punto de rocio");
+    lv_obj_set_style_text_font(dew_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(dew_lbl, darkMode ? lv_color_hex(0x94A3B8) : lv_color_hex(0x64748B), 0);
+    lv_obj_align(dew_lbl, LV_ALIGN_TOP_LEFT, 30, 70);
+
+    // Sensación térmica (derecha)
+    lv_obj_t *feels_icon = lv_label_create(sc_derived);
+    lv_label_set_text(feels_icon, WI_THERMOMETER);
+    lv_obj_set_style_text_font(feels_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(feels_icon, lv_color_hex(0xFB923C), 0);  // orange-400
+    lv_obj_align(feels_icon, LV_ALIGN_TOP_RIGHT, -180, 30);
+
+    detail_remoto_ui.stats_hum = lv_label_create(sc_derived);  // Sensación térmica
+    lv_label_set_text(detail_remoto_ui.stats_hum, "--.-°C");
+    lv_obj_set_style_text_color(detail_remoto_ui.stats_hum, lv_color_hex(0xFB923C), 0);
+    lv_obj_set_style_text_font(detail_remoto_ui.stats_hum, &lv_font_montserrat_24, 0);
+    lv_obj_align(detail_remoto_ui.stats_hum, LV_ALIGN_TOP_RIGHT, -85, 35);
+
+    lv_obj_t *feels_lbl = lv_label_create(sc_derived);
+    lv_label_set_text(feels_lbl, "Sensacion termica");
+    lv_obj_set_style_text_font(feels_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(feels_lbl, darkMode ? lv_color_hex(0x94A3B8) : lv_color_hex(0x64748B), 0);
+    lv_obj_align(feels_lbl, LV_ALIGN_TOP_RIGHT, -65, 70);
+
+    // Nota explicativa
+    lv_obj_t *note_lbl = lv_label_create(sc_derived);
+    lv_label_set_text(note_lbl, "Calculados a partir de temperatura y humedad");
+    lv_obj_set_style_text_font(note_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(note_lbl, darkMode ? lv_color_hex(0x64748B) : lv_color_hex(0x94A3B8), 0);
+    lv_obj_align(note_lbl, LV_ALIGN_BOTTOM_MID, 0, -10);
+
+    // --- Sub-card 4: Presión (bottom-right) ---
+    // --- Sub-card 4: Presión (bottom-right) - Tono 3 ---
+    lv_obj_t *sc_pres = lv_obj_create(main_card);
+    lv_obj_set_size(sc_pres, sc_w, sc_h);
+    lv_obj_set_pos(sc_pres, sc_w + 12, row2_y);
+    lv_obj_set_style_bg_color(sc_pres, bg_subcard, 0);  // Tono 3
+    lv_obj_set_style_bg_opa(sc_pres, LV_OPA_COVER, 0);
+    lv_obj_set_style_radius(sc_pres, 10, 0);
+    lv_obj_set_style_border_width(sc_pres, 0, 0);
+    lv_obj_set_style_pad_all(sc_pres, 12, 0);
+    lv_obj_clear_flag(sc_pres, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *pres_icon = lv_label_create(sc_pres);
     lv_label_set_text(pres_icon, WI_BAROMETER);
-    lv_obj_set_style_text_font(pres_icon, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(pres_icon, DETAIL_COLOR_REMOTO, 0);
-    lv_obj_align(pres_icon, LV_ALIGN_TOP_RIGHT, -220, 40);
+    lv_obj_set_style_text_font(pres_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(pres_icon, color_pres, 0);
+    lv_obj_align(pres_icon, LV_ALIGN_TOP_MID, 0, 0);
 
-    lv_obj_t *pres_val = lv_label_create(card);
-    lv_label_set_text(pres_val, "1015 hPa");
-    lv_obj_set_style_text_color(pres_val, DETAIL_COLOR_REMOTO, 0);
-    lv_obj_set_style_text_font(pres_val, &lv_font_montserrat_28, 0);
-    lv_obj_align(pres_val, LV_ALIGN_TOP_RIGHT, -30, 45);
+    detail_remoto_ui.pressure = lv_label_create(sc_pres);
+    lv_label_set_text(detail_remoto_ui.pressure, "---- hPa");
+    lv_obj_set_style_text_color(detail_remoto_ui.pressure, color_pres, 0);
+    lv_obj_set_style_text_font(detail_remoto_ui.pressure, &lv_font_montserrat_24, 0);
+    lv_obj_align(detail_remoto_ui.pressure, LV_ALIGN_TOP_MID, 0, 40);
 
-    // Diferencia vs principal
-    lv_obj_t *diff = lv_label_create(card);
-    lv_label_set_text(diff, "vs Principal: -3.3°C  |  Presion: +3 hPa");
-    lv_obj_set_style_text_color(diff, lv_color_hex(0x93C5FD), 0);
-    lv_obj_set_style_text_font(diff, &lv_font_montserrat_18, 0);
-    lv_obj_align(diff, LV_ALIGN_BOTTOM_LEFT, 20, -20);
+    lv_obj_t *pres_lbl = lv_label_create(sc_pres);
+    lv_label_set_text(pres_lbl, "Presion");
+    lv_obj_set_style_text_font(pres_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pres_lbl, darkMode ? lv_color_hex(0x94A3B8) : lv_color_hex(0x64748B), 0);
+    lv_obj_align(pres_lbl, LV_ALIGN_TOP_MID, 0, 68);
 
-    // Card de grafica
-    int y2 = y_start + 250 + gap;
-    lv_obj_t *card_chart = createDetailCard(scr_detail_remoto, gap, y2, SCREEN_WIDTH - gap * 2, 220, "HISTORIAL 24 HORAS", DETAIL_COLOR_REMOTO);
+    detail_remoto_ui.chart_pres = lv_chart_create(sc_pres);
+    lv_obj_set_size(detail_remoto_ui.chart_pres, sc_w - 60, 70);
+    lv_obj_align(detail_remoto_ui.chart_pres, LV_ALIGN_BOTTOM_RIGHT, -8, -18);
+    lv_chart_set_type(detail_remoto_ui.chart_pres, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(detail_remoto_ui.chart_pres, 36);
+    lv_chart_set_range(detail_remoto_ui.chart_pres, LV_CHART_AXIS_PRIMARY_Y, 1000, 1025);
+    lv_obj_set_style_line_width(detail_remoto_ui.chart_pres, 2, LV_PART_ITEMS);
+    lv_obj_set_style_size(detail_remoto_ui.chart_pres, 0, LV_PART_INDICATOR);
+    lv_obj_set_style_bg_opa(detail_remoto_ui.chart_pres, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(detail_remoto_ui.chart_pres, 0, 0);
+    lv_chart_set_div_line_count(detail_remoto_ui.chart_pres, 3, 6);
+    lv_obj_set_style_line_color(detail_remoto_ui.chart_pres, grid_color, LV_PART_MAIN);
+    lv_obj_set_style_line_opa(detail_remoto_ui.chart_pres, LV_OPA_70, LV_PART_MAIN);
+    lv_obj_set_style_line_dash_width(detail_remoto_ui.chart_pres, 4, LV_PART_MAIN);  // Punteada
+    lv_obj_set_style_line_dash_gap(detail_remoto_ui.chart_pres, 4, LV_PART_MAIN);
+    detail_remoto_ui.ser_pres = lv_chart_add_series(detail_remoto_ui.chart_pres, color_pres, LV_CHART_AXIS_PRIMARY_Y);
 
-    lv_obj_t *chart = lv_chart_create(card_chart);
-    lv_obj_set_size(chart, SCREEN_WIDTH - 80, 150);
-    lv_obj_align(chart, LV_ALIGN_BOTTOM_MID, 0, -10);
-    lv_chart_set_type(chart, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart, 24);
-    lv_obj_set_style_line_width(chart, 2, LV_PART_ITEMS);
-    lv_chart_series_t *ser = lv_chart_add_series(chart, DETAIL_COLOR_REMOTO, LV_CHART_AXIS_PRIMARY_Y);
-    for (int i = 0; i < 24; i++) {
-        lv_chart_set_next_value(chart, ser, 18 + (rand() % 8));
+    // Etiquetas eje Y (presión)
+    lv_obj_t *pres_max_lbl = lv_label_create(sc_pres);
+    lv_label_set_text(pres_max_lbl, "1025");
+    lv_obj_set_style_text_font(pres_max_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pres_max_lbl, axis_color, 0);
+    lv_obj_align_to(pres_max_lbl, detail_remoto_ui.chart_pres, LV_ALIGN_OUT_LEFT_TOP, -2, 0);
+
+    lv_obj_t *pres_min_lbl = lv_label_create(sc_pres);
+    lv_label_set_text(pres_min_lbl, "1000");
+    lv_obj_set_style_text_font(pres_min_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pres_min_lbl, axis_color, 0);
+    lv_obj_align_to(pres_min_lbl, detail_remoto_ui.chart_pres, LV_ALIGN_OUT_LEFT_BOTTOM, -2, 0);
+
+    // Etiquetas eje X (tiempo)
+    lv_obj_t *pres_t1 = lv_label_create(sc_pres);
+    lv_label_set_text(pres_t1, "-6h");
+    lv_obj_set_style_text_font(pres_t1, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pres_t1, axis_color, 0);
+    lv_obj_align_to(pres_t1, detail_remoto_ui.chart_pres, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 2);
+
+    lv_obj_t *pres_t2 = lv_label_create(sc_pres);
+    lv_label_set_text(pres_t2, "Ahora");
+    lv_obj_set_style_text_font(pres_t2, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pres_t2, axis_color, 0);
+    lv_obj_align_to(pres_t2, detail_remoto_ui.chart_pres, LV_ALIGN_OUT_BOTTOM_RIGHT, 0, 2);
+
+    // Footer con comparación vs principal
+    detail_remoto_ui.diff = lv_label_create(main_card);
+    lv_label_set_text(detail_remoto_ui.diff, "vs Principal: --");
+    lv_obj_set_style_text_color(detail_remoto_ui.diff, darkMode ? lv_color_hex(0x94A3B8) : lv_color_hex(0x64748B), 0);
+    lv_obj_set_style_text_font(detail_remoto_ui.diff, &lv_font_montserrat_12, 0);
+    lv_obj_align(detail_remoto_ui.diff, LV_ALIGN_BOTTOM_MID, 0, -5);
+
+    // Stats no usados
+    detail_remoto_ui.stats_pres = nullptr;
+
+    // Datos placeholder con tendencia realista
+    for (int i = 0; i < 36; i++) {
+        int temp = 22 + (int)(3 * sin(i * 0.18));
+        int hum = 60 + (int)(12 * cos(i * 0.15));
+        int pres = 1012 + (int)(5 * sin(i * 0.1));
+        lv_chart_set_next_value(detail_remoto_ui.chart_temp, detail_remoto_ui.ser_temp, temp);
+        lv_chart_set_next_value(detail_remoto_ui.chart_hum, detail_remoto_ui.ser_hum, hum);
+        lv_chart_set_next_value(detail_remoto_ui.chart_pres, detail_remoto_ui.ser_pres, pres);
     }
 
     enableSwipeNavigation(scr_detail_remoto);
-    Serial.println("[UI] Pantalla detalle Remoto creada");
+    Serial.println("[UI] Pantalla detalle Remoto creada (estilo servidor grid 2x2)");
+}
+
+void updateDetailRemoto() {
+    extern RemoteGatewayData g_remoto;
+    extern WeatherData g_weather;
+    char buf[128];
+
+    if (!g_remoto.valid) {
+        if (detail_remoto_ui.temp) {
+            lv_label_set_text(detail_remoto_ui.temp, "--.-°C");
+        }
+        if (detail_remoto_ui.humidity) {
+            lv_label_set_text(detail_remoto_ui.humidity, "--%");
+        }
+        if (detail_remoto_ui.pressure) {
+            lv_label_set_text(detail_remoto_ui.pressure, "---- hPa");
+        }
+        if (detail_remoto_ui.stats_temp) {
+            lv_label_set_text(detail_remoto_ui.stats_temp, "--.-°C");
+        }
+        if (detail_remoto_ui.diff) {
+            lv_label_set_text(detail_remoto_ui.diff, "Sin datos de estacion remota");
+        }
+        return;
+    }
+
+    // Temperatura
+    if (detail_remoto_ui.temp) {
+        snprintf(buf, sizeof(buf), "%.1f°C", g_remoto.temperature);
+        lv_label_set_text(detail_remoto_ui.temp, buf);
+    }
+
+    // Humedad
+    if (detail_remoto_ui.humidity) {
+        snprintf(buf, sizeof(buf), "%.0f%%", g_remoto.humidity);
+        lv_label_set_text(detail_remoto_ui.humidity, buf);
+    }
+
+    // Punto de rocío (Magnus formula)
+    float t = g_remoto.temperature;
+    float h = g_remoto.humidity;
+    if (detail_remoto_ui.stats_temp) {
+        float a = 17.27;
+        float b = 237.7;
+        float alpha = (a * t) / (b + t) + log(h / 100.0);
+        float dew = (b * alpha) / (a - alpha);
+        snprintf(buf, sizeof(buf), "%.1f°C", dew);
+        lv_label_set_text(detail_remoto_ui.stats_temp, buf);
+    }
+
+    // Sensación térmica (Heat Index simplificado para T>20°C y H>40%)
+    if (detail_remoto_ui.stats_hum) {
+        float feels;
+        if (t >= 20.0 && h >= 40.0) {
+            // Heat Index formula (Rothfusz regression)
+            float tf = t * 9.0/5.0 + 32.0;  // Convert to Fahrenheit
+            float hi = -42.379 + 2.04901523*tf + 10.14333127*h
+                       - 0.22475541*tf*h - 0.00683783*tf*tf
+                       - 0.05481717*h*h + 0.00122874*tf*tf*h
+                       + 0.00085282*tf*h*h - 0.00000199*tf*tf*h*h;
+            feels = (hi - 32.0) * 5.0/9.0;  // Convert back to Celsius
+        } else if (t <= 10.0) {
+            // Wind chill (simplified - no wind data available)
+            feels = t;  // Without wind, feels like actual temp
+        } else {
+            feels = t;  // Comfort range
+        }
+        snprintf(buf, sizeof(buf), "%.1f°C", feels);
+        lv_label_set_text(detail_remoto_ui.stats_hum, buf);
+    }
+
+    // Presion
+    if (detail_remoto_ui.pressure) {
+        snprintf(buf, sizeof(buf), "%.0f hPa", g_remoto.pressure);
+        lv_label_set_text(detail_remoto_ui.pressure, buf);
+    }
+
+    // Diferencia vs principal
+    if (detail_remoto_ui.diff && g_weather.valid) {
+        float temp_diff = g_remoto.temperature - g_weather.temp_outdoor;
+        float pres_diff = g_remoto.pressure - g_weather.pressure_rel;
+        snprintf(buf, sizeof(buf), "vs Principal: %+.1f°C  |  Presion: %+.0f hPa",
+                 temp_diff, pres_diff);
+        lv_label_set_text(detail_remoto_ui.diff, buf);
+    }
+
+    // TODO: Cargar historial real del servidor cuando esté disponible
 }
 
 // ============================================================================

@@ -1861,10 +1861,25 @@ void createDashboard() {
     // Card Remoto -> Detalle Remoto
     if (card_remoto) {
         lv_obj_add_flag(card_remoto, LV_OBJ_FLAG_CLICKABLE);
+        // Hacer que todos los hijos pasen el click al padre
+        uint32_t child_cnt = lv_obj_get_child_cnt(card_remoto);
+        for (uint32_t i = 0; i < child_cnt; i++) {
+            lv_obj_t *child = lv_obj_get_child(card_remoto, i);
+            lv_obj_add_flag(child, LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_flag(child, LV_OBJ_FLAG_EVENT_BUBBLE);
+            // Recursivamente para nietos
+            uint32_t grandchild_cnt = lv_obj_get_child_cnt(child);
+            for (uint32_t j = 0; j < grandchild_cnt; j++) {
+                lv_obj_t *grandchild = lv_obj_get_child(child, j);
+                lv_obj_add_flag(grandchild, LV_OBJ_FLAG_EVENT_BUBBLE);
+            }
+        }
         lv_obj_add_event_cb(card_remoto, [](lv_event_t *e) {
+            Serial.println("[TAP] Card Remoto tocada!");
             extern void navigateToScreenById(int);
             navigateToScreenById(NAV_SCREEN_DETAIL_REMOTO);
         }, LV_EVENT_CLICKED, NULL);
+        Serial.println("[UI] Tap handler agregado a card_remoto");
     }
 
     // Cargar pantalla
