@@ -216,6 +216,16 @@ static lv_obj_t *chart_pressure = nullptr;
 static lv_chart_series_t *ser_temp = nullptr;
 static lv_chart_series_t *ser_humidity = nullptr;
 static lv_chart_series_t *ser_pressure = nullptr;
+static lv_obj_t *lbl_history_stats_temp = nullptr;
+static lv_obj_t *lbl_history_stats_hum = nullptr;
+static lv_obj_t *lbl_history_stats_pres = nullptr;
+static lv_obj_t *lbl_history_status = nullptr;
+
+// Datos históricos globales
+static HistoryData g_history = {0};
+
+// Forward declaration
+void updateHistoryCharts();
 
 void createHistoryScreen() {
     extern lv_style_t style_card;
@@ -245,6 +255,26 @@ void createHistoryScreen() {
     lv_label_set_text(btn_label, LV_SYMBOL_LEFT " Volver");
     lv_obj_center(btn_label);
 
+    // Botón actualizar
+    lv_obj_t *btn_refresh = lv_btn_create(scr_history);
+    lv_obj_set_size(btn_refresh, 100, 40);
+    lv_obj_align(btn_refresh, LV_ALIGN_TOP_RIGHT, -10, 10);
+    lv_obj_set_style_bg_color(btn_refresh, lv_color_hex(0x2196F3), 0);
+    lv_obj_add_event_cb(btn_refresh, [](lv_event_t *e) {
+        if (lbl_history_status) {
+            lv_label_set_text(lbl_history_status, "Cargando...");
+        }
+        lv_timer_create([](lv_timer_t *t) {
+            updateHistoryCharts();
+            lv_timer_del(t);
+        }, 100, NULL);
+    }, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_t *btn_ref_label = lv_label_create(btn_refresh);
+    lv_label_set_text(btn_ref_label, LV_SYMBOL_REFRESH " Actualizar");
+    lv_obj_set_style_text_color(btn_ref_label, lv_color_white(), 0);
+    lv_obj_center(btn_ref_label);
+
     // Gráfica de temperatura
     lv_obj_t *card_temp = lv_obj_create(scr_history);
     lv_obj_set_size(card_temp, 480, 200);
@@ -255,16 +285,24 @@ void createHistoryScreen() {
     lv_obj_t *lbl_temp = lv_label_create(card_temp);
     lv_label_set_text(lbl_temp, "TEMPERATURA (°C)");
     lv_obj_set_style_text_font(lbl_temp, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(lbl_temp, lv_color_hex(0x666666), 0);
     lv_obj_align(lbl_temp, LV_ALIGN_TOP_LEFT, 5, 5);
 
+    lbl_history_stats_temp = lv_label_create(card_temp);
+    lv_label_set_text(lbl_history_stats_temp, "Min: --  Max: --  Avg: --");
+    lv_obj_set_style_text_font(lbl_history_stats_temp, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_history_stats_temp, lv_color_hex(0xFF6B6B), 0);
+    lv_obj_align(lbl_history_stats_temp, LV_ALIGN_TOP_RIGHT, -5, 5);
+
     chart_temp = lv_chart_create(card_temp);
-    lv_obj_set_size(chart_temp, 440, 140);
+    lv_obj_set_size(chart_temp, 450, 145);
     lv_obj_align(chart_temp, LV_ALIGN_BOTTOM_MID, 0, -5);
     lv_chart_set_type(chart_temp, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart_temp, 24);
+    lv_chart_set_point_count(chart_temp, HISTORY_MAX_POINTS);
     lv_chart_set_range(chart_temp, LV_CHART_AXIS_PRIMARY_Y, 10, 40);
     lv_obj_set_style_line_width(chart_temp, 2, LV_PART_ITEMS);
-    lv_obj_set_style_size(chart_temp, 4, LV_PART_INDICATOR);
+    lv_obj_set_style_size(chart_temp, 0, LV_PART_INDICATOR);  // Sin puntos
+    lv_chart_set_div_line_count(chart_temp, 5, 8);
     ser_temp = lv_chart_add_series(chart_temp, lv_color_hex(0xFF6B6B), LV_CHART_AXIS_PRIMARY_Y);
 
     // Gráfica de humedad
@@ -277,16 +315,24 @@ void createHistoryScreen() {
     lv_obj_t *lbl_hum = lv_label_create(card_hum);
     lv_label_set_text(lbl_hum, "HUMEDAD (%)");
     lv_obj_set_style_text_font(lbl_hum, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(lbl_hum, lv_color_hex(0x666666), 0);
     lv_obj_align(lbl_hum, LV_ALIGN_TOP_LEFT, 5, 5);
 
+    lbl_history_stats_hum = lv_label_create(card_hum);
+    lv_label_set_text(lbl_history_stats_hum, "Min: --  Max: --");
+    lv_obj_set_style_text_font(lbl_history_stats_hum, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_history_stats_hum, lv_color_hex(0x2196F3), 0);
+    lv_obj_align(lbl_history_stats_hum, LV_ALIGN_TOP_RIGHT, -5, 5);
+
     chart_humidity = lv_chart_create(card_hum);
-    lv_obj_set_size(chart_humidity, 440, 140);
+    lv_obj_set_size(chart_humidity, 450, 145);
     lv_obj_align(chart_humidity, LV_ALIGN_BOTTOM_MID, 0, -5);
     lv_chart_set_type(chart_humidity, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart_humidity, 24);
+    lv_chart_set_point_count(chart_humidity, HISTORY_MAX_POINTS);
     lv_chart_set_range(chart_humidity, LV_CHART_AXIS_PRIMARY_Y, 0, 100);
     lv_obj_set_style_line_width(chart_humidity, 2, LV_PART_ITEMS);
-    lv_obj_set_style_size(chart_humidity, 4, LV_PART_INDICATOR);
+    lv_obj_set_style_size(chart_humidity, 0, LV_PART_INDICATOR);
+    lv_chart_set_div_line_count(chart_humidity, 5, 8);
     ser_humidity = lv_chart_add_series(chart_humidity, lv_color_hex(0x2196F3), LV_CHART_AXIS_PRIMARY_Y);
 
     // Gráfica de presión
@@ -299,19 +345,27 @@ void createHistoryScreen() {
     lv_obj_t *lbl_pres = lv_label_create(card_pres);
     lv_label_set_text(lbl_pres, "PRESION (hPa)");
     lv_obj_set_style_text_font(lbl_pres, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(lbl_pres, lv_color_hex(0x666666), 0);
     lv_obj_align(lbl_pres, LV_ALIGN_TOP_LEFT, 5, 5);
 
+    lbl_history_stats_pres = lv_label_create(card_pres);
+    lv_label_set_text(lbl_history_stats_pres, "Min: --  Max: --");
+    lv_obj_set_style_text_font(lbl_history_stats_pres, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_history_stats_pres, lv_color_hex(0x4CAF50), 0);
+    lv_obj_align(lbl_history_stats_pres, LV_ALIGN_TOP_RIGHT, -5, 5);
+
     chart_pressure = lv_chart_create(card_pres);
-    lv_obj_set_size(chart_pressure, 440, 140);
+    lv_obj_set_size(chart_pressure, 450, 145);
     lv_obj_align(chart_pressure, LV_ALIGN_BOTTOM_MID, 0, -5);
     lv_chart_set_type(chart_pressure, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart_pressure, 24);
+    lv_chart_set_point_count(chart_pressure, HISTORY_MAX_POINTS);
     lv_chart_set_range(chart_pressure, LV_CHART_AXIS_PRIMARY_Y, 990, 1040);
     lv_obj_set_style_line_width(chart_pressure, 2, LV_PART_ITEMS);
-    lv_obj_set_style_size(chart_pressure, 4, LV_PART_INDICATOR);
+    lv_obj_set_style_size(chart_pressure, 0, LV_PART_INDICATOR);
+    lv_chart_set_div_line_count(chart_pressure, 5, 8);
     ser_pressure = lv_chart_add_series(chart_pressure, lv_color_hex(0x4CAF50), LV_CHART_AXIS_PRIMARY_Y);
 
-    // Panel de estadísticas
+    // Panel de estado/info
     lv_obj_t *card_stats = lv_obj_create(scr_history);
     lv_obj_set_size(card_stats, 480, 200);
     lv_obj_set_pos(card_stats, 510, 275);
@@ -319,21 +373,83 @@ void createHistoryScreen() {
     lv_obj_clear_flag(card_stats, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *lbl_stats = lv_label_create(card_stats);
-    lv_label_set_text(lbl_stats, "ESTADISTICAS DEL DIA");
+    lv_label_set_text(lbl_stats, "RESUMEN 24 HORAS");
     lv_obj_set_style_text_font(lbl_stats, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_color(lbl_stats, lv_color_hex(0x666666), 0);
     lv_obj_align(lbl_stats, LV_ALIGN_TOP_LEFT, 5, 5);
 
-    // Rellenar datos de ejemplo
-    for (int i = 0; i < 24; i++) {
-        lv_chart_set_next_value(chart_temp, ser_temp, 18 + (rand() % 10));
-        lv_chart_set_next_value(chart_humidity, ser_humidity, 50 + (rand() % 30));
-        lv_chart_set_next_value(chart_pressure, ser_pressure, 1010 + (rand() % 15));
-    }
+    lbl_history_status = lv_label_create(card_stats);
+    lv_label_set_text(lbl_history_status, "Presiona Actualizar para cargar datos");
+    lv_obj_set_style_text_font(lbl_history_status, &lv_font_montserrat_16, 0);
+    lv_obj_set_style_text_color(lbl_history_status, lv_color_hex(0x2C2C2C), 0);
+    lv_obj_align(lbl_history_status, LV_ALIGN_CENTER, 0, 0);
 
     // Habilitar swipe
     enableSwipeNavigation(scr_history);
 
     Serial.println("[UI] Pantalla historial creada");
+}
+
+// Actualizar gráficas con datos reales del servidor
+void updateHistoryCharts() {
+    extern EcowittAPI ecowittApi;
+
+    Serial.println("[HISTORY] Obteniendo datos...");
+
+    if (ecowittApi.fetchHistory(g_history, 24)) {
+        Serial.printf("[HISTORY] Recibidos %d puntos\n", g_history.count);
+
+        // Limpiar series
+        lv_chart_set_all_value(chart_temp, ser_temp, LV_CHART_POINT_NONE);
+        lv_chart_set_all_value(chart_humidity, ser_humidity, LV_CHART_POINT_NONE);
+        lv_chart_set_all_value(chart_pressure, ser_pressure, LV_CHART_POINT_NONE);
+
+        // Ajustar rango de temperatura dinámicamente
+        int temp_min_range = (int)(g_history.temp_min - 2);
+        int temp_max_range = (int)(g_history.temp_max + 2);
+        lv_chart_set_range(chart_temp, LV_CHART_AXIS_PRIMARY_Y, temp_min_range, temp_max_range);
+
+        // Ajustar rango de presión dinámicamente
+        int pres_min_range = (int)(g_history.pres_min - 5);
+        int pres_max_range = (int)(g_history.pres_max + 5);
+        lv_chart_set_range(chart_pressure, LV_CHART_AXIS_PRIMARY_Y, pres_min_range, pres_max_range);
+
+        // Rellenar datos (del más antiguo al más reciente)
+        for (int i = g_history.count - 1; i >= 0; i--) {
+            lv_chart_set_next_value(chart_temp, ser_temp, (lv_coord_t)g_history.points[i].temperature);
+            lv_chart_set_next_value(chart_humidity, ser_humidity, (lv_coord_t)g_history.points[i].humidity);
+            lv_chart_set_next_value(chart_pressure, ser_pressure, (lv_coord_t)g_history.points[i].pressure);
+        }
+
+        lv_chart_refresh(chart_temp);
+        lv_chart_refresh(chart_humidity);
+        lv_chart_refresh(chart_pressure);
+
+        // Actualizar estadísticas
+        char buf[64];
+        snprintf(buf, sizeof(buf), "Min: %.1f  Max: %.1f  Avg: %.1f",
+                 g_history.temp_min, g_history.temp_max, g_history.temp_avg);
+        lv_label_set_text(lbl_history_stats_temp, buf);
+
+        snprintf(buf, sizeof(buf), "Min: %.0f%%  Max: %.0f%%",
+                 g_history.hum_min, g_history.hum_max);
+        lv_label_set_text(lbl_history_stats_hum, buf);
+
+        snprintf(buf, sizeof(buf), "Min: %.0f  Max: %.0f",
+                 g_history.pres_min, g_history.pres_max);
+        lv_label_set_text(lbl_history_stats_pres, buf);
+
+        snprintf(buf, sizeof(buf), "%d puntos de datos\nTemp: %.1f a %.1f°C\nHum: %.0f a %.0f%%\nPres: %.0f a %.0f hPa",
+                 g_history.count,
+                 g_history.temp_min, g_history.temp_max,
+                 g_history.hum_min, g_history.hum_max,
+                 g_history.pres_min, g_history.pres_max);
+        lv_label_set_text(lbl_history_status, buf);
+
+    } else {
+        lv_label_set_text(lbl_history_status, "Error al cargar datos\nVerifica conexion");
+        Serial.println("[HISTORY] Error al obtener datos");
+    }
 }
 
 // ============================================================================

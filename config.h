@@ -203,6 +203,30 @@ struct StatsData {
     bool valid;
 };
 
+// Punto de datos históricos
+struct HistoryPoint {
+    time_t timestamp;
+    float temperature;
+    float humidity;
+    float pressure;
+    float rain;
+};
+
+// Datos históricos (máx 288 puntos = 24h x 12 por hora = cada 5 min)
+#define HISTORY_MAX_POINTS 144  // 24h x 6 por hora = cada 10 min
+struct HistoryData {
+    HistoryPoint points[HISTORY_MAX_POINTS];
+    int count;
+    float temp_min;
+    float temp_max;
+    float temp_avg;
+    float hum_min;
+    float hum_max;
+    float pres_min;
+    float pres_max;
+    bool valid;
+};
+
 // Estado del sistema
 struct SystemStatus {
     bool wifi_connected;

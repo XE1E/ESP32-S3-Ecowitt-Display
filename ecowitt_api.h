@@ -673,6 +673,103 @@ public:
         return false;
     }
 
+    /**
+     * Obtener datos históricos
+     * @param history Estructura para almacenar datos
+     * @param hours Horas de historial (default 24)
+     * @return true si éxito
+     */
+    bool fetchHistory(HistoryData& history, int hours = 24) {
+        char url[128];
+        snprintf(url, sizeof(url), "%s/api/history?hours=%d", _baseUrl, hours);
+
+        HTTPClient http;
+        http.begin(url);
+        http.setTimeout(15000);
+
+        int httpCode = http.GET();
+        if (httpCode == HTTP_CODE_OK) {
+            String payload = http.getString();
+
+            // Usar documento más grande para historial
+            DynamicJsonDocument doc(32768);
+            DeserializationError error = deserializeJson(doc, payload);
+
+            if (!error) {
+                JsonArray data = doc["data"].as<JsonArray>();
+
+                history.count = 0;
+                history.temp_min = 999.0f;
+                history.temp_max = -999.0f;
+                history.hum_min = 999.0f;
+                history.hum_max = -999.0f;
+                history.pres_min = 9999.0f;
+                history.pres_max = -9999.0f;
+                float temp_sum = 0;
+                int temp_count = 0;
+
+                for (JsonObject point : data) {
+                    // Solo procesar datos de estación real (no simulador)
+                    const char* station = point["station_type"] | "";
+                    if (strcmp(station, "SIMULATOR") == 0) continue;
+
+                    if (history.count >= HISTORY_MAX_POINTS) break;
+
+                    // Parsear timestamp ISO 8601
+                    const char* timeStr = point["_time"] | "";
+                    struct tm tm = {0};
+                    if (strlen(timeStr) >= 19) {
+                        sscanf(timeStr, "%d-%d-%dT%d:%d:%d",
+                               &tm.tm_year, &tm.tm_mon, &tm.tm_mday,
+                               &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
+                        tm.tm_year -= 1900;
+                        tm.tm_mon -= 1;
+                        history.points[history.count].timestamp = mktime(&tm);
+                    }
+
+                    // Obtener valores (priorizar outdoor, fallback indoor)
+                    float temp = point["temperature_outdoor"] | (point["temperature_indoor"] | -999.0f);
+                    float hum = point["humidity_outdoor"] | (point["humidity_indoor"] | -999.0f);
+                    float pres = point["pressure_relative"] | (point["pressure_absolute"] | -999.0f);
+                    float rain = point["rain_daily"] | 0.0f;
+
+                    if (temp > -900) {
+                        history.points[history.count].temperature = temp;
+                        if (temp < history.temp_min) history.temp_min = temp;
+                        if (temp > history.temp_max) history.temp_max = temp;
+                        temp_sum += temp;
+                        temp_count++;
+                    }
+                    if (hum > -900) {
+                        history.points[history.count].humidity = hum;
+                        if (hum < history.hum_min) history.hum_min = hum;
+                        if (hum > history.hum_max) history.hum_max = hum;
+                    }
+                    if (pres > -900) {
+                        history.points[history.count].pressure = pres;
+                        if (pres < history.pres_min) history.pres_min = pres;
+                        if (pres > history.pres_max) history.pres_max = pres;
+                    }
+                    history.points[history.count].rain = rain;
+
+                    history.count++;
+                }
+
+                history.temp_avg = (temp_count > 0) ? (temp_sum / temp_count) : 0;
+                history.valid = (history.count > 0);
+
+                http.end();
+                Serial.printf("[API] fetchHistory OK: %d puntos\n", history.count);
+                return history.valid;
+            }
+        }
+
+        http.end();
+        Serial.printf("[API] fetchHistory error: %d\n", httpCode);
+        history.valid = false;
+        return false;
+    }
+
 private:
     const char* _baseUrl;
 };
