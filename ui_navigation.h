@@ -343,6 +343,8 @@ void createHistoryScreen() {
 static lv_obj_t *sw_celsius = nullptr;
 static lv_obj_t *sw_24h = nullptr;
 static lv_obj_t *slider_brightness = nullptr;
+static lv_obj_t *slider_pressure_offset = nullptr;
+static lv_obj_t *lbl_pressure_offset_val = nullptr;
 
 void createSettingsScreen() {
     extern lv_style_t style_card;
@@ -423,13 +425,13 @@ void createSettingsScreen() {
 
     // Card: Display
     lv_obj_t *card_display = lv_obj_create(scr_settings);
-    lv_obj_set_size(card_display, 480, 120);
+    lv_obj_set_size(card_display, 480, 180);
     lv_obj_set_pos(card_display, 15, 235);
     lv_obj_add_style(card_display, &style_card, 0);
     lv_obj_clear_flag(card_display, LV_OBJ_FLAG_SCROLLABLE);
 
     lv_obj_t *lbl_display = lv_label_create(card_display);
-    lv_label_set_text(lbl_display, "PANTALLA");
+    lv_label_set_text(lbl_display, "PANTALLA Y SENSORES");
     lv_obj_set_style_text_color(lbl_display, lv_color_hex(0x666666), 0);
     lv_obj_set_style_text_font(lbl_display, &lv_font_montserrat_12, 0);
     lv_obj_align(lbl_display, LV_ALIGN_TOP_LEFT, 0, 0);
@@ -437,12 +439,12 @@ void createSettingsScreen() {
     lv_obj_t *lbl_bright = lv_label_create(card_display);
     lv_label_set_text(lbl_bright, "Brillo:");
     lv_obj_set_style_text_font(lbl_bright, &lv_font_montserrat_16, 0);
-    lv_obj_align(lbl_bright, LV_ALIGN_TOP_LEFT, 0, 35);
+    lv_obj_align(lbl_bright, LV_ALIGN_TOP_LEFT, 0, 30);
 
     slider_brightness = lv_slider_create(card_display);
-    lv_obj_set_width(slider_brightness, 300);
-    lv_obj_align(slider_brightness, LV_ALIGN_TOP_LEFT, 100, 40);
-    lv_slider_set_range(slider_brightness, 10, 100);  // Porcentaje 10-100%
+    lv_obj_set_width(slider_brightness, 280);
+    lv_obj_align(slider_brightness, LV_ALIGN_TOP_LEFT, 100, 35);
+    lv_slider_set_range(slider_brightness, 10, 100);
     lv_slider_set_value(slider_brightness, 80, LV_ANIM_OFF);
 
     lv_obj_t *lbl_bright_val = lv_label_create(card_display);
@@ -452,19 +454,57 @@ void createSettingsScreen() {
     lv_obj_add_event_cb(slider_brightness, [](lv_event_t *e) {
         lv_obj_t *slider = lv_event_get_target(e);
         int val = lv_slider_get_value(slider);
-
-        // Aplicar brillo via CH422G PWM
         setBacklight(val);
-
-        // Actualizar label
         lv_obj_t *parent = lv_obj_get_parent(slider);
-        lv_obj_t *label = lv_obj_get_child(parent, -1);
+        lv_obj_t *label = lv_obj_get_child(parent, 3);  // brightness label
         if (label) {
             char buf[10];
             snprintf(buf, sizeof(buf), "%d%%", val);
             lv_label_set_text(label, buf);
         }
     }, LV_EVENT_VALUE_CHANGED, NULL);
+
+    // BME280 Pressure Offset
+    lv_obj_t *lbl_pres_off = lv_label_create(card_display);
+    lv_label_set_text(lbl_pres_off, "Offset presion:");
+    lv_obj_set_style_text_font(lbl_pres_off, &lv_font_montserrat_16, 0);
+    lv_obj_align(lbl_pres_off, LV_ALIGN_TOP_LEFT, 0, 80);
+
+    slider_pressure_offset = lv_slider_create(card_display);
+    lv_obj_set_width(slider_pressure_offset, 220);
+    lv_obj_align(slider_pressure_offset, LV_ALIGN_TOP_LEFT, 160, 85);
+    lv_slider_set_range(slider_pressure_offset, -50, 50);
+    lv_slider_set_value(slider_pressure_offset, userPrefs.bme280_pressure_offset, LV_ANIM_OFF);
+
+    lbl_pressure_offset_val = lv_label_create(card_display);
+    char off_buf[16];
+    snprintf(off_buf, sizeof(off_buf), "%+d hPa", userPrefs.bme280_pressure_offset);
+    lv_label_set_text(lbl_pressure_offset_val, off_buf);
+    lv_obj_align_to(lbl_pressure_offset_val, slider_pressure_offset, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
+
+    lv_obj_add_event_cb(slider_pressure_offset, [](lv_event_t *e) {
+        lv_obj_t *slider = lv_event_get_target(e);
+        int val = lv_slider_get_value(slider);
+
+        // Actualizar preferencias y BME280
+        userPrefs.bme280_pressure_offset = (int8_t)val;
+        setBME280PressureOffset((int8_t)val);
+        savePreferences();
+
+        // Actualizar label
+        if (lbl_pressure_offset_val) {
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%+d hPa", val);
+            lv_label_set_text(lbl_pressure_offset_val, buf);
+        }
+        Serial.printf("[SETTINGS] Offset presion: %d hPa\n", val);
+    }, LV_EVENT_VALUE_CHANGED, NULL);
+
+    lv_obj_t *lbl_pres_hint = lv_label_create(card_display);
+    lv_label_set_text(lbl_pres_hint, "Ajuste para calibrar BME280 vs estacion");
+    lv_obj_set_style_text_font(lbl_pres_hint, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(lbl_pres_hint, lv_color_hex(0x999999), 0);
+    lv_obj_align(lbl_pres_hint, LV_ALIGN_TOP_LEFT, 0, 120);
 
     // Card: Conexión
     lv_obj_t *card_conn = lv_obj_create(scr_settings);

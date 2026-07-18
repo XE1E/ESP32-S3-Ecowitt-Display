@@ -153,6 +153,10 @@ void setup() {
     incrementBootCount();
     Serial.printf("[PREFS] Configurado: %s\n", configured ? "Sí" : "No");
 
+    // Aplicar offset de presion BME280 desde preferencias
+    setBME280PressureOffset(userPrefs.bme280_pressure_offset);
+    Serial.printf("[BME280] Offset presion: %d hPa\n", userPrefs.bme280_pressure_offset);
+
     // ========================================================================
     // Inicializar I2C (compartido por touch y BME280)
     // ========================================================================
@@ -196,7 +200,7 @@ void setup() {
         g_remote_config.send_interval = max(60, (int)prefs->remote_interval);
         Serial.printf("[REMOTE] Estación remota: %s\n", g_remote_config.label);
     } else {
-#ifdef REMOTE_STATION_ENABLED
+#if REMOTE_STATION_ENABLED
         g_remote_config.enabled = true;
         strncpy(g_remote_config.passkey, REMOTE_STATION_PASSKEY, sizeof(g_remote_config.passkey));
         strncpy(g_remote_config.label, REMOTE_STATION_LABEL, sizeof(g_remote_config.label));

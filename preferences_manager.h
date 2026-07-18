@@ -49,6 +49,9 @@ struct UserPreferences {
     char remote_label[32];
     uint16_t remote_interval;
 
+    // BME280
+    int8_t bme280_pressure_offset;  // Offset de presion en hPa (-50 a +50)
+
     // Estado
     bool configured;
     uint32_t boot_count;
@@ -78,6 +81,8 @@ void setDefaultPreferences() {
 
     userPrefs.remote_enabled = false;
     userPrefs.remote_interval = 60;
+
+    userPrefs.bme280_pressure_offset = 0;
 
     userPrefs.configured = false;
     userPrefs.boot_count = 0;
@@ -140,6 +145,9 @@ bool loadPreferences() {
     strncpy(userPrefs.remote_label, rlbl.c_str(), sizeof(userPrefs.remote_label) - 1);
     userPrefs.remote_interval = nvs.getUShort("remote_int", 60);
 
+    // BME280
+    userPrefs.bme280_pressure_offset = nvs.getChar("bme_pres_off", 0);
+
     // Estado
     userPrefs.configured = nvs.getBool("configured", false);
     userPrefs.boot_count = nvs.getUInt("boot_count", 0);
@@ -187,6 +195,9 @@ void savePreferences() {
     nvs.putString("remote_key", userPrefs.remote_passkey);
     nvs.putString("remote_lbl", userPrefs.remote_label);
     nvs.putUShort("remote_int", userPrefs.remote_interval);
+
+    // BME280
+    nvs.putChar("bme_pres_off", userPrefs.bme280_pressure_offset);
 
     // Estado
     nvs.putBool("configured", userPrefs.configured);
