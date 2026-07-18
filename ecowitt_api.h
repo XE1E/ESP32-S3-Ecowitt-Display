@@ -491,33 +491,52 @@ public:
 
                 // === CURRENT ===
                 JsonObject current = doc["current"];
-                weather.temp_outdoor = current["temperature_outdoor"] | 0.0f;
-                weather.humidity_outdoor = current["humidity_outdoor"] | 0.0f;
-                weather.pressure_rel = current["pressure_relative"] | 0.0f;
-                weather.wind_speed = current["wind_speed"] | 0.0f;
-                weather.wind_gust = current["wind_gust"] | 0.0f;
-                weather.wind_dir = current["wind_direction"] | 0.0f;
 
-                int dir = (int)weather.wind_dir;
-                const char* cardinals[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE",
-                                           "S","SSO","SO","OSO","O","ONO","NO","NNO"};
-                int idx = ((dir + 11) / 22) % 16;
-                strlcpy(weather.wind_dir_cardinal, cardinals[idx], sizeof(weather.wind_dir_cardinal));
+                // Solo actualizar si el servidor envía datos válidos del sensor exterior
+                // (a veces el servidor solo envía datos de la consola sin el WS69)
+                float new_temp = current["temperature_outdoor"] | -999.0f;
+                float new_hum = current["humidity_outdoor"] | -999.0f;
+                float new_pres = current["pressure_relative"] | -999.0f;
 
-                weather.rain_rate = current["rain_rate"] | 0.0f;
-                weather.rain_day = current["rain_daily"] | 0.0f;
-                weather.rain_week = current["rain_weekly"] | 0.0f;
-                weather.rain_month = current["rain_monthly"] | 0.0f;
-                weather.rain_year = current["rain_yearly"] | 0.0f;
-                weather.uv = current["uv_index"] | 0.0f;
-                weather.solar_radiation = current["solar_radiation"] | 0.0f;
-                weather.feels_like = current["feels_like"] | weather.temp_outdoor;
-                weather.dewpoint = current["dew_point"] | 0.0f;
+                bool hasOutdoorData = (new_temp > -900 && new_hum > -900 && new_pres > -900);
+
+                if (hasOutdoorData) {
+                    // Datos válidos del sensor exterior - actualizar todo
+                    weather.temp_outdoor = new_temp;
+                    weather.humidity_outdoor = new_hum;
+                    weather.pressure_rel = new_pres;
+
+                    weather.wind_speed = current["wind_speed"] | 0.0f;
+                    weather.wind_gust = current["wind_gust"] | 0.0f;
+                    weather.wind_dir = current["wind_direction"] | 0.0f;
+
+                    int dir = (int)weather.wind_dir;
+                    const char* cardinals[] = {"N","NNE","NE","ENE","E","ESE","SE","SSE",
+                                               "S","SSO","SO","OSO","O","ONO","NO","NNO"};
+                    int idx = ((dir + 11) / 22) % 16;
+                    strlcpy(weather.wind_dir_cardinal, cardinals[idx], sizeof(weather.wind_dir_cardinal));
+
+                    weather.rain_rate = current["rain_rate"] | 0.0f;
+                    weather.rain_day = current["rain_daily"] | 0.0f;
+                    weather.rain_week = current["rain_weekly"] | 0.0f;
+                    weather.rain_month = current["rain_monthly"] | 0.0f;
+                    weather.rain_year = current["rain_yearly"] | 0.0f;
+                    weather.uv = current["uv_index"] | 0.0f;
+                    weather.solar_radiation = current["solar_radiation"] | 0.0f;
+                    weather.feels_like = current["feels_like"] | weather.temp_outdoor;
+                    weather.dewpoint = current["dew_point"] | 0.0f;
+                    weather.battery_wh65 = current["battery_wh65"] | true;
+                } else {
+                    // Servidor envió datos incompletos - mantener valores anteriores
+                    Serial.println("[API] WARN: Datos exteriores incompletos del servidor, manteniendo valores anteriores");
+                }
+
+                // Datos interiores siempre se actualizan (vienen de la consola)
                 weather.temp_indoor = current["temperature_indoor"] | 0.0f;
                 weather.humidity_indoor = current["humidity_indoor"] | 0.0f;
-                weather.battery_wh65 = current["battery_wh65"] | true;
 
                 strlcpy(weather.timestamp, current["received_at"] | "", sizeof(weather.timestamp));
+
 
                 // === STATS (min/max del día) ===
                 JsonObject statsObj = doc["stats"];

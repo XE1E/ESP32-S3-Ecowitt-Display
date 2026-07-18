@@ -24,12 +24,19 @@ static bool bmeInitialized = false;
 
 bool initBME280(uint8_t address = 0x76) {
     Serial.println("[BME280] Inicializando...");
+    Serial.printf("[BME280] Intentando direccion 0x%02X\n", address);
 
-    // I2C ya inicializado por el touch (GPIO 19/20)
-    if (!bme.begin(address)) {
-        Serial.println("[BME280] No encontrado!");
-        bmeInitialized = false;
-        return false;
+    // Pasar Wire explicitamente (I2C en GPIO 8/9)
+    if (!bme.begin(address, &Wire)) {
+        Serial.println("[BME280] No encontrado en direccion primaria");
+        // Intentar direccion alternativa
+        uint8_t altAddr = (address == 0x76) ? 0x77 : 0x76;
+        Serial.printf("[BME280] Intentando direccion alternativa 0x%02X\n", altAddr);
+        if (!bme.begin(altAddr, &Wire)) {
+            Serial.println("[BME280] No encontrado!");
+            bmeInitialized = false;
+            return false;
+        }
     }
 
     // Configurar para monitoreo interior

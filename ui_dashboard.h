@@ -229,6 +229,7 @@ static lv_obj_t *lbl_footer_aqi = nullptr;
 static lv_obj_t *lbl_footer_sunrise = nullptr;
 static lv_obj_t *lbl_footer_sunset = nullptr;
 static lv_obj_t *lbl_footer_moon = nullptr;
+static lv_obj_t *lbl_footer_bme280 = nullptr;
 
 // ============================================================================
 // Estilos
@@ -508,7 +509,14 @@ void createFooter(lv_obj_t *parent) {
     lv_label_set_text(lbl_footer_moon, "Luna: 82%");
     lv_obj_set_style_text_color(lbl_footer_moon, lv_color_white(), 0);
     lv_obj_set_style_text_font(lbl_footer_moon, &lv_font_montserrat_14, 0);
-    lv_obj_align(lbl_footer_moon, LV_ALIGN_RIGHT_MID, 0, 0);
+    lv_obj_align(lbl_footer_moon, LV_ALIGN_CENTER, 120, 0);
+
+    // BME280 local
+    lbl_footer_bme280 = lv_label_create(footer);
+    lv_label_set_text(lbl_footer_bme280, "Local: --");
+    lv_obj_set_style_text_color(lbl_footer_bme280, lv_color_hex(0x4ADE80), 0);  // Verde
+    lv_obj_set_style_text_font(lbl_footer_bme280, &lv_font_montserrat_14, 0);
+    lv_obj_align(lbl_footer_bme280, LV_ALIGN_RIGHT_MID, 0, 0);
 }
 
 // ============================================================================
@@ -2063,21 +2071,10 @@ void updateDashboardWeather() {
         lv_label_set_text(lbl_trend_humidity, buf);
     }
 
-    // === Interior (BME280 local o consola) ===
-    float indoor_temp, indoor_hum, indoor_pres;
-    bool use_local = g_local.valid;
-
-    if (use_local) {
-        indoor_temp = g_local.temperature;
-        indoor_hum = g_local.humidity;
-        indoor_pres = g_local.pressure;
-        if (lbl_indoor_title) lv_label_set_text(lbl_indoor_title, "* INTERIOR (BME280)");
-    } else {
-        indoor_temp = g_weather.temp_indoor;
-        indoor_hum = g_weather.humidity_indoor;
-        indoor_pres = g_weather.pressure_rel;
-        if (lbl_indoor_title) lv_label_set_text(lbl_indoor_title, "* INTERIOR (Consola)");
-    }
+    // === Interior (siempre datos del servidor - consola Ecowitt) ===
+    float indoor_temp = g_weather.temp_indoor;
+    float indoor_hum = g_weather.humidity_indoor;
+    float indoor_pres = g_weather.pressure_rel;
 
     if (lbl_indoor_temp) {
         snprintf(buf, sizeof(buf), "%.1f°%s", toDisplayTemp(indoor_temp), tempUnit());
@@ -2119,6 +2116,19 @@ void updateDashboardWeather() {
                                g_weather.uv < 6 ? "Mod" : "Alto";
         snprintf(buf, sizeof(buf), "UV: %.0f %s", g_weather.uv, uv_level);
         lv_label_set_text(lbl_footer_uv, buf);
+    }
+
+    // === Footer BME280 local ===
+    if (lbl_footer_bme280) {
+        if (g_local.valid) {
+            snprintf(buf, sizeof(buf), "Local: %.1f°C %.0f%%",
+                     g_local.temperature, g_local.humidity);
+            lv_label_set_text(lbl_footer_bme280, buf);
+            lv_obj_set_style_text_color(lbl_footer_bme280, lv_color_hex(0x4ADE80), 0);
+        } else {
+            lv_label_set_text(lbl_footer_bme280, "Local: --");
+            lv_obj_set_style_text_color(lbl_footer_bme280, lv_color_hex(0x888888), 0);
+        }
     }
 
     // === Status indicators (header) ===
