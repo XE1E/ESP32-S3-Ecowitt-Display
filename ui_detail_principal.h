@@ -266,59 +266,65 @@ void createDetailPrincipal() {
     // === CARD 1: TEMPERATURA ===
     lv_obj_t *card_temp = createGlassCard(scr, gap, y, col1_w, row1_h, "TEMPERATURA");
 
-    // Sub-card principal con temperatura grande
-    lv_obj_t *sc_temp = createDPSubCard(card_temp, 0, 18, col1_w - 24, 110);
+    // Sub-card 1: Temperatura actual
+    lv_obj_t *sc_temp = createDPSubCard(card_temp, 0, 18, col1_w - 24, 90);
 
     lv_obj_t *temp_icon = lv_label_create(sc_temp);
     lv_label_set_text(temp_icon, WI_THERMOMETER);
     lv_obj_set_style_text_font(temp_icon, &weather_icons_48, 0);
     lv_obj_set_style_text_color(temp_icon, lv_color_hex(0xFCD34D), 0);
-    lv_obj_align(temp_icon, LV_ALIGN_LEFT_MID, 5, -15);
+    lv_obj_align(temp_icon, LV_ALIGN_LEFT_MID, 5, 0);
 
     detail_principal_ui.temp_value = lv_label_create(sc_temp);
     lv_label_set_text(detail_principal_ui.temp_value, "--.-°C");
     lv_obj_set_style_text_color(detail_principal_ui.temp_value, lv_color_hex(0xFCD34D), 0);
     lv_obj_set_style_text_font(detail_principal_ui.temp_value, &lv_font_montserrat_48, 0);
-    lv_obj_align(detail_principal_ui.temp_value, LV_ALIGN_LEFT_MID, 70, -15);
+    lv_obj_align(detail_principal_ui.temp_value, LV_ALIGN_LEFT_MID, 70, 0);
 
-    // Sensación y rocío en fila inferior de la sub-card
-    detail_principal_ui.feels_like = lv_label_create(sc_temp);
+    // Sub-card 2: Sensación y Rocío
+    lv_obj_t *sc_temp_derived = createDPSubCard(card_temp, 0, 115, col1_w - 24, 45);
+
+    detail_principal_ui.feels_like = lv_label_create(sc_temp_derived);
     lv_label_set_text(detail_principal_ui.feels_like, "Sensacion: --.-°C");
     lv_obj_set_style_text_color(detail_principal_ui.feels_like, lv_color_hex(0xFB923C), 0);
     lv_obj_set_style_text_font(detail_principal_ui.feels_like, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.feels_like, LV_ALIGN_BOTTOM_LEFT, 5, -5);
+    lv_obj_align(detail_principal_ui.feels_like, LV_ALIGN_LEFT_MID, 10, 0);
 
-    detail_principal_ui.dew_point = lv_label_create(sc_temp);
+    detail_principal_ui.dew_point = lv_label_create(sc_temp_derived);
     lv_label_set_text(detail_principal_ui.dew_point, "Rocio: --.-°C");
     lv_obj_set_style_text_color(detail_principal_ui.dew_point, lv_color_hex(0x6EE7B7), 0);
     lv_obj_set_style_text_font(detail_principal_ui.dew_point, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.dew_point, LV_ALIGN_BOTTOM_RIGHT, -5, -5);
+    lv_obj_align(detail_principal_ui.dew_point, LV_ALIGN_RIGHT_MID, -10, 0);
 
-    // Min/Max debajo de sub-card
-    detail_principal_ui.temp_max = lv_label_create(card_temp);
+    // Sub-card 3: Min/Max/Compare
+    lv_obj_t *sc_temp_stats = createDPSubCard(card_temp, 0, 167, col1_w - 24, 70);
+
+    detail_principal_ui.temp_max = lv_label_create(sc_temp_stats);
     lv_label_set_text(detail_principal_ui.temp_max, LV_SYMBOL_UP " Max: --.-°C");
     lv_obj_set_style_text_color(detail_principal_ui.temp_max, DP_COLOR_TEMP, 0);
     lv_obj_set_style_text_font(detail_principal_ui.temp_max, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.temp_max, LV_ALIGN_TOP_LEFT, 5, 140);
+    lv_obj_align(detail_principal_ui.temp_max, LV_ALIGN_TOP_LEFT, 10, 8);
 
-    detail_principal_ui.temp_min = lv_label_create(card_temp);
+    detail_principal_ui.temp_min = lv_label_create(sc_temp_stats);
     lv_label_set_text(detail_principal_ui.temp_min, LV_SYMBOL_DOWN " Min: --.-°C");
     lv_obj_set_style_text_color(detail_principal_ui.temp_min, lv_color_hex(0x38BDF8), 0);
     lv_obj_set_style_text_font(detail_principal_ui.temp_min, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.temp_min, LV_ALIGN_TOP_LEFT, 5, 165);
+    lv_obj_align(detail_principal_ui.temp_min, LV_ALIGN_TOP_RIGHT, -10, 8);
 
-    detail_principal_ui.temp_compare = lv_label_create(card_temp);
+    detail_principal_ui.temp_compare = lv_label_create(sc_temp_stats);
     lv_label_set_text(detail_principal_ui.temp_compare, "vs ayer: --");
     lv_obj_set_style_text_color(detail_principal_ui.temp_compare, dp_text_muted(), 0);
     lv_obj_set_style_text_font(detail_principal_ui.temp_compare, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.temp_compare, LV_ALIGN_TOP_LEFT, 5, 195);
+    lv_obj_align(detail_principal_ui.temp_compare, LV_ALIGN_BOTTOM_MID, 0, -8);
 
     // === CARD 2: HUMEDAD / PRESION ===
     lv_obj_t *card_hp = createGlassCard(scr, gap + col1_w + gap, y, col2_w, row1_h, "HUMEDAD / PRESION");
 
-    // Sub-cards más grandes (lado a lado) con más separación vertical
+    // Sub-cards lado a lado para valores principales
     int hp_sc_w = (col2_w - 24 - 10) / 2;
-    lv_obj_t *sc_hum = createDPSubCard(card_hp, 0, 18, hp_sc_w, 100);
+
+    // Sub-card Humedad
+    lv_obj_t *sc_hum = createDPSubCard(card_hp, 0, 18, hp_sc_w, 90);
 
     lv_obj_t *hum_icon = lv_label_create(sc_hum);
     lv_label_set_text(hum_icon, WI_HUMIDITY);
@@ -326,19 +332,20 @@ void createDetailPrincipal() {
     lv_obj_set_style_text_color(hum_icon, lv_color_hex(0x67E8F9), 0);
     lv_obj_align(hum_icon, LV_ALIGN_TOP_MID, 0, 5);
 
-    lv_obj_t *hum_lbl = lv_label_create(sc_hum);
-    lv_label_set_text(hum_lbl, "Humedad");
-    lv_obj_set_style_text_font(hum_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(hum_lbl, dp_text_muted(), 0);
-    lv_obj_align(hum_lbl, LV_ALIGN_TOP_MID, 0, 42);
-
     detail_principal_ui.humidity = lv_label_create(sc_hum);
     lv_label_set_text(detail_principal_ui.humidity, "--%");
     lv_obj_set_style_text_color(detail_principal_ui.humidity, lv_color_hex(0x67E8F9), 0);
     lv_obj_set_style_text_font(detail_principal_ui.humidity, &lv_font_montserrat_28, 0);
-    lv_obj_align(detail_principal_ui.humidity, LV_ALIGN_BOTTOM_MID, 0, -8);
+    lv_obj_align(detail_principal_ui.humidity, LV_ALIGN_CENTER, 0, 12);
 
-    lv_obj_t *sc_pres = createDPSubCard(card_hp, hp_sc_w + 10, 18, hp_sc_w, 100);
+    lv_obj_t *hum_lbl = lv_label_create(sc_hum);
+    lv_label_set_text(hum_lbl, "Humedad");
+    lv_obj_set_style_text_font(hum_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(hum_lbl, dp_text_muted(), 0);
+    lv_obj_align(hum_lbl, LV_ALIGN_BOTTOM_MID, 0, -5);
+
+    // Sub-card Presion
+    lv_obj_t *sc_pres = createDPSubCard(card_hp, hp_sc_w + 10, 18, hp_sc_w, 90);
 
     lv_obj_t *pres_icon = lv_label_create(sc_pres);
     lv_label_set_text(pres_icon, WI_BAROMETER);
@@ -346,36 +353,39 @@ void createDetailPrincipal() {
     lv_obj_set_style_text_color(pres_icon, lv_color_hex(0xC4B5FD), 0);
     lv_obj_align(pres_icon, LV_ALIGN_TOP_MID, 0, 5);
 
-    lv_obj_t *pres_lbl = lv_label_create(sc_pres);
-    lv_label_set_text(pres_lbl, "Presion");
-    lv_obj_set_style_text_font(pres_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_set_style_text_color(pres_lbl, dp_text_muted(), 0);
-    lv_obj_align(pres_lbl, LV_ALIGN_TOP_MID, 0, 42);
-
     detail_principal_ui.pressure = lv_label_create(sc_pres);
     lv_label_set_text(detail_principal_ui.pressure, "---- hPa");
     lv_obj_set_style_text_color(detail_principal_ui.pressure, lv_color_hex(0xC4B5FD), 0);
     lv_obj_set_style_text_font(detail_principal_ui.pressure, &lv_font_montserrat_20, 0);
-    lv_obj_align(detail_principal_ui.pressure, LV_ALIGN_BOTTOM_MID, 0, -8);
+    lv_obj_align(detail_principal_ui.pressure, LV_ALIGN_CENTER, 0, 12);
 
-    detail_principal_ui.pressure_trend = lv_label_create(card_hp);
+    lv_obj_t *pres_lbl = lv_label_create(sc_pres);
+    lv_label_set_text(pres_lbl, "Presion");
+    lv_obj_set_style_text_font(pres_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_set_style_text_color(pres_lbl, dp_text_muted(), 0);
+    lv_obj_align(pres_lbl, LV_ALIGN_BOTTOM_MID, 0, -5);
+
+    // Sub-card Tendencia y Pronóstico
+    lv_obj_t *sc_hp_info = createDPSubCard(card_hp, 0, 115, col2_w - 24, 120);
+
+    detail_principal_ui.pressure_trend = lv_label_create(sc_hp_info);
     lv_label_set_text(detail_principal_ui.pressure_trend, "Tendencia: --");
     lv_obj_set_style_text_color(detail_principal_ui.pressure_trend, dp_text_muted(), 0);
     lv_obj_set_style_text_font(detail_principal_ui.pressure_trend, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.pressure_trend, LV_ALIGN_TOP_LEFT, 5, 130);
+    lv_obj_align(detail_principal_ui.pressure_trend, LV_ALIGN_TOP_LEFT, 10, 10);
 
-    detail_principal_ui.forecast_text = lv_label_create(card_hp);
+    detail_principal_ui.forecast_text = lv_label_create(sc_hp_info);
     lv_label_set_text(detail_principal_ui.forecast_text, "Pronostico: --");
     lv_obj_set_style_text_color(detail_principal_ui.forecast_text, lv_color_hex(0x4ADE80), 0);
     lv_obj_set_style_text_font(detail_principal_ui.forecast_text, &lv_font_montserrat_12, 0);
-    lv_obj_set_width(detail_principal_ui.forecast_text, col2_w - 30);
+    lv_obj_set_width(detail_principal_ui.forecast_text, col2_w - 50);
     lv_label_set_long_mode(detail_principal_ui.forecast_text, LV_LABEL_LONG_WRAP);
-    lv_obj_align(detail_principal_ui.forecast_text, LV_ALIGN_TOP_LEFT, 5, 155);
+    lv_obj_align(detail_principal_ui.forecast_text, LV_ALIGN_TOP_LEFT, 10, 35);
 
     // === CARD 3: VIENTO ===
     lv_obj_t *card_wind = createGlassCard(scr, gap + col1_w + gap + col2_w + gap, y, col3_w, row1_h, "VIENTO");
 
-    // Sub-card velocidad
+    // Sub-card 1: Velocidad
     lv_obj_t *sc_wind = createDPSubCard(card_wind, 0, 18, col3_w - 24, 70);
 
     lv_obj_t *wind_icon = lv_label_create(sc_wind);
@@ -390,11 +400,11 @@ void createDetailPrincipal() {
     lv_obj_set_style_text_font(detail_principal_ui.wind_speed, &lv_font_montserrat_28, 0);
     lv_obj_align(detail_principal_ui.wind_speed, LV_ALIGN_LEFT_MID, 55, 0);
 
-    // Sub-card dirección con símbolo
+    // Sub-card 2: Dirección
     lv_obj_t *sc_wind_dir = createDPSubCard(card_wind, 0, 95, col3_w - 24, 45);
 
     lv_obj_t *dir_icon = lv_label_create(sc_wind_dir);
-    lv_label_set_text(dir_icon, WI_DIR_N);  // Flecha de dirección
+    lv_label_set_text(dir_icon, WI_DIR_N);
     lv_obj_set_style_text_font(dir_icon, &weather_icons_32, 0);
     lv_obj_set_style_text_color(dir_icon, lv_color_hex(0x60A5FA), 0);
     lv_obj_align(dir_icon, LV_ALIGN_LEFT_MID, 10, 0);
@@ -405,31 +415,35 @@ void createDetailPrincipal() {
     lv_obj_set_style_text_font(detail_principal_ui.wind_dir, &lv_font_montserrat_18, 0);
     lv_obj_align(detail_principal_ui.wind_dir, LV_ALIGN_LEFT_MID, 50, 0);
 
-    detail_principal_ui.wind_gust = lv_label_create(card_wind);
+    // Sub-card 3: Estadísticas (Rafagas, Max, Beaufort)
+    lv_obj_t *sc_wind_stats = createDPSubCard(card_wind, 0, 147, col3_w - 24, 90);
+
+    detail_principal_ui.wind_gust = lv_label_create(sc_wind_stats);
     lv_label_set_text(detail_principal_ui.wind_gust, "Rafagas: -- km/h");
     lv_obj_set_style_text_color(detail_principal_ui.wind_gust, lv_color_hex(0xFDE047), 0);
     lv_obj_set_style_text_font(detail_principal_ui.wind_gust, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.wind_gust, LV_ALIGN_TOP_LEFT, 5, 150);
+    lv_obj_align(detail_principal_ui.wind_gust, LV_ALIGN_TOP_LEFT, 10, 8);
 
-    detail_principal_ui.wind_max = lv_label_create(card_wind);
+    detail_principal_ui.wind_max = lv_label_create(sc_wind_stats);
     lv_label_set_text(detail_principal_ui.wind_max, "Max hoy: -- km/h");
     lv_obj_set_style_text_color(detail_principal_ui.wind_max, dp_text_muted(), 0);
     lv_obj_set_style_text_font(detail_principal_ui.wind_max, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.wind_max, LV_ALIGN_TOP_LEFT, 5, 175);
+    lv_obj_align(detail_principal_ui.wind_max, LV_ALIGN_TOP_LEFT, 10, 32);
 
-    detail_principal_ui.wind_beaufort = lv_label_create(card_wind);
+    detail_principal_ui.wind_beaufort = lv_label_create(sc_wind_stats);
     lv_label_set_text(detail_principal_ui.wind_beaufort, "--");
     lv_obj_set_style_text_color(detail_principal_ui.wind_beaufort, lv_color_hex(0x6EE7B7), 0);
     lv_obj_set_style_text_font(detail_principal_ui.wind_beaufort, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.wind_beaufort, LV_ALIGN_TOP_LEFT, 5, 200);
+    lv_obj_align(detail_principal_ui.wind_beaufort, LV_ALIGN_TOP_LEFT, 10, 56);
 
     // === FILA 2 ===
     int y2 = y + row1_h + gap;
     int row2_w = (SCREEN_WIDTH - gap * 5) / 4;
 
-    // Card LLUVIA con sub-card para icono+rate
+    // Card LLUVIA
     lv_obj_t *card_rain = createGlassCard(scr, gap, y2, row2_w, row2_h, "PRECIPITACION");
 
+    // Sub-card 1: Rate actual
     lv_obj_t *sc_rain = createDPSubCard(card_rain, 0, 18, row2_w - 24, 50);
     lv_obj_t *rain_icon = lv_label_create(sc_rain);
     lv_label_set_text(rain_icon, WI_RAIN);
@@ -440,36 +454,40 @@ void createDetailPrincipal() {
     detail_principal_ui.rain_rate = lv_label_create(sc_rain);
     lv_label_set_text(detail_principal_ui.rain_rate, "-.-- mm/h");
     lv_obj_set_style_text_color(detail_principal_ui.rain_rate, lv_color_hex(0x60A5FA), 0);
-    lv_obj_set_style_text_font(detail_principal_ui.rain_rate, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_font(detail_principal_ui.rain_rate, &lv_font_montserrat_18, 0);
     lv_obj_align(detail_principal_ui.rain_rate, LV_ALIGN_LEFT_MID, 45, 0);
 
-    detail_principal_ui.rain_day = lv_label_create(card_rain);
+    // Sub-card 2: Acumulados
+    lv_obj_t *sc_rain_acc = createDPSubCard(card_rain, 0, 75, row2_w - 24, 100);
+
+    detail_principal_ui.rain_day = lv_label_create(sc_rain_acc);
     lv_label_set_text(detail_principal_ui.rain_day, "Hoy: -- mm");
     lv_obj_set_style_text_color(detail_principal_ui.rain_day, dp_text_muted(), 0);
     lv_obj_set_style_text_font(detail_principal_ui.rain_day, &lv_font_montserrat_12, 0);
-    lv_obj_align(detail_principal_ui.rain_day, LV_ALIGN_TOP_LEFT, 5, 80);
+    lv_obj_align(detail_principal_ui.rain_day, LV_ALIGN_TOP_LEFT, 10, 8);
 
-    detail_principal_ui.rain_week = lv_label_create(card_rain);
+    detail_principal_ui.rain_week = lv_label_create(sc_rain_acc);
     lv_label_set_text(detail_principal_ui.rain_week, "Semana: -- mm");
     lv_obj_set_style_text_color(detail_principal_ui.rain_week, dp_text_muted(), 0);
     lv_obj_set_style_text_font(detail_principal_ui.rain_week, &lv_font_montserrat_12, 0);
-    lv_obj_align(detail_principal_ui.rain_week, LV_ALIGN_TOP_LEFT, 5, 100);
+    lv_obj_align(detail_principal_ui.rain_week, LV_ALIGN_TOP_LEFT, 10, 30);
 
-    detail_principal_ui.rain_month = lv_label_create(card_rain);
+    detail_principal_ui.rain_month = lv_label_create(sc_rain_acc);
     lv_label_set_text(detail_principal_ui.rain_month, "Mes: -- mm");
     lv_obj_set_style_text_color(detail_principal_ui.rain_month, dp_text_muted(), 0);
     lv_obj_set_style_text_font(detail_principal_ui.rain_month, &lv_font_montserrat_12, 0);
-    lv_obj_align(detail_principal_ui.rain_month, LV_ALIGN_TOP_LEFT, 5, 120);
+    lv_obj_align(detail_principal_ui.rain_month, LV_ALIGN_TOP_LEFT, 10, 52);
 
-    detail_principal_ui.rain_year = lv_label_create(card_rain);
+    detail_principal_ui.rain_year = lv_label_create(sc_rain_acc);
     lv_label_set_text(detail_principal_ui.rain_year, "Anual: -- mm");
     lv_obj_set_style_text_color(detail_principal_ui.rain_year, dp_text_muted(), 0);
     lv_obj_set_style_text_font(detail_principal_ui.rain_year, &lv_font_montserrat_12, 0);
-    lv_obj_align(detail_principal_ui.rain_year, LV_ALIGN_TOP_LEFT, 5, 140);
+    lv_obj_align(detail_principal_ui.rain_year, LV_ALIGN_TOP_LEFT, 10, 74);
 
     // Card UV/SOLAR
     lv_obj_t *card_uv = createGlassCard(scr, gap + row2_w + gap, y2, row2_w, row2_h, "UV / SOLAR");
 
+    // Sub-card 1: Indice UV
     lv_obj_t *sc_uv = createDPSubCard(card_uv, 0, 18, row2_w - 24, 55);
     detail_principal_ui.uv_index = lv_label_create(sc_uv);
     lv_label_set_text(detail_principal_ui.uv_index, "UV: --");
@@ -483,11 +501,13 @@ void createDetailPrincipal() {
     lv_obj_set_style_text_font(detail_principal_ui.uv_level, &lv_font_montserrat_14, 0);
     lv_obj_align(detail_principal_ui.uv_level, LV_ALIGN_RIGHT_MID, -10, 0);
 
-    detail_principal_ui.solar_radiation = lv_label_create(card_uv);
+    // Sub-card 2: Radiación solar
+    lv_obj_t *sc_solar = createDPSubCard(card_uv, 0, 80, row2_w - 24, 40);
+    detail_principal_ui.solar_radiation = lv_label_create(sc_solar);
     lv_label_set_text(detail_principal_ui.solar_radiation, "Radiacion: -- W/m2");
     lv_obj_set_style_text_color(detail_principal_ui.solar_radiation, dp_text_muted(), 0);
     lv_obj_set_style_text_font(detail_principal_ui.solar_radiation, &lv_font_montserrat_14, 0);
-    lv_obj_align(detail_principal_ui.solar_radiation, LV_ALIGN_TOP_LEFT, 5, 85);
+    lv_obj_align(detail_principal_ui.solar_radiation, LV_ALIGN_LEFT_MID, 10, 0);
 
     // Card AQI
     lv_obj_t *card_aqi = createGlassCard(scr, gap + (row2_w + gap) * 2, y2, row2_w, row2_h, "CALIDAD AIRE");
