@@ -1175,6 +1175,8 @@ void createDetailRemoto() {
 
     scr_detail_remoto = lv_obj_create(NULL);
     lv_obj_set_style_bg_color(scr_detail_remoto, bg_screen, 0);  // Tono 1
+    lv_obj_set_style_bg_opa(scr_detail_remoto, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(scr_detail_remoto, 0, 0);
     lv_obj_clear_flag(scr_detail_remoto, LV_OBJ_FLAG_SCROLLABLE);
 
     createDetailHeader(scr_detail_remoto, "ESTACION REMOTA", "Ecowitt GW1100", DETAIL_COLOR_REMOTO);

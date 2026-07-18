@@ -216,6 +216,8 @@ void createDetailPrincipal() {
     lv_obj_t *scr = lv_obj_create(NULL);
     detail_principal_ui.screen = scr;
     lv_obj_set_style_bg_color(scr, dp_bg(), 0);
+    lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
+    lv_obj_set_style_border_width(scr, 0, 0);
     lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
 
     // === HEADER ===
@@ -254,11 +256,12 @@ void createDetailPrincipal() {
     lv_obj_set_style_text_font(subtitle, &lv_font_montserrat_12, 0);
     lv_obj_align(subtitle, LV_ALIGN_TOP_MID, 0, 32);
 
-    // Layout: usar toda la altura disponible
+    // Layout: usar toda la altura disponible (600px total)
+    // Header: 56px, gap: 8px, footer zone: ~50px
     int gap = 8;
     int y = 62;
-    int row1_h = 270;  // Más alto
-    int row2_h = 210;  // Más alto
+    int row1_h = 260;  // Primera fila
+    int row2_h = 195;  // Segunda fila (reducida para evitar overflow)
     int col1_w = 340;
     int col2_w = 340;
     int col3_w = 316;
@@ -587,8 +590,8 @@ void createDetailPrincipal() {
 
     // Barra de baterias al fondo
     lv_obj_t *batt_bar = lv_obj_create(scr);
-    lv_obj_set_size(batt_bar, SCREEN_WIDTH - 20, 26);
-    lv_obj_align(batt_bar, LV_ALIGN_BOTTOM_MID, 0, -18);
+    lv_obj_set_size(batt_bar, SCREEN_WIDTH - 20, 24);
+    lv_obj_align(batt_bar, LV_ALIGN_BOTTOM_MID, 0, -22);
     lv_obj_set_style_bg_color(batt_bar, dp_subcard_bg(), 0);
     lv_obj_set_style_bg_opa(batt_bar, LV_OPA_COVER, 0);
     lv_obj_set_style_radius(batt_bar, 6, 0);
@@ -617,7 +620,7 @@ void createDetailPrincipal() {
     lv_label_set_text(footer, LV_SYMBOL_LEFT " Swipe " LV_SYMBOL_RIGHT);
     lv_obj_set_style_text_color(footer, dp_text_muted(), 0);
     lv_obj_set_style_text_font(footer, &lv_font_montserrat_12, 0);
-    lv_obj_align(footer, LV_ALIGN_BOTTOM_MID, 0, -3);
+    lv_obj_align(footer, LV_ALIGN_BOTTOM_MID, 0, -6);
 
     enableSwipeNavigation(scr);
     Serial.println("[UI] Pantalla detalle Principal creada");
