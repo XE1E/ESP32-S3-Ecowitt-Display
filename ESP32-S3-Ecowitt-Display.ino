@@ -102,8 +102,8 @@ void startNormalOperation() {
     }
 
     // Primera carga de datos (también sincroniza la hora)
+    // Nota: updateWeatherData() ya obtiene almanac via /api/display
     updateWeatherData();
-    updateAlmanac();
 
     // Crear dashboard
     createDashboard();

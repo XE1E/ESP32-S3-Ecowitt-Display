@@ -556,13 +556,42 @@ public:
 
                 // === ALMANAC ===
                 JsonObject alm = doc["almanac"];
-                strlcpy(almanac.sunrise, alm["sunrise"] | "00:00", sizeof(almanac.sunrise));
-                strlcpy(almanac.sunset, alm["sunset"] | "00:00", sizeof(almanac.sunset));
-                strlcpy(almanac.moon_phase, alm["moon_phase"] | "", sizeof(almanac.moon_phase));
-                almanac.moon_illumination = alm["moon_illumination"] | 0;
-                almanac.valid = true;
-                Serial.printf("[API] Almanac - Luna: fase='%s', ilum=%d%%\n",
-                              almanac.moon_phase, almanac.moon_illumination);
+                Serial.printf("[API] Almanac presente: %s\n", alm.isNull() ? "NO" : "SI");
+                if (!alm.isNull()) {
+                    // Solo actualizar si hay datos válidos
+                    const char* sunrise = alm["sunrise"];
+                    const char* sunset = alm["sunset"];
+                    const char* moon_phase = alm["moon_phase"];
+
+                    Serial.printf("[API] Raw: sunrise='%s', sunset='%s', phase='%s', illum=",
+                                  sunrise ? sunrise : "NULL",
+                                  sunset ? sunset : "NULL",
+                                  moon_phase ? moon_phase : "NULL");
+                    if (alm["moon_illumination"].isNull()) {
+                        Serial.println("NULL");
+                    } else {
+                        Serial.printf("%.1f\n", alm["moon_illumination"].as<float>());
+                    }
+
+                    if (sunrise && strlen(sunrise) > 0) {
+                        strlcpy(almanac.sunrise, sunrise, sizeof(almanac.sunrise));
+                    }
+                    if (sunset && strlen(sunset) > 0) {
+                        strlcpy(almanac.sunset, sunset, sizeof(almanac.sunset));
+                    }
+                    if (moon_phase && strlen(moon_phase) > 0) {
+                        strlcpy(almanac.moon_phase, moon_phase, sizeof(almanac.moon_phase));
+                    }
+                    // Solo actualizar iluminación si viene en el JSON
+                    if (!alm["moon_illumination"].isNull()) {
+                        almanac.moon_illumination = alm["moon_illumination"].as<int>();
+                    }
+                    almanac.valid = true;
+                    Serial.printf("[API] Almanac final - Luna: fase='%s', ilum=%d%%\n",
+                                  almanac.moon_phase, almanac.moon_illumination);
+                } else {
+                    Serial.println("[API] Almanac NO presente en respuesta, manteniendo valores anteriores");
+                }
 
                 // === FORECAST (pronóstico barométrico) ===
                 if (forecast != nullptr && doc.containsKey("forecast")) {
