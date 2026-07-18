@@ -19,6 +19,7 @@
 void createHistoryScreen();
 void createSettingsScreen();
 void createDetailLocal();
+void updateDetailLocal();
 void createDetailJardin();
 void updateDetailJardin();
 void createDetailRemoto();
@@ -103,6 +104,7 @@ void navigateToScreen(ScreenType screen) {
             break;
         case SCREEN_DETAIL_LOCAL:
             if (!scr_detail_local) createDetailLocal();
+            updateDetailLocal();
             target = scr_detail_local;
             break;
         case SCREEN_DETAIL_JARDIN:
@@ -1107,92 +1109,295 @@ lv_obj_t* createDetailCard(lv_obj_t *parent, int x, int y, int w, int h, const c
     return card;
 }
 
+// UI elements for Local detail
+static struct {
+    lv_obj_t *temp;
+    lv_obj_t *humidity;
+    lv_obj_t *pressure;
+    lv_obj_t *maxmin;
+    lv_obj_t *diff;
+    lv_obj_t *chart;
+    lv_chart_series_t *ser_temp;
+    lv_obj_t *lbl_y_max;
+    lv_obj_t *lbl_y_min;
+} detail_local_ui = {0};
+
 /**
- * Pantalla detalle LOCAL (BME280)
+ * Pantalla detalle INTERIOR (WS2910/BME280)
  */
 void createDetailLocal() {
     extern LocalSensorData g_local;
+    extern WeatherData g_weather;
+
+    // Paleta dark
+    lv_color_t bg_dark = lv_color_hex(0x0A0E12);
+    lv_color_t card_dark = lv_color_hex(0x1A1F24);
+    lv_color_t subcard_dark = lv_color_hex(0x2A3238);
+    lv_color_t border_dark = lv_color_hex(0x3A4248);
+    lv_color_t text_primary = lv_color_hex(0xF1F5F9);
+    lv_color_t text_muted = lv_color_hex(0x94A3B8);
+    lv_color_t accent_green = lv_color_hex(0x4ADE80);
+    lv_color_t accent_cyan = lv_color_hex(0x67E8F9);
+    lv_color_t accent_purple = lv_color_hex(0xC4B5FD);
+    lv_color_t grid_color = lv_color_hex(0x5A6570);
 
     scr_detail_local = lv_obj_create(NULL);
-    lv_obj_set_style_bg_color(scr_detail_local, DETAIL_BG, 0);
+    lv_obj_set_style_bg_color(scr_detail_local, bg_dark, 0);
+    lv_obj_set_style_bg_opa(scr_detail_local, LV_OPA_COVER, 0);
     lv_obj_clear_flag(scr_detail_local, LV_OBJ_FLAG_SCROLLABLE);
 
-    createDetailHeader(scr_detail_local, "SENSOR LOCAL", "BME280 Interior", DETAIL_COLOR_LOCAL);
+    // === HEADER ===
+    lv_obj_t *header = lv_obj_create(scr_detail_local);
+    lv_obj_set_size(header, SCREEN_WIDTH, 56);
+    lv_obj_set_pos(header, 0, 0);
+    lv_obj_set_style_bg_color(header, card_dark, 0);
+    lv_obj_set_style_radius(header, 0, 0);
+    lv_obj_set_style_border_width(header, 1, 0);
+    lv_obj_set_style_border_side(header, LV_BORDER_SIDE_BOTTOM, 0);
+    lv_obj_set_style_border_color(header, border_dark, 0);
+    lv_obj_clear_flag(header, LV_OBJ_FLAG_SCROLLABLE);
 
-    int y_start = 85;
-    int gap = 12;
+    lv_obj_t *btn_back = lv_btn_create(scr_detail_local);
+    lv_obj_set_size(btn_back, 90, 32);
+    lv_obj_align(btn_back, LV_ALIGN_TOP_LEFT, 12, 12);
+    lv_obj_set_style_bg_color(btn_back, subcard_dark, 0);
+    lv_obj_set_style_radius(btn_back, 6, 0);
+    lv_obj_set_style_shadow_width(btn_back, 0, 0);
+    lv_obj_add_event_cb(btn_back, [](lv_event_t *e) {
+        navigateToScreen(SCREEN_DASHBOARD);
+        updatePageIndicator();
+    }, LV_EVENT_CLICKED, NULL);
 
-    // Card grande con todos los datos
-    lv_obj_t *card = createDetailCard(scr_detail_local, gap, y_start, SCREEN_WIDTH - gap * 2, 250, "LECTURAS ACTUALES", DETAIL_COLOR_LOCAL);
+    lv_obj_t *btn_label = lv_label_create(btn_back);
+    lv_label_set_text(btn_label, LV_SYMBOL_LEFT " Volver");
+    lv_obj_set_style_text_color(btn_label, text_primary, 0);
+    lv_obj_center(btn_label);
 
-    // Temperatura
-    lv_obj_t *temp_icon = lv_label_create(card);
+    lv_obj_t *title = lv_label_create(scr_detail_local);
+    lv_label_set_text(title, "INTERIOR");
+    lv_obj_set_style_text_color(title, accent_green, 0);
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_20, 0);
+    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 16);
+
+    lv_obj_t *subtitle = lv_label_create(scr_detail_local);
+    lv_label_set_text(subtitle, "WS2910");
+    lv_obj_set_style_text_color(subtitle, text_muted, 0);
+    lv_obj_set_style_text_font(subtitle, &lv_font_montserrat_12, 0);
+    lv_obj_align(subtitle, LV_ALIGN_TOP_RIGHT, -15, 22);
+
+    int gap = 10;
+    int y_start = 66;
+
+    // === CARD DATOS (arriba, a todo lo ancho) ===
+    int data_card_h = 180;
+    lv_obj_t *card_data = lv_obj_create(scr_detail_local);
+    lv_obj_set_pos(card_data, gap, y_start);
+    lv_obj_set_size(card_data, SCREEN_WIDTH - gap * 2, data_card_h);
+    lv_obj_set_style_bg_color(card_data, card_dark, 0);
+    lv_obj_set_style_radius(card_data, 16, 0);
+    lv_obj_set_style_border_width(card_data, 1, 0);
+    lv_obj_set_style_border_color(card_data, border_dark, 0);
+    lv_obj_set_style_pad_all(card_data, 12, 0);
+    lv_obj_clear_flag(card_data, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *card_title = lv_label_create(card_data);
+    lv_label_set_text(card_title, "LECTURAS ACTUALES");
+    lv_obj_set_style_text_color(card_title, text_muted, 0);
+    lv_obj_set_style_text_font(card_title, &lv_font_montserrat_12, 0);
+    lv_obj_align(card_title, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    // Temperatura con icono
+    lv_obj_t *temp_icon = lv_label_create(card_data);
     lv_label_set_text(temp_icon, WI_THERMOMETER);
     lv_obj_set_style_text_font(temp_icon, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(temp_icon, DETAIL_COLOR_LOCAL, 0);
-    lv_obj_align(temp_icon, LV_ALIGN_TOP_LEFT, 20, 40);
+    lv_obj_set_style_text_color(temp_icon, accent_green, 0);
+    lv_obj_align(temp_icon, LV_ALIGN_TOP_LEFT, 20, 35);
 
-    lv_obj_t *temp_val = lv_label_create(card);
-    lv_label_set_text(temp_val, "22.5°C");
-    lv_obj_set_style_text_color(temp_val, DETAIL_TEXT_PRIMARY, 0);
-    lv_obj_set_style_text_font(temp_val, &lv_font_montserrat_48, 0);
-    lv_obj_align(temp_val, LV_ALIGN_TOP_LEFT, 90, 35);
+    detail_local_ui.temp = lv_label_create(card_data);
+    lv_label_set_text(detail_local_ui.temp, "--.-°C");
+    lv_obj_set_style_text_color(detail_local_ui.temp, text_primary, 0);
+    lv_obj_set_style_text_font(detail_local_ui.temp, &lv_font_montserrat_48, 0);
+    lv_obj_align(detail_local_ui.temp, LV_ALIGN_TOP_LEFT, 90, 30);
 
-    lv_obj_t *maxmin = lv_label_create(card);
-    lv_label_set_text(maxmin, LV_SYMBOL_UP " 25°  " LV_SYMBOL_DOWN " 20°");
-    lv_obj_set_style_text_color(maxmin, DETAIL_TEXT_MUTED, 0);
-    lv_obj_align(maxmin, LV_ALIGN_TOP_LEFT, 20, 100);
+    detail_local_ui.maxmin = lv_label_create(card_data);
+    lv_label_set_text(detail_local_ui.maxmin, LV_SYMBOL_UP " --°  " LV_SYMBOL_DOWN " --°");
+    lv_obj_set_style_text_color(detail_local_ui.maxmin, text_muted, 0);
+    lv_obj_set_style_text_font(detail_local_ui.maxmin, &lv_font_montserrat_16, 0);
+    lv_obj_align(detail_local_ui.maxmin, LV_ALIGN_TOP_LEFT, 20, 95);
 
     // Humedad
-    lv_obj_t *hum_icon = lv_label_create(card);
+    lv_obj_t *hum_icon = lv_label_create(card_data);
     lv_label_set_text(hum_icon, WI_HUMIDITY);
     lv_obj_set_style_text_font(hum_icon, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(hum_icon, lv_color_hex(0x67E8F9), 0);
-    lv_obj_align(hum_icon, LV_ALIGN_TOP_MID, -100, 40);
+    lv_obj_set_style_text_color(hum_icon, accent_cyan, 0);
+    lv_obj_align(hum_icon, LV_ALIGN_TOP_MID, -80, 35);
 
-    lv_obj_t *hum_val = lv_label_create(card);
-    lv_label_set_text(hum_val, "58%");
-    lv_obj_set_style_text_color(hum_val, lv_color_hex(0x67E8F9), 0);
-    lv_obj_set_style_text_font(hum_val, &lv_font_montserrat_48, 0);
-    lv_obj_align(hum_val, LV_ALIGN_TOP_MID, 0, 35);
+    detail_local_ui.humidity = lv_label_create(card_data);
+    lv_label_set_text(detail_local_ui.humidity, "--%");
+    lv_obj_set_style_text_color(detail_local_ui.humidity, accent_cyan, 0);
+    lv_obj_set_style_text_font(detail_local_ui.humidity, &lv_font_montserrat_48, 0);
+    lv_obj_align(detail_local_ui.humidity, LV_ALIGN_TOP_MID, 20, 30);
 
-    // Presion
-    lv_obj_t *pres_icon = lv_label_create(card);
+    // Presión (en lugar de batería)
+    lv_obj_t *pres_icon = lv_label_create(card_data);
     lv_label_set_text(pres_icon, WI_BAROMETER);
     lv_obj_set_style_text_font(pres_icon, &weather_icons_48, 0);
-    lv_obj_set_style_text_color(pres_icon, lv_color_hex(0xC4B5FD), 0);
-    lv_obj_align(pres_icon, LV_ALIGN_TOP_RIGHT, -200, 40);
+    lv_obj_set_style_text_color(pres_icon, accent_purple, 0);
+    lv_obj_align(pres_icon, LV_ALIGN_TOP_RIGHT, -180, 35);
 
-    lv_obj_t *pres_val = lv_label_create(card);
-    lv_label_set_text(pres_val, "1018 hPa");
-    lv_obj_set_style_text_color(pres_val, lv_color_hex(0xC4B5FD), 0);
-    lv_obj_set_style_text_font(pres_val, &lv_font_montserrat_28, 0);
-    lv_obj_align(pres_val, LV_ALIGN_TOP_RIGHT, -20, 45);
+    detail_local_ui.pressure = lv_label_create(card_data);
+    lv_label_set_text(detail_local_ui.pressure, "---- hPa");
+    lv_obj_set_style_text_color(detail_local_ui.pressure, accent_purple, 0);
+    lv_obj_set_style_text_font(detail_local_ui.pressure, &lv_font_montserrat_28, 0);
+    lv_obj_align(detail_local_ui.pressure, LV_ALIGN_TOP_RIGHT, -20, 45);
 
     // Diferencia vs exterior
-    lv_obj_t *diff = lv_label_create(card);
-    lv_label_set_text(diff, "vs Exterior: +1.5°C mas calido");
-    lv_obj_set_style_text_color(diff, lv_color_hex(0xFDE047), 0);
-    lv_obj_set_style_text_font(diff, &lv_font_montserrat_18, 0);
-    lv_obj_align(diff, LV_ALIGN_BOTTOM_LEFT, 20, -20);
+    detail_local_ui.diff = lv_label_create(card_data);
+    lv_label_set_text(detail_local_ui.diff, "vs Exterior: --");
+    lv_obj_set_style_text_color(detail_local_ui.diff, lv_color_hex(0x93C5FD), 0);
+    lv_obj_set_style_text_font(detail_local_ui.diff, &lv_font_montserrat_18, 0);
+    lv_obj_align(detail_local_ui.diff, LV_ALIGN_BOTTOM_LEFT, 20, -10);
 
-    // Card de grafica placeholder
-    int y2 = y_start + 250 + gap;
-    lv_obj_t *card_chart = createDetailCard(scr_detail_local, gap, y2, SCREEN_WIDTH - gap * 2, 220, "HISTORIAL 24 HORAS", DETAIL_COLOR_LOCAL);
+    // === CARD GRAFICA (abajo, a todo lo ancho) ===
+    int chart_y = y_start + data_card_h + gap;
+    int chart_h = SCREEN_HEIGHT - chart_y - 30;
 
-    lv_obj_t *chart = lv_chart_create(card_chart);
-    lv_obj_set_size(chart, SCREEN_WIDTH - 80, 150);
-    lv_obj_align(chart, LV_ALIGN_BOTTOM_MID, 0, -10);
-    lv_chart_set_type(chart, LV_CHART_TYPE_LINE);
-    lv_chart_set_point_count(chart, 24);
-    lv_obj_set_style_line_width(chart, 2, LV_PART_ITEMS);
-    lv_chart_series_t *ser = lv_chart_add_series(chart, DETAIL_COLOR_LOCAL, LV_CHART_AXIS_PRIMARY_Y);
+    lv_obj_t *card_chart = lv_obj_create(scr_detail_local);
+    lv_obj_set_pos(card_chart, gap, chart_y);
+    lv_obj_set_size(card_chart, SCREEN_WIDTH - gap * 2, chart_h);
+    lv_obj_set_style_bg_color(card_chart, card_dark, 0);
+    lv_obj_set_style_radius(card_chart, 16, 0);
+    lv_obj_set_style_border_width(card_chart, 1, 0);
+    lv_obj_set_style_border_color(card_chart, border_dark, 0);
+    lv_obj_set_style_pad_all(card_chart, 12, 0);
+    lv_obj_clear_flag(card_chart, LV_OBJ_FLAG_SCROLLABLE);
+
+    lv_obj_t *chart_title_lbl = lv_label_create(card_chart);
+    lv_label_set_text(chart_title_lbl, "HISTORIAL 24H (pendiente API)");
+    lv_obj_set_style_text_color(chart_title_lbl, text_muted, 0);
+    lv_obj_set_style_text_font(chart_title_lbl, &lv_font_montserrat_12, 0);
+    lv_obj_align(chart_title_lbl, LV_ALIGN_TOP_MID, 0, 0);
+
+    // Chart a todo lo ancho
+    detail_local_ui.chart = lv_chart_create(card_chart);
+    lv_obj_set_size(detail_local_ui.chart, SCREEN_WIDTH - gap * 2 - 80, chart_h - 50);
+    lv_obj_align(detail_local_ui.chart, LV_ALIGN_BOTTOM_RIGHT, -10, -18);
+    lv_chart_set_type(detail_local_ui.chart, LV_CHART_TYPE_LINE);
+    lv_chart_set_point_count(detail_local_ui.chart, 24);
+    lv_chart_set_range(detail_local_ui.chart, LV_CHART_AXIS_PRIMARY_Y, 18, 30);
+    lv_chart_set_div_line_count(detail_local_ui.chart, 4, 6);
+    lv_obj_set_style_line_width(detail_local_ui.chart, 2, LV_PART_ITEMS);
+    lv_obj_set_style_size(detail_local_ui.chart, 0, LV_PART_INDICATOR);
+    lv_obj_set_style_bg_color(detail_local_ui.chart, subcard_dark, 0);
+    lv_obj_set_style_border_width(detail_local_ui.chart, 0, 0);
+    lv_obj_set_style_line_color(detail_local_ui.chart, grid_color, LV_PART_MAIN);
+    lv_obj_set_style_line_opa(detail_local_ui.chart, LV_OPA_50, LV_PART_MAIN);
+
+    detail_local_ui.ser_temp = lv_chart_add_series(detail_local_ui.chart, accent_green, LV_CHART_AXIS_PRIMARY_Y);
     for (int i = 0; i < 24; i++) {
-        lv_chart_set_next_value(chart, ser, 20 + (rand() % 5));
+        lv_chart_set_next_value(detail_local_ui.chart, detail_local_ui.ser_temp, 22 + (rand() % 6));
     }
 
+    // Escala Y
+    detail_local_ui.lbl_y_max = lv_label_create(card_chart);
+    lv_label_set_text(detail_local_ui.lbl_y_max, "30°");
+    lv_obj_set_style_text_color(detail_local_ui.lbl_y_max, text_muted, 0);
+    lv_obj_set_style_text_font(detail_local_ui.lbl_y_max, &lv_font_montserrat_12, 0);
+    lv_obj_align(detail_local_ui.lbl_y_max, LV_ALIGN_TOP_LEFT, 5, 18);
+
+    detail_local_ui.lbl_y_min = lv_label_create(card_chart);
+    lv_label_set_text(detail_local_ui.lbl_y_min, "18°");
+    lv_obj_set_style_text_color(detail_local_ui.lbl_y_min, text_muted, 0);
+    lv_obj_set_style_text_font(detail_local_ui.lbl_y_min, &lv_font_montserrat_12, 0);
+    lv_obj_align(detail_local_ui.lbl_y_min, LV_ALIGN_BOTTOM_LEFT, 5, -22);
+
+    // Escala X
+    lv_obj_t *lbl_x_start = lv_label_create(card_chart);
+    lv_label_set_text(lbl_x_start, "-24h");
+    lv_obj_set_style_text_color(lbl_x_start, text_muted, 0);
+    lv_obj_set_style_text_font(lbl_x_start, &lv_font_montserrat_12, 0);
+    lv_obj_align(lbl_x_start, LV_ALIGN_BOTTOM_LEFT, 35, -5);
+
+    lv_obj_t *lbl_x_end = lv_label_create(card_chart);
+    lv_label_set_text(lbl_x_end, "Ahora");
+    lv_obj_set_style_text_color(lbl_x_end, text_muted, 0);
+    lv_obj_set_style_text_font(lbl_x_end, &lv_font_montserrat_12, 0);
+    lv_obj_align(lbl_x_end, LV_ALIGN_BOTTOM_RIGHT, -10, -5);
+
+    // Footer
+    lv_obj_t *footer = lv_label_create(scr_detail_local);
+    lv_label_set_text(footer, LV_SYMBOL_LEFT " Swipe " LV_SYMBOL_RIGHT);
+    lv_obj_set_style_text_color(footer, text_muted, 0);
+    lv_obj_set_style_text_font(footer, &lv_font_montserrat_12, 0);
+    lv_obj_align(footer, LV_ALIGN_BOTTOM_MID, 0, -6);
+
     enableSwipeNavigation(scr_detail_local);
-    Serial.println("[UI] Pantalla detalle Local creada");
+    Serial.println("[UI] Pantalla detalle Interior creada (estilo dark)");
+}
+
+void updateDetailLocal() {
+    extern LocalSensorData g_local;
+    extern WeatherData g_weather;
+
+    if (!scr_detail_local) return;
+
+    char buf[48];
+
+    // Temperatura actual
+    if (detail_local_ui.temp) {
+        if (g_local.valid) {
+            snprintf(buf, sizeof(buf), "%.1f°C", g_local.temperature);
+        } else {
+            snprintf(buf, sizeof(buf), "--.-°C");
+        }
+        lv_label_set_text(detail_local_ui.temp, buf);
+    }
+
+    // Humedad
+    if (detail_local_ui.humidity) {
+        if (g_local.valid) {
+            snprintf(buf, sizeof(buf), "%.0f%%", g_local.humidity);
+        } else {
+            snprintf(buf, sizeof(buf), "--%");
+        }
+        lv_label_set_text(detail_local_ui.humidity, buf);
+    }
+
+    // Presión
+    if (detail_local_ui.pressure) {
+        if (g_local.valid) {
+            snprintf(buf, sizeof(buf), "%.0f hPa", g_local.pressure);
+        } else {
+            snprintf(buf, sizeof(buf), "---- hPa");
+        }
+        lv_label_set_text(detail_local_ui.pressure, buf);
+    }
+
+    // Max/Min del día (si están disponibles)
+    if (detail_local_ui.maxmin) {
+        if (g_local.valid && g_local.temp_max > -100 && g_local.temp_min < 100) {
+            snprintf(buf, sizeof(buf), LV_SYMBOL_UP " %.1f°  " LV_SYMBOL_DOWN " %.1f°",
+                     g_local.temp_max, g_local.temp_min);
+        } else {
+            snprintf(buf, sizeof(buf), LV_SYMBOL_UP " --°  " LV_SYMBOL_DOWN " --°");
+        }
+        lv_label_set_text(detail_local_ui.maxmin, buf);
+    }
+
+    // Diferencia vs exterior
+    if (detail_local_ui.diff) {
+        if (g_local.valid && g_weather.valid) {
+            float diff_val = g_local.temperature - g_weather.temp_outdoor;
+            if (diff_val >= 0) {
+                snprintf(buf, sizeof(buf), "vs Exterior: +%.1f°C (mas calido)", diff_val);
+            } else {
+                snprintf(buf, sizeof(buf), "vs Exterior: %.1f°C (mas frio)", diff_val);
+            }
+        } else {
+            snprintf(buf, sizeof(buf), "vs Exterior: --");
+        }
+        lv_label_set_text(detail_local_ui.diff, buf);
+    }
 }
 
 /**
@@ -1362,7 +1567,7 @@ void createDetailJardin() {
     lv_label_set_text(chart_title_lbl, "HISTORIAL 24H (pendiente API)");
     lv_obj_set_style_text_color(chart_title_lbl, text_muted, 0);
     lv_obj_set_style_text_font(chart_title_lbl, &lv_font_montserrat_12, 0);
-    lv_obj_align(chart_title_lbl, LV_ALIGN_TOP_LEFT, 30, 0);
+    lv_obj_align(chart_title_lbl, LV_ALIGN_TOP_MID, 0, 0);
 
     // Chart a todo lo ancho
     detail_jardin_ui.chart = lv_chart_create(card_chart);
