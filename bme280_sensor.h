@@ -17,11 +17,16 @@
 // BME280 instance
 static Adafruit_BME280 bme;
 static bool bmeInitialized = false;
-static int8_t bmePressureOffset = 0;  // Offset de calibracion en hPa
+static int8_t bmePressureOffset = 0;     // Offset de calibracion en hPa
+static int8_t bmeTemperatureOffset = 0;  // Offset de calibracion en decimas de grado
 
-// Setter para el offset (llamar desde main al cargar preferencias)
+// Setters para los offsets (llamar desde main al cargar preferencias)
 void setBME280PressureOffset(int8_t offset) {
     bmePressureOffset = offset;
+}
+
+void setBME280TemperatureOffset(int8_t offset) {
+    bmeTemperatureOffset = offset;
 }
 
 // ============================================================================
@@ -70,7 +75,7 @@ bool readBME280(LocalSensorData& data) {
         return false;
     }
 
-    data.temperature = bme.readTemperature();
+    data.temperature = bme.readTemperature() + (float)bmeTemperatureOffset;
     data.humidity = bme.readHumidity();
 
     // Leer presion absoluta y convertir a presion relativa (nivel del mar)

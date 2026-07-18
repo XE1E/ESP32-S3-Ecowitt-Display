@@ -1852,7 +1852,20 @@ void createDashboard() {
     // Card Jardin -> Detalle Jardin
     if (card_jardin) {
         lv_obj_add_flag(card_jardin, LV_OBJ_FLAG_CLICKABLE);
+        // Hacer que todos los hijos pasen el click al padre
+        uint32_t child_cnt = lv_obj_get_child_cnt(card_jardin);
+        for (uint32_t i = 0; i < child_cnt; i++) {
+            lv_obj_t *child = lv_obj_get_child(card_jardin, i);
+            lv_obj_add_flag(child, LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_flag(child, LV_OBJ_FLAG_EVENT_BUBBLE);
+            uint32_t grandchild_cnt = lv_obj_get_child_cnt(child);
+            for (uint32_t j = 0; j < grandchild_cnt; j++) {
+                lv_obj_t *grandchild = lv_obj_get_child(child, j);
+                lv_obj_add_flag(grandchild, LV_OBJ_FLAG_EVENT_BUBBLE);
+            }
+        }
         lv_obj_add_event_cb(card_jardin, [](lv_event_t *e) {
+            Serial.println("[TAP] Card Jardin tocada!");
             extern void navigateToScreenById(int);
             navigateToScreenById(NAV_SCREEN_DETAIL_JARDIN);
         }, LV_EVENT_CLICKED, NULL);
@@ -1898,8 +1911,17 @@ void updateDashboardTime() {
     localtime_r(&now, &timeinfo);
 
     // Hora en header (con segundos)
-    char time_full[10];
-    strftime(time_full, sizeof(time_full), "%H:%M:%S", &timeinfo);
+    char time_full[16];
+    if (userPrefs.use_24h) {
+        snprintf(time_full, sizeof(time_full), "%02d:%02d:%02d",
+                 timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    } else {
+        int hour12 = timeinfo.tm_hour % 12;
+        if (hour12 == 0) hour12 = 12;
+        const char* ampm = timeinfo.tm_hour < 12 ? "AM" : "PM";
+        snprintf(time_full, sizeof(time_full), "%d:%02d:%02d %s",
+                 hour12, timeinfo.tm_min, timeinfo.tm_sec, ampm);
+    }
     if (lbl_header_time) lv_label_set_text(lbl_header_time, time_full);
 
     // Fecha en header (estilo servidor)
@@ -1912,8 +1934,15 @@ void updateDashboardTime() {
     if (lbl_status_text) lv_label_set_text(lbl_status_text, date_str);
 
     // Hora en panel reloj
-    char time_str[10];
-    strftime(time_str, sizeof(time_str), "%H:%M", &timeinfo);
+    char time_str[12];
+    if (userPrefs.use_24h) {
+        snprintf(time_str, sizeof(time_str), "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+    } else {
+        int hour12 = timeinfo.tm_hour % 12;
+        if (hour12 == 0) hour12 = 12;
+        const char* ampm = timeinfo.tm_hour < 12 ? "AM" : "PM";
+        snprintf(time_str, sizeof(time_str), "%d:%02d %s", hour12, timeinfo.tm_min, ampm);
+    }
     if (lbl_clock_time) lv_label_set_text(lbl_clock_time, time_str);
 
     // Fecha corta en panel reloj

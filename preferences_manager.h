@@ -50,7 +50,8 @@ struct UserPreferences {
     uint16_t remote_interval;
 
     // BME280
-    int8_t bme280_pressure_offset;  // Offset de presion en hPa (-50 a +50)
+    int8_t bme280_pressure_offset;     // Offset de presion en hPa (-15 a +15)
+    int8_t bme280_temperature_offset;  // Offset de temperatura en grados (-15 a +15)
 
     // Estado
     bool configured;
@@ -83,6 +84,7 @@ void setDefaultPreferences() {
     userPrefs.remote_interval = 60;
 
     userPrefs.bme280_pressure_offset = 0;
+    userPrefs.bme280_temperature_offset = 0;
 
     userPrefs.configured = false;
     userPrefs.boot_count = 0;
@@ -147,6 +149,7 @@ bool loadPreferences() {
 
     // BME280
     userPrefs.bme280_pressure_offset = nvs.getChar("bme_pres_off", 0);
+    userPrefs.bme280_temperature_offset = nvs.getChar("bme_temp_off", 0);
 
     // Estado
     userPrefs.configured = nvs.getBool("configured", false);
@@ -198,6 +201,7 @@ void savePreferences() {
 
     // BME280
     nvs.putChar("bme_pres_off", userPrefs.bme280_pressure_offset);
+    nvs.putChar("bme_temp_off", userPrefs.bme280_temperature_offset);
 
     // Estado
     nvs.putBool("configured", userPrefs.configured);

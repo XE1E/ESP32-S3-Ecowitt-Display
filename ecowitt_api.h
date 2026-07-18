@@ -706,11 +706,16 @@ public:
      * Obtener datos históricos
      * @param history Estructura para almacenar datos
      * @param hours Horas de historial (default 24)
+     * @param station Estación opcional: nullptr=principal, "ch1"=Jardín WN31, "gw1100"=Remoto
      * @return true si éxito
      */
-    bool fetchHistory(HistoryData& history, int hours = 24) {
-        char url[128];
-        snprintf(url, sizeof(url), "%s/api/history?hours=%d", _baseUrl, hours);
+    bool fetchHistory(HistoryData& history, int hours = 24, const char* station = nullptr) {
+        char url[160];
+        if (station && strlen(station) > 0) {
+            snprintf(url, sizeof(url), "%s/api/history?hours=%d&station=%s", _baseUrl, hours, station);
+        } else {
+            snprintf(url, sizeof(url), "%s/api/history?hours=%d", _baseUrl, hours);
+        }
 
         HTTPClient http;
         http.begin(url);
@@ -756,10 +761,10 @@ public:
                         history.points[history.count].timestamp = mktime(&tm);
                     }
 
-                    // Obtener valores (priorizar outdoor, fallback indoor)
-                    float temp = point["temperature_outdoor"] | (point["temperature_indoor"] | -999.0f);
-                    float hum = point["humidity_outdoor"] | (point["humidity_indoor"] | -999.0f);
-                    float pres = point["pressure_relative"] | (point["pressure_absolute"] | -999.0f);
+                    // Obtener valores (priorizar outdoor, fallback ch1/indoor)
+                    float temp = point["temperature_outdoor"] | (point["temperature"] | (point["temperature_ch1"] | (point["temperature_indoor"] | -999.0f)));
+                    float hum = point["humidity_outdoor"] | (point["humidity"] | (point["humidity_ch1"] | (point["humidity_indoor"] | -999.0f)));
+                    float pres = point["pressure_relative"] | (point["pressure"] | (point["pressure_absolute"] | -999.0f));
                     float rain = point["rain_daily"] | 0.0f;
 
                     if (temp > -900) {

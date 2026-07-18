@@ -153,9 +153,11 @@ void setup() {
     incrementBootCount();
     Serial.printf("[PREFS] Configurado: %s\n", configured ? "Sí" : "No");
 
-    // Aplicar offset de presion BME280 desde preferencias
+    // Aplicar offsets BME280 desde preferencias
     setBME280PressureOffset(userPrefs.bme280_pressure_offset);
-    Serial.printf("[BME280] Offset presion: %d hPa\n", userPrefs.bme280_pressure_offset);
+    setBME280TemperatureOffset(userPrefs.bme280_temperature_offset);
+    Serial.printf("[BME280] Offset presion: %d hPa, temperatura: %+d C\n",
+                  userPrefs.bme280_pressure_offset, userPrefs.bme280_temperature_offset);
 
     // ========================================================================
     // Inicializar I2C (compartido por touch y BME280)
