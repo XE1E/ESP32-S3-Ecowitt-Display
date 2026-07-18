@@ -561,6 +561,8 @@ public:
                 strlcpy(almanac.moon_phase, alm["moon_phase"] | "", sizeof(almanac.moon_phase));
                 almanac.moon_illumination = alm["moon_illumination"] | 0;
                 almanac.valid = true;
+                Serial.printf("[API] Almanac - Luna: fase='%s', ilum=%d%%\n",
+                              almanac.moon_phase, almanac.moon_illumination);
 
                 // === FORECAST (pronóstico barométrico) ===
                 if (forecast != nullptr && doc.containsKey("forecast")) {

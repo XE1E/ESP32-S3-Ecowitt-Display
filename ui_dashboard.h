@@ -229,6 +229,7 @@ static lv_obj_t *lbl_footer_aqi = nullptr;
 static lv_obj_t *lbl_footer_sunrise = nullptr;
 static lv_obj_t *lbl_footer_sunset = nullptr;
 static lv_obj_t *lbl_footer_moon = nullptr;
+static lv_obj_t *lbl_footer_moon_icon = nullptr;
 static lv_obj_t *lbl_footer_bme280 = nullptr;
 
 // ============================================================================
@@ -1571,14 +1572,14 @@ void createMainPanel(lv_obj_t *parent, int x, int y, int w, int h) {
     // Sub-card Luna (compacto: icono + porcentaje)
     lv_obj_t *sc_moon = createSubCard(panel_main, col5_x, 5 + (subcard_h + subcard_gap) * 2, col5_w, subcard_h);
 
-    lv_obj_t *moon_icon = lv_label_create(sc_moon);
-    lv_label_set_text(moon_icon, WI_MOON_WAXING_CRES);
-    lv_obj_set_style_text_font(moon_icon, &weather_icons_32, 0);
-    lv_obj_set_style_text_color(moon_icon, COLOR_TEXT_SECONDARY, 0);
-    lv_obj_align(moon_icon, LV_ALIGN_LEFT_MID, 5, 0);
+    lbl_footer_moon_icon = lv_label_create(sc_moon);
+    lv_label_set_text(lbl_footer_moon_icon, WI_MOON_WAXING_CRES);
+    lv_obj_set_style_text_font(lbl_footer_moon_icon, &weather_icons_32, 0);
+    lv_obj_set_style_text_color(lbl_footer_moon_icon, COLOR_TEXT_SECONDARY, 0);
+    lv_obj_align(lbl_footer_moon_icon, LV_ALIGN_LEFT_MID, 5, 0);
 
     lbl_footer_moon = lv_label_create(sc_moon);
-    lv_label_set_text(lbl_footer_moon, "82%");
+    lv_label_set_text(lbl_footer_moon, "--%");
     lv_obj_set_style_text_color(lbl_footer_moon, COLOR_TEXT_PRIMARY, 0);
     lv_obj_set_style_text_font(lbl_footer_moon, &lv_font_montserrat_18, 0);
     lv_obj_align(lbl_footer_moon, LV_ALIGN_RIGHT_MID, -8, 0);
@@ -2333,6 +2334,13 @@ void updateDashboardWeather() {
         if (lbl_footer_moon) {
             snprintf(buf, sizeof(buf), "%d%%", g_almanac.moon_illumination);
             lv_label_set_text(lbl_footer_moon, buf);
+        }
+        if (lbl_footer_moon_icon) {
+            bool is_waxing = strstr(g_almanac.moon_phase, "creciente") ||
+                            strstr(g_almanac.moon_phase, "Creciente") ||
+                            strstr(g_almanac.moon_phase, "waxing");
+            const char* icon = getMoonPhaseIcon(g_almanac.moon_illumination, is_waxing);
+            lv_label_set_text(lbl_footer_moon_icon, icon);
         }
     }
 
